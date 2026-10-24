@@ -18,7 +18,8 @@ describe('canonical component contract and shell', () => {
     expect(Object.keys(panelRegistry).sort()).toEqual(['bank', 'home', 'hospital', 'market', 'office']);
     render(<BuildingPanel building="bank" state={initial()} dispatch={dispatchFor()} />);
     for (const name of ['Current status', 'Decision', 'Projected consequence']) expect(screen.getByRole('region', { name })).toBeTruthy();
-    expect(screen.getByLabelText('12-month policy preview')).toBeTruthy(); // engine previewHorizon now supplies the preview
+    fireEvent.click(screen.getByRole('button', { name: 'Help for Bank' }));
+    expect(screen.getByText(/Preview unavailable/)).toBeTruthy();
   });
   it('renders every panel for four starting lives without undefined or NaN', () => {
     for (const config of scenarios) for (const building of Object.keys(panelRegistry) as BuildingId[]) {
@@ -45,7 +46,7 @@ describe('reduced Bank decisions', () => {
   it('caps extra debt input at both debt and cash, and rejects excess before dispatch', () => {
     const state = initial(); state.cash = 100; state.debts[0]!.balance = 40;
     const dispatch = dispatchFor(state); render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
-    fireEvent.click(screen.getByText('Make a one-time extra debt payment'));
+    fireEvent.click(screen.getByText('Extra debt payment'));
     const input = screen.getByLabelText('One-time debt payment (USD)');
     expect(input.getAttribute('max')).toBe('40');
     fireEvent.change(input, { target: { value: '41' } });
@@ -55,7 +56,7 @@ describe('reduced Bank decisions', () => {
   it('dispatches an affordable one-time payment and clears only after success', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
-    fireEvent.click(screen.getByText('Make a one-time extra debt payment'));
+    fireEvent.click(screen.getByText('Extra debt payment'));
     const input = screen.getByLabelText('One-time debt payment (USD)') as HTMLInputElement;
     fireEvent.change(input, { target: { value: '10' } }); fireEvent.click(screen.getByRole('button', { name: 'Pay once' }));
     await waitFor(() => expect(input.value).toBe(''));
@@ -65,7 +66,7 @@ describe('reduced Bank decisions', () => {
     const state = initial(); state.cash = 0;
     const dispatch = vi.fn(() => ({ ok: false as const, code: 'invalid_amount' as const, message: 'Engine rejected this policy.', state }));
     render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
-    fireEvent.click(screen.getByText('Make a one-time extra debt payment'));
+    fireEvent.click(screen.getByText('Extra debt payment'));
     expect((screen.getByLabelText('One-time debt payment (USD)') as HTMLInputElement).disabled).toBe(true);
     fireEvent.change(screen.getByLabelText('Monthly savings contribution (USD)'), { target: { value: '50' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save savings contribution' }));
@@ -88,7 +89,7 @@ describe('reduced Market decisions', () => {
   it('uses set_contributions separately and preserves savings', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="market" state={state} dispatch={dispatch} />);
-    fireEvent.click(screen.getByText('Monthly investment contribution', { exact: true }));
+    fireEvent.click(screen.getByText('Monthly investing', { exact: true }));
     fireEvent.change(screen.getByLabelText('Monthly investment contribution (USD)'), { target: { value: '200' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save investment contribution' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_contributions', savingsContributionPerMonth: state.policy.savingsContributionPerMonth, investmentContributionPerMonth: 200 }));
@@ -102,6 +103,7 @@ describe('Insurance, Home and Office', () => {
     fireEvent.click(screen.getByLabelText(/High premium \/ low deductible/));
     fireEvent.click(screen.getByRole('button', { name: 'Save health plan' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_insurance', line: 'health', planId: 'health_plus' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Help for Insurance' }));
     expect(screen.getByText(/never accident likelihood/)).toBeTruthy();
   });
   it('uses one budget slider within the engine bounds', async () => {
@@ -115,8 +117,9 @@ describe('Insurance, Home and Office', () => {
   it('keeps Office read-only and marks the missing tax estimate instead of calculating it', () => {
     render(<BuildingPanel building="office" state={initial()} dispatch={dispatchFor()} />);
     expect(screen.queryByRole('spinbutton')).toBeNull(); expect(screen.queryByRole('slider')).toBeNull();
-    expect(screen.getByText('Take-home — illustrative tax estimate')).toBeTruthy();
-    expect(screen.getByText(/awaiting the engine's complete monthly pay summary/)).toBeTruthy();
+    expect(screen.getByText('Take-home estimate')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Help for Office' }));
+    expect(screen.getByText('Illustrative tax estimate unavailable.')).toBeTruthy();
   });
   it('accepts and declines using the canonical engine event and option IDs', async () => {
     const state = initial();
@@ -140,5 +143,27 @@ describe('stress states dev page', () => {
     const next = stressFixtures(); expect(next[0]!.state.cash).toBe(0);
     expect(next.find(value => value.id === 'no-insurance')!.state.insurance.health).toBeNull();
     expect(next.find(value => value.id === 'unemployed')!.state.employment.status).toBe('unemployed');
+  });
+});
+
+describe('concise help popup', () => {
+  it('keeps explanations off the main view and restores focus when help closes', () => {
+    render(<BuildingPanel building="bank" state={initial()} dispatch={dispatchFor()} />);
+    expect(screen.queryByText('Extra payments use cash and reduce the debt.')).toBeNull();
+    const trigger = screen.getByRole('button', { name: 'Help for Bank' });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('dialog', { name: 'Bank help' })).toBeTruthy();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    const close = screen.getByRole('button', { name: 'Close help' });
+    expect(document.activeElement).toBe(close);
+    fireEvent.keyDown(close, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Bank help' })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+  it('closes help when the user clicks elsewhere', () => {
+    render(<BuildingPanel building="home" state={initial()} dispatch={dispatchFor()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Help for Home' }));
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByRole('dialog', { name: 'Home help' })).toBeNull();
   });
 });

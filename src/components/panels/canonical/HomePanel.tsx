@@ -10,18 +10,17 @@ export function HomePanel({ state, dispatch }: PanelProps) {
   const error = amountError(budget, 0, BOUNDS.monthlySpendMax);
   const disabled = !editable(state) || task.pending;
   return <PanelShell title="Home" status={<dl>
-    <dt>Rent / housing</dt><dd>{money(state.household.housingMonthly)} / month</dd>
-    <dt>Essentials</dt><dd>{money(state.household.essentialsMonthly)} / month</dd>
-    <dt>Saved discretionary budget</dt><dd>{money(state.household.discretionaryMonthly)} / month</dd>
+    <div><dt>Housing / month</dt><dd>{money(state.household.housingMonthly)}</dd></div>
+    <div><dt>Essentials / month</dt><dd>{money(state.household.essentialsMonthly)}</dd></div>
+    <div><dt>Budget / month</dt><dd>{money(state.household.discretionaryMonthly)}</dd></div>
   </dl>} decision={<form onSubmit={event => { event.preventDefault(); if (!disabled && !error) void task.send({ type: 'set_budget', discretionaryMonthly: Number(budget) }); }}>
-    {/* TODO(shared-ui-kit): replace this native semantic scaffold with the owner's Slider. */}
-    <label htmlFor={id}>Monthly discretionary budget (USD)</label>
-    <input id={id} type="range" min={0} max={BOUNDS.monthlySpendMax} step={.01} value={budget} disabled={disabled} onChange={event => setBudget(event.target.value)} aria-invalid={!!error} aria-describedby={`${id}-help`} />
+    <label htmlFor={id}>Monthly spending</label>
+    <input className="ft-budget" id={id} aria-label="Monthly discretionary budget (USD)" type="range" min={0} max={BOUNDS.monthlySpendMax} step={.01} value={budget} disabled={disabled} onChange={event => setBudget(event.target.value)} aria-invalid={!!error} aria-describedby={error ? `${id}-help` : undefined} />
     <output htmlFor={id}>{error ? 'Invalid amount' : `${money(Number(budget))} / month`}</output>
-    <p id={`${id}-help`}>{error || `Engine range: ${money(0)} to ${money(BOUNDS.monthlySpendMax)} per month.`}</p>
+    {error && <p id={`${id}-help`}>{error}</p>}
     <button disabled={disabled || !!error}>Save budget</button>{task.feedback}
-  </form>} consequence={<>
-    <p>Draft discretionary spending: {error ? 'Fix the amount' : `${money(-Number(budget))} / month`}. This is recurring spending, separate from rent and essentials. Changes apply only after Save.</p>
+  </form>} consequence={<p>After Save · {error ? 'Check amount' : `${money(-Number(budget))} / month`}</p>} help={<>
+    <p>This changes flexible spending. Housing and essentials stay the same.</p>
     {/* TODO(Agent 1): Policy has no budget field. Never invent one for a preview. */}
     <PolicyPreview state={state} draftPolicy={state.policy} />
   </>} details={<LedgerHistory state={state} categories={['housing', 'essentials', 'discretionary']} />} />;

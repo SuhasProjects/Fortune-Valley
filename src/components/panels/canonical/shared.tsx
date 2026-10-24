@@ -29,26 +29,26 @@ export function useAction(dispatch: PanelDispatch) {
     locked.current = true; setPending(true); setMessage(undefined);
     try {
       const result = await dispatch(action);
-      if (mounted.current) setMessage(result?.ok ? { error: false, text: 'Saved.' } : { error: true, text: result && !result.ok ? result.message : 'The store did not return an action result. Please retry.' });
+      if (mounted.current) setMessage(result?.ok ? { error: false, text: 'Saved.' } : { error: true, text: result && !result.ok ? result.message : "Couldn't save. Try again." });
       return result?.ok === true;
     } catch {
-      if (mounted.current) setMessage({ error: true, text: 'Unable to apply the change. Please retry.' });
+      if (mounted.current) setMessage({ error: true, text: "Couldn't save. Try again." });
       return false;
     } finally { locked.current = false; if (mounted.current) setPending(false); }
   }
   return { pending, send, feedback: <div aria-live="polite">{pending ? 'Saving…' : message && <p role={message.error ? 'alert' : 'status'}>{message.text}</p>}</div> };
 }
 
-/** TODO(shared-ui-kit): use the owner's Input. Native semantic scaffold only. */
+/** Accessible amount input; all limits come from the canonical state/config. */
 export function MoneyInput({ label, raw, onChange, min = 0, max, step = .01, disabled = false }: {
   label: string; raw: string; onChange: (value: string) => void; min?: number; max: number; step?: number; disabled?: boolean;
 }) {
   const id = useId(); const [touched, setTouched] = useState(false);
   useEffect(() => { if (!raw) setTouched(false); }, [raw]);
   const error = amountError(raw, min, max, step);
-  return <div><label htmlFor={id}>{label} (USD)</label>
-    <input id={id} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} aria-invalid={touched && !!error} aria-describedby={`${id}-help`} />
-    <p id={`${id}-help`}>{touched && error ? error : `Allowed: ${money(min)} to ${money(max)}; increments of ${money(step)}.`}</p>
+  return <div className="ft-field"><label htmlFor={id}>{label}</label>
+    <input id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} aria-invalid={touched && !!error} aria-describedby={touched && error ? `${id}-help` : undefined} />
+    {touched && error && <p className="ft-field__error" id={`${id}-help`}>{error}</p>}
   </div>;
 }
 
