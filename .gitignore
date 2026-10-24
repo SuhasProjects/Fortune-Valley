@@ -6,3 +6,12 @@ dist
 .vercel
 *.log
 .DS_Store
+!.env.example
+*.tsbuildinfo
+.env*
+.vite/
+debug.log
+dist/
+node_modules/
+playwright-report/
+test-results/
