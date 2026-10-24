@@ -1,44 +1,38 @@
+﻿import { useMemo } from 'react';
 import type { GameState, Policy } from '../../types/domain';
-import { previewHorizon } from '../../engine';
+import { previewHorizon, type PreviewOverrides } from '../../engine';
+import { money } from './canonical/shared';
 
-const money = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
-
-/**
- * 12-month what-if supplied by the engine (Agent 1): `previewHorizon` replays the
- * next 12 months twice under the game's own seed streams — once with the current
- * policy, once with the draft — so the two differ only by the draft. Deterministic,
- * pure, no forecast of real-world outcomes.
- */
-export function PolicyPreview({ state, draftPolicy }: { state: GameState; draftPolicy: Policy }) {
-  const p = state.policy;
-  const changed = draftPolicy.savingsContributionPerMonth !== p.savingsContributionPerMonth
-    || draftPolicy.investmentContributionPerMonth !== p.investmentContributionPerMonth
-    || draftPolicy.extraDebtPaymentPerMonth !== p.extraDebtPaymentPerMonth
-    || draftPolicy.minCashBuffer !== p.minCashBuffer
-    || (['stock', 'bond', 'etf'] as const).some((k) => draftPolicy.targetAllocation[k] !== p.targetAllocation[k]);
-  if (!changed) {
-    return <aside aria-label="12-month policy preview" role="status">Change a value above to preview the next 12 months with that policy versus your current one (same simulated luck).</aside>;
-  }
-  const h = previewHorizon(state, { policy: draftPolicy }, 12);
-  if (h.rejected.length) {
-    return <aside aria-label="12-month policy preview" role="status">Preview unavailable: {h.rejected.join('; ')}</aside>;
-  }
-  const b = h.baseline[h.baseline.length - 1]!;
-  const d = h.withChange[h.withChange.length - 1]!;
-  const delta = (x: number) => `${x >= 0 ? '+' : '−'}${money(Math.abs(x))}`;
-  const runway = (m: number | null) => (m === null ? 'no emergency borrowing' : `emergency borrowing in month ${m}`);
-  return (
-    <aside aria-label="12-month policy preview" role="status">
-      <p>After 12 months with the draft policy, versus keeping the current one (same simulated luck):</p>
-      <dl>
-        <dt>Cash</dt><dd>{money(d.cash)} ({delta(d.cash - b.cash)})</dd>
-        <dt>Savings</dt><dd>{money(d.savings)} ({delta(d.savings - b.savings)})</dd>
-        <dt>Investments</dt><dd>{money(d.investments)} ({delta(d.investments - b.investments)})</dd>
-        <dt>Debt</dt><dd>{money(d.debt)} ({delta(d.debt - b.debt)})</dd>
-        <dt>Net worth</dt><dd>{money(d.netWorth)} ({delta(d.netWorth - b.netWorth)})</dd>
-        <dt>Runway</dt><dd>Draft: {runway(h.monthsUntilShortfall.withChange)}; current: {runway(h.monthsUntilShortfall.baseline)}</dd>
-      </dl>
-      <small>Illustrative engine replay with demo assumptions, not a forecast. Shocks and returns are identical in both paths.</small>
-    </aside>
-  );
+/** Display the engine's same-luck replay. No simulation/statistics/math in UI. */
+export function PolicyPreview({ state, draftPolicy, overrides, invalid = false, compact = false }: {
+  state: GameState; draftPolicy?: Policy; overrides?: PreviewOverrides; invalid?: boolean; compact?: boolean;
+}) {
+  const changes: PreviewOverrides = { ...(draftPolicy ? { policy: draftPolicy } : {}), ...overrides };
+  const p = changes.policy;
+  const changed = Boolean(p && (
+    (p.savingsContributionPerMonth !== undefined && p.savingsContributionPerMonth !== state.policy.savingsContributionPerMonth)
+    || (p.investmentContributionPerMonth !== undefined && p.investmentContributionPerMonth !== state.policy.investmentContributionPerMonth)
+    || (p.extraDebtPaymentPerMonth !== undefined && p.extraDebtPaymentPerMonth !== state.policy.extraDebtPaymentPerMonth)
+    || (p.minCashBuffer !== undefined && p.minCashBuffer !== state.policy.minCashBuffer)
+    || (p.targetAllocation && (['stock', 'bond', 'etf'] as const).some(asset => p.targetAllocation![asset] !== state.policy.targetAllocation[asset]))
+  )) || Boolean(changes.household && Object.entries(changes.household).some(([key, value]) => state.household[key as keyof typeof state.household] !== value))
+    || Boolean(changes.insurance && Object.entries(changes.insurance).some(([line, plan]) => state.insurance[line as keyof typeof state.insurance] !== plan));
+  const signature = JSON.stringify(changes);
+  const result = useMemo(() => changed && !invalid ? previewHorizon(state, changes, 12) : null, [state, signature, changed, invalid]);
+  if (compact && (!changed || invalid)) return null;
+  const label = compact ? '12-month policy preview' : '12-month preview details';
+  if (invalid || result?.rejected.length) return <aside aria-label={label}><p>{invalid ? 'Check draft values to preview.' : result!.rejected.join('; ')}</p></aside>;
+  if (!result) return <aside aria-label={label}><p>Change a value to compare the next 12 months.</p></aside>;
+  const baseline = result.baseline.at(-1); const draft = result.withChange.at(-1);
+  if (!baseline || !draft) return <aside aria-label={label}>Preview unavailable.</aside>;
+  const shortfall = result.monthsUntilShortfall.withChange;
+  const borrowing = shortfall === null ? 'No borrowing in 12 months' : `First borrowing: month ${shortfall}`;
+  if (compact) return <aside className="ft-preview" aria-label={label} role="status"><p>After 12 months · cash <strong>{money(draft.cash)}</strong></p><small>{borrowing} · Illustration</small></aside>;
+  return <aside aria-label={label}>
+    <div className="ft-table-scroll"><table><caption>12-month illustration</caption><thead><tr><th scope="col">Balance</th><th scope="col">Current</th><th scope="col">Draft</th></tr></thead><tbody>
+      <tr><th scope="row">Cash</th><td>{money(baseline.cash)}</td><td>{money(draft.cash)}</td></tr>
+      <tr><th scope="row">Savings</th><td>{money(baseline.savings)}</td><td>{money(draft.savings)}</td></tr>
+      <tr><th scope="row">Net worth</th><td>{money(baseline.netWorth)}</td><td>{money(draft.netWorth)}</td></tr>
+    </tbody></table></div><p>{borrowing}.</p><small>Same simulated luck. Illustrative, not a forecast.</small>
+  </aside>;
 }

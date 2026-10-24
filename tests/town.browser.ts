@@ -36,6 +36,11 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
     // Native dialogs trap Tab inside the panel.
     await page.keyboard.press('Tab')
     await expect(dialog).toContainText('Your decision')
+    if (name === 'Market Hall') {
+      await expect(dialog.getByRole('group', { name: 'Stocks allocation' })).toContainText('Last month')
+      await expect(dialog.getByRole('group', { name: 'Stocks allocation' })).toContainText('Annual assumption')
+      await page.screenshot({ path: `docs/screenshots/${testInfo.project.name}-market.png` })
+    }
     expect(await page.evaluate(() => !!document.activeElement?.closest('dialog'))).toBe(true)
     await page.keyboard.press('Escape')
     await expect(dialog).toHaveCount(0)
