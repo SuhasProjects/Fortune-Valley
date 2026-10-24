@@ -11,15 +11,15 @@ export function Window({ title, plaque, headerExtra, onClose, children, width = 
 export interface ModalProps extends Omit<WindowProps, 'onClose'> { onClose: () => void }
 export function Modal({ title, onClose, ...rest }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)
+  const previousFocus = useRef<HTMLElement | null>(typeof document === 'undefined' ? null : document.activeElement as HTMLElement | null)
   const heading = useId()
   const reduced = useReducedMotion()
   useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null
     const dialog = ref.current
     dialog?.showModal()
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { dialog?.close(); document.body.style.overflow = overflow; previous?.focus() }
+    return () => { dialog?.close(); document.body.style.overflow = overflow; previousFocus.current?.focus() }
   }, [])
   function containTab(event: KeyboardEvent<HTMLDialogElement>) {
     if (event.key !== 'Tab') return

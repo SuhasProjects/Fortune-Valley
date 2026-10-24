@@ -50,6 +50,10 @@
 .fv-stage .notice { background: #f5e5baee; backdrop-filter: blur(2px); }
 .fv-stage .history-button { align-self: flex-end; }
 .fv-stage > .fv-ui > .simulation-footer { position: fixed; z-index: 7; left: 14px; bottom: 5px; pointer-events: none; font-size: 16px; }
+.fv-status-tools { position: absolute; z-index: var(--z-hud); top: calc(19 * var(--px)); left: calc(3 * var(--px)); display: flex; align-items: center; gap: var(--px); }
+.fv-status-tools .fv-status-tag { position: static; }
+.fv-game-flow { pointer-events: none; }
+.fv-game-flow > * { pointer-events: auto; }
 .fullscreen-game-view > .action-error { position: absolute; z-index: 6; top: 112px; left: 50%; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px)); margin: 0; }
 
 @media(max-width:850px) {

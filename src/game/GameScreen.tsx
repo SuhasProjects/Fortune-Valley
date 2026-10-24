@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { EventCard, monthLabel, usd } from '../components/flow'
-import { selectDebtTotal, selectNetWorth, useGameStore } from '../stores/useGameStore'
+import { EventCard, monthLabel } from '../components/flow'
+import { useGameStore } from '../stores/useGameStore'
 import { PanelHost } from '../components/town/PanelHost'
-import { FullscreenGameView } from '../components/layout/FullscreenGameView'
 import type { BuildingId } from '../types/domain'
 import { ConnectedBuildingPanel } from '../components/panels/ConnectedBuildingPanel'
-import { PixelIcon } from '../components/layout/PixelArt'
 import { ToastStack } from './flow/ToastStack'
 import { useShortcuts } from './flow/useShortcuts'
 import { ActivityWindow } from './flow/ActivityWindow'
@@ -15,11 +13,12 @@ import { OptionsWindow, setSetting, useSettings } from './settings'
 import { sfx } from './audio/sfx'
 import { GameStage } from './stage/GameStage'
 import { TownWorld } from './world/TownWorld'
+import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
+import { useGameClock } from '../hooks/useGameClock'
+import { IconButton, Tag } from '../ui'
 
 export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId, ReactNode>> }) {
   const store = useGameStore()
-  const netWorth = useGameStore(selectNetWorth)
-  const debt = useGameStore(selectDebtTotal)
   const settings = useSettings()
   const [menu, setMenu] = useState<'pause' | 'options' | 'guide' | null>(null)
   const [finishConfirm, setFinishConfirm] = useState(false)
@@ -42,6 +41,7 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   const panel = store.openBuildingId
   const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || finishConfirm || confirm)
   const [tipStep, setTipStep] = useState(() => settings.tips && !settings.tipsSeen && game.monthIndex === 0 ? 0 : -1)
+  const clock = useGameClock({ enabled: settings.autoAdvanceSeconds > 0, intervalMs: Math.max(1, settings.autoAdvanceSeconds) * 1_000, blocked: game.activeEvents.length > 0 || modalOpen || finishing })
   const openPause = () => {
     pauseWasAlreadyPaused.current = game.status === 'paused'
     setMenu('pause')
@@ -105,12 +105,13 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     if (tipStep < 2) setTipStep(step => step + 1)
     else { setTipStep(-1); setSetting('tipsSeen', true) }
   }
-  const hud = <header className="town-hud"><div className="hud-brand"><span className="brand-mark"><PixelIcon/></span><div className="wordmark">FINANCIAL TOWN<small>{config.title}</small></div></div><dl className="hud-stats"><div className="hud-date"><dt><PixelIcon kind="calendar"/>{monthLabel(config.startMonth,game.monthIndex)}</dt><dd>Month {game.monthIndex} / {config.durationMonths}</dd></div><div><dt><PixelIcon kind="coin"/>Cash</dt><dd>{usd(game.cash)}</dd></div><div><dt><PixelIcon kind="leaf"/>Savings</dt><dd>{usd(game.savings)}</dd></div><div><dt><PixelIcon kind="book"/>Debt</dt><dd>{usd(debt)}</dd></div><div className="hud-net"><dt><PixelIcon kind="coin"/>Net worth</dt><dd>{usd(netWorth)}</dd></div></dl><button className="pixel-button" onClick={store.openTimeline}>Timeline ↗</button></header>
-  const gameStatus = <>{<span className="offline-tag">{game.status === 'paused' ? 'PAUSED' : game.status === 'finished' ? 'STORY COMPLETE' : store.aiStatus === 'loading' ? 'PREPARING OPPORTUNITY' : store.aiStatus === 'online' ? 'AI CONNECTED' : 'OFFLINE READY'}</span>}{saved && <span className="offline-tag" role="status">✓ Saved</span>}<button className="icon-button" aria-label="Open pause menu" onClick={openPause}>⚙</button></>
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
   return <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
     <a className="skip-link" href="#town-main">Skip to town controls</a>
-    <FullscreenGameView hud={hud} status={gameStatus} blocked={modalOpen || finishing} onFinish={requestFinish}>
+    <Hud onOpenTimeline={store.openTimeline}/>
+    <div className="fv-status-tools"><StatusTag/>{saved && <Tag tone="green">✓ Saved</Tag>}<IconButton icon="gear" label="Open pause menu" onClick={openPause}/></div>
+    <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
+    <main id="town-main" className="fv-game-flow" aria-label="Financial Town game">
     {store.lastActionError && <p className="action-error pixel-panel" role="alert">{store.lastActionError}</p>}
     {monthBanner && <div className="month-banner pixel-panel" role="status">Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</div>}
     {tipStep >= 0 && <aside className={`coach-tip coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
@@ -137,8 +138,8 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     }
     {finishing && <div className="finish-overlay" role="status"><div className="pixel-panel"><h2>Counting 1,000 possible futures…</h2><p aria-hidden="true">● ● ● ● ●</p></div></div>}
     {game.status === 'finished' && !finishing && <div className="completion-banner pixel-panel"><p>Your {config.durationMonths} months are complete.</p><button className="pixel-button pixel-button--gold" onClick={() => void beginFinish()}>Review your story →</button></div>}
-    </FullscreenGameView>
+    </main>
     <div className="activity-area"><ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={()=>store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/></div>
-    <footer className="simulation-footer"><span>Fictional educational simulation · Assumptions are illustrative</span></footer>
+    <HudFooter/>
   </GameStage>
 }
