@@ -104,12 +104,12 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
       if (e.status === 429) return err(429, 'rate_limited', 'Model rate limited');
       if (e.status === 504) return err(504, 'timeout', 'Model request timed out');
       if (e.status === 401 || e.status === 403) return err(502, 'upstream_error', 'AI credentials rejected');
-      return err(502, 'upstream_error', `Model error ${e.status}: ${e.message.slice(0, 120)}`);
+      return err(502, 'upstream_error', `Model error ${e.status}`);
     }
     if (e instanceof Anthropic.RateLimitError) return err(429, 'rate_limited', 'Model rate limited');
     if (e instanceof Anthropic.APIConnectionTimeoutError) return err(504, 'timeout', 'Model request timed out');
     if (e instanceof Anthropic.AuthenticationError) return err(502, 'upstream_error', 'AI credentials rejected');
     if (e instanceof Anthropic.APIError) return err(502, 'upstream_error', `Model error ${e.status ?? ''}`.trim());
-    return err(502, 'upstream_error', e instanceof Error ? e.message.slice(0, 200) : 'Unknown error');
+    return err(502, 'upstream_error', 'Model request failed');
   }
 }

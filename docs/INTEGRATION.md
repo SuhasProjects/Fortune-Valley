@@ -64,3 +64,7 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 ## Theme tokens
 
 `src/styles/pixel-tokens.css` defines `--pixel`, palette and chart series colors (`--ft-series-*`). Use them in Tailwind via `bg-[var(--ft-panel)]` etc., and in Recharts via `stroke="var(--ft-series-etf)"`. Integer pixel scaling only; `image-rendering: pixelated` on sprites.
+
+## Core reliability update
+
+No schema fields or existing exports changed. Financial transfers now conserve cents using normalized largest-remainder allocation (ties: stock, bond, ETF). Config/assumption and action/event inputs are copied, so caller edits cannot rewrite the active run or replay history. Initial insurance and policy plan ids must agree. Malformed assumptions/configurations fail before simulation. Monte Carlo rejects noninteger/out-of-range path counts (1–10,000), months (1–240), and unsafe integer seeds rather than clamping or looping indefinitely. Narrative event enqueue validates buildings, option ids/effects, source and expiry; Type A shocks remain engine-only. Type B `none` choices are recorded for timeline and replay. Provider exception text is never forwarded to the browser.

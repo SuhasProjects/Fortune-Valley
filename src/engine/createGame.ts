@@ -25,7 +25,7 @@ export function createGame(config: GameConfig): GameState {
     taxProfile: init.taxProfile,
     marketState: { lastMonthlyReturns: { stock: 0, bond: 0, etf: 0 }, index: { stock: 1, bond: 1, etf: 1 } },
     policy: init.policy,
-    assumptions: config.assumptions,
+    assumptions: structuredClone(config.assumptions),
     activeEvents: [],
     ledger: [],
     notifications: [],

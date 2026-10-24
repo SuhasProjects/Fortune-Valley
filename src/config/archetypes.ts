@@ -110,7 +110,7 @@ export function archetypeConfig(id: ArchetypeId, seed: number, opts: { durationM
     startMonth: opts.startMonth ?? '2026-01',
     durationMonths: opts.durationMonths ?? DEFAULT_DURATION_MONTHS,
     seed,
-    assumptions: DEFAULT_ASSUMPTIONS,
+    assumptions: structuredClone(DEFAULT_ASSUMPTIONS),
     initialState: structuredClone(a.initialState),
     narrativeFocus: [...a.narrativeFocus],
   };

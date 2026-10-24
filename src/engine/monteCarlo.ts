@@ -14,7 +14,7 @@
  *    `replayFallbacks`. The persistent policy (contributions etc.) continues as-is.
  */
 import type { GameConfig, GameState, MonteCarloComparison, MonteCarloResult, MonteCarloSummary, PolicyLogEntry } from '@/types/domain';
-import { DEFAULT_MONTE_CARLO_PATHS } from '@/config/defaults';
+import { BOUNDS, DEFAULT_MONTE_CARLO_PATHS } from '@/config/defaults';
 import { netWorthOf } from './accounting';
 import { applyAction } from './actions';
 import { advanceMonth } from './advanceMonth';
@@ -28,6 +28,12 @@ export interface MonteCarloOptions {
   seed?: number;
   /** Horizon override; defaults to observed months played (or config duration if none). */
   months?: number;
+}
+
+function validateSimulationOptions(paths: number, months: number, seed: number): void {
+  if (!Number.isInteger(paths) || paths < 1 || paths > 10_000) throw new Error('Monte Carlo paths must be an integer from 1 to 10000');
+  if (!Number.isInteger(months) || months < 1 || months > BOUNDS.durationMonthsMax) throw new Error(`Monte Carlo months must be an integer from 1 to ${BOUNDS.durationMonthsMax}`);
+  if (!Number.isSafeInteger(seed)) throw new Error('Monte Carlo seed must be a safe integer');
 }
 
 export function quantile(sorted: number[], q: number): number {
@@ -117,10 +123,11 @@ export function assumptionsSummary(config: GameConfig): string[] {
  */
 export function runMonteCarlo(config: GameConfig, policyLog: PolicyLogEntry[], observedState: GameState, options: MonteCarloOptions = {}): MonteCarloResult {
   const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now();
-  const paths = Math.max(1, Math.floor(options.paths ?? DEFAULT_MONTE_CARLO_PATHS));
+  const paths = options.paths ?? DEFAULT_MONTE_CARLO_PATHS;
   const seed = options.seed ?? config.seed;
   const playedMonths = observedState.monthIndex;
   const months = options.months ?? (playedMonths > 0 ? playedMonths : config.durationMonths);
+  validateSimulationOptions(paths, months, seed);
   const outcomes = runPaths(config, policyLog, seed, paths, months);
   const summary = summarize(outcomes, months);
   const observedNetWorth = netWorthOf(observedState);
@@ -150,8 +157,9 @@ export function compareStrategies(
   labels: { a: string; b: string },
   options: MonteCarloOptions & { months: number },
 ): MonteCarloComparison {
-  const paths = Math.max(1, Math.floor(options.paths ?? DEFAULT_MONTE_CARLO_PATHS));
+  const paths = options.paths ?? DEFAULT_MONTE_CARLO_PATHS;
   const seed = options.seed ?? config.seed;
+  validateSimulationOptions(paths, options.months, seed);
   const oa = runPaths(config, logA, seed, paths, options.months);
   const ob = runPaths(config, logB, seed, paths, options.months);
   const diffs = oa.map((o, i) => o.ending - (ob[i]?.ending ?? 0)).sort((x, y) => x - y);
