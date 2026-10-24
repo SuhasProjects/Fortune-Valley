@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+@import './pixel-tokens.css';
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--ft-bg);
+  color: var(--ft-ink);
+  font-family: var(--ft-font-body);
+  image-rendering: pixelated;
+}
