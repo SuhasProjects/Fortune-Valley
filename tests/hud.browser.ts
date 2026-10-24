@@ -21,7 +21,11 @@ for (const scale of [3, 4, 6]) {
     })
     expect(invalidFonts).toEqual([])
     expect(await page.evaluate(() => [...document.fonts].filter(font => font.status === 'error').map(font => font.family))).toEqual([])
-    const brokenImages = await page.locator('img').evaluateAll(images => (images as HTMLImageElement[]).filter(image => !image.complete || image.naturalWidth === 0).map(image => image.src))
+    // Wait for every sprite to finish loading (the gallery shows ~120 icons) before judging which are broken.
+    const brokenImages = await page.locator('img').evaluateAll(async images => {
+      await Promise.all((images as HTMLImageElement[]).map(image => image.complete ? null : new Promise(resolve => { image.onload = image.onerror = resolve })))
+      return (images as HTMLImageElement[]).filter(image => image.naturalWidth === 0).map(image => image.src)
+    })
     expect(brokenImages).toEqual([])
     await page.getByRole('button', {name:'Timeline'}).focus()
     await page.keyboard.press('Tab')
