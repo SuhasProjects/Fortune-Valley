@@ -10,10 +10,10 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 import type { AiErrorResponse, AiResponse } from '../../src/types/domain';
-import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM } from './prompts';
-import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas';
-import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible';
-import { allowRequest, MAX_BODY_BYTES } from './rateLimit';
+import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM } from './prompts.js';
+import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas.js';
+import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible.js';
+import { allowRequest, MAX_BODY_BYTES } from './rateLimit.js';
 
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
 export interface HandlerEnv {

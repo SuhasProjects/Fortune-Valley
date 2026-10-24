@@ -2,7 +2,7 @@
  * Vercel serverless function: POST /api/ai. Owner: Agent 1.
  * Reads AI_API_KEY / AI_MODEL / AI_ENABLED from the server environment only.
  */
-import { handleAiRequest } from './_lib/handler';
+import { handleAiRequest } from './_lib/handler.js';
 
 interface VercelLikeRequest { method?: string; body?: unknown; headers?: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } }
 interface VercelLikeResponse { status(code: number): VercelLikeResponse; json(body: unknown): void; setHeader(k: string, v: string): void }
