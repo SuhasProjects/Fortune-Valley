@@ -1,5 +1,6 @@
 ﻿export { BuildingPanel, panelRegistry } from './panelRegistry';
 export { PanelShell } from './PanelShell';
+export { BuildingWindow } from './BuildingWindow';
 export { PolicyPreview } from './PolicyPreview';
 export { BankPanel } from './canonical/BankPanel';
 export { MarketPanel } from './canonical/MarketPanel';
