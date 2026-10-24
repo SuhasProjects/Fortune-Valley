@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { scenarios } from './data/scenarios'
-import { EventCard, GameClock, NotificationStack, TimelineDrawer, monthLabel, usd } from './components/flow'
+import { GameClock, NotificationStack, TimelineDrawer, monthLabel, usd } from './components/flow'
 import { selectNetWorth, useGameStore } from './stores/useGameStore'
 import type { BuildingTarget } from './types/domain'
+import { ConnectedBuildingPanel } from './components/panels/ConnectedBuildingPanel'
 
 const buildingMeta: Record<BuildingTarget, { icon: string; title: string; hint: string }> = { bank: { icon: '🏦', title: 'Pine Bank', hint: 'Savings & debt' }, office: { icon: '🏢', title: 'Town Office', hint: 'Pay & career' }, home: { icon: '🏡', title: 'Home', hint: 'Rent & budget' }, hospital: { icon: '🏥', title: 'Health House', hint: 'Coverage & claims' }, market: { icon: '📈', title: 'Market Hall', hint: 'Investments' } }
 export default function App() {
@@ -16,7 +17,7 @@ export default function App() {
     <div className="bottom-controls"><GameClock status={game.status} onAdvance={store.advanceOneMonth} onPause={store.setPaused} onFinish={store.finishGame}/></div>
     <NotificationStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/>
     <TimelineDrawer open={store.timelineOpen} entries={game.timeline} onClose={store.closeTimeline}/>
-    {store.openBuildingId && <div className="drawer-backdrop" onMouseDown={e => e.target === e.currentTarget && store.closeBuilding()}><section className="building-panel pixel-panel" role="dialog" aria-modal="true"><button className="icon-button close" onClick={store.closeBuilding}>×</button><span className="big-icon">{buildingMeta[store.openBuildingId].icon}</span><h2>{buildingMeta[store.openBuildingId].title}</h2><p>{buildingMeta[store.openBuildingId].hint}</p>{game.activeEvent?.buildingTarget === store.openBuildingId ? <EventCard event={game.activeEvent} onChoose={index => store.dispatchAction(game.activeEvent!.options[index].action)}/> : <p className="empty-copy">No decision is waiting here. Detailed financial controls plug into this panel through the shared store.</p>}</section></div>}
+    {store.openBuildingId && <div className="drawer-backdrop" onMouseDown={e => e.target === e.currentTarget && store.closeBuilding()}><section className="building-panel pixel-panel" role="dialog" aria-modal="true" aria-label={buildingMeta[store.openBuildingId].title}><button className="icon-button close" aria-label="Close building" onClick={store.closeBuilding}>×</button><ConnectedBuildingPanel building={store.openBuildingId}/></section></div>}
     {store.finishPayload && <div className="drawer-backdrop"><section className="finish-card pixel-panel" role="dialog"><h2>Story ready for simulation</h2><p>You played {game.monthIndex} months and recorded {game.replayLog.length} replayable policy decisions.</p><strong>Observed net worth: {usd(netWorth)}</strong><p>The reveal module can now run 1,000 seeded paths from this exact payload.</p><button className="pixel-button" onClick={store.resetGame}>Return to start</button></section></div>}
     <div className="disclaimer">Fictional educational simulation · Illustrative assumptions</div>
   </main>

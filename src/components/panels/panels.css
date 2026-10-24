@@ -1,0 +1,32 @@
+.ft-panel { --pixel: 4px; --ink: #352d26; --paper: #fff2cc; --edge: #67472e; --green: #315441; box-sizing: border-box; width: 100%; max-width: 860px; margin: auto; padding: clamp(16px, 4vw, 32px); color: var(--ink); background: var(--paper); border: calc(var(--pixel) * 2) solid var(--edge); box-shadow: 4px 4px 0 #b98749, 8px 8px 0 var(--ink); font-family: 'Courier New', monospace; line-height: 1.6; }
+.ft-panel *, .ft-panel *::before, .ft-panel *::after { box-sizing: border-box; }
+.ft-panel h2 { font-size: clamp(24px, 5vw, 34px); line-height: 1.15; margin: 12px 0; letter-spacing: -1px; }
+.ft-panel h3 { font-size: 20px; margin: 12px 0; } .ft-panel h4 { font-size: 18px; margin: 0 0 12px; }
+.ft-panel p { margin: 12px 0; } .ft-kicker { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.ft-panel header { border-bottom: 4px solid #c9a66c; padding-bottom: 12px; margin-bottom: 24px; }
+.ft-panel footer { font-size: 12px; border-top: 4px solid #c9a66c; padding-top: 16px; margin-top: 28px; }
+.ft-card { padding: 16px; margin: 20px 0; border: 4px solid #b18b54; background: #fffae8; box-shadow: 4px 4px 0 #e1c38c; }
+.ft-card .ft-card { box-shadow: none; border-width: 0; padding: 0; margin-bottom: 0; }
+.ft-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 16px; margin: 20px 0; }
+.ft-stats dt { font-size: 13px; } .ft-stats dd { margin: 4px 0; font-weight: bold; font-size: 20px; overflow-wrap: anywhere; }
+.ft-stat { border-left: 4px solid #b18b54; padding-left: 12px; }
+.ft-panel small { display: block; font-size: 12px; }
+.ft-muted { color: #655744; font-size: 13px; } .ft-error { color: #8b2924; font-size: 13px; }
+.ft-panel label { display: block; font-weight: 700; font-size: 14px; }
+.ft-panel input, .ft-panel select { min-height: 44px; max-width: 100%; width: 100%; border: 4px solid #907149; border-radius: 0; color: var(--ink); background: #fffdf4; padding: 8px; font: inherit; }
+.ft-panel button { min-height: 44px; padding: 8px 16px; border: 4px solid #243f31; border-radius: 0; color: #fff9e5; background: var(--green); box-shadow: 0 4px 0 #182f24; font: bold 14px/1.5 'Courier New', monospace; cursor: pointer; }
+.ft-panel button:hover:not(:disabled) { background: #406e52; } .ft-panel button:active:not(:disabled) { transform: translateY(4px); box-shadow: none; }
+.ft-panel :disabled { opacity: .6; cursor: not-allowed; }
+.ft-panel :focus-visible { outline: 4px solid #284d98; outline-offset: 4px; }
+.ft-input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .ft-input-row input { flex: 1; min-width: 100px; width: 120px; }
+.ft-weight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 16px; }
+.ft-panel fieldset { min-width: 0; margin: 16px 0; padding: 12px; border: 2px solid #b18b54; }
+.ft-panel legend { font-size: 13px; padding: 0 8px; }
+.ft-panel summary { cursor: pointer; font-weight: 700; min-height: 44px; padding: 8px 0; }
+.ft-feedback { min-height: 28px; font-size: 13px; margin-top: 12px; }
+.ft-event { border-color: #6b763a; background: #f3f2d4; } .ft-choices { display: flex; flex-wrap: wrap; gap: 16px; }
+.ft-choices > div { flex: 1; min-width: min(100%, 160px); } .ft-choices small { margin-top: 8px; }
+.ft-history { list-style: none; padding: 0; } .ft-history li { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 2px dashed #c9a66c; } .ft-history span { display: block; } .ft-history strong { white-space: nowrap; }
+.ft-table-wrap { overflow-x: auto; } .ft-panel table { border-collapse: collapse; width: 100%; font-size: 13px; } .ft-panel caption { text-align: left; margin: 12px 0; } .ft-panel th, .ft-panel td { text-align: left; border-bottom: 2px solid #c9a66c; padding: 12px 8px; }
+.ft-flows > div { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; } .ft-flows dd { margin: 0; text-align: right; }
+@media (max-width: 480px) { .ft-panel { padding: 16px 12px; } .ft-card { padding: 12px; } .ft-input-row button { width: 100%; } .ft-history li { flex-wrap: wrap; } }
