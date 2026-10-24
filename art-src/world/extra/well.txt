@@ -1,0 +1,21 @@
+size 16x18
+anchor 8,17
+--- 0
+................
+....kkkkkkkk....
+...kbnwwwwWk....
+..kwkkkkkkkkwk..
+..kwk......kwk..
+..kWk......kWk..
+..kWk......kWk..
+..kWk..UU..kWk..
+..kWkkkkkkkkWk..
+..kWwsssssswWk..
+.kkwzzzzzzzzwkk.
+.kzsssssssssszk.
+.kssSSSSSSSSssk.
+.kzsssssssssszk.
+..kSSSSSSSSSSk..
+...kkkkkkkkkk...
+................
+................

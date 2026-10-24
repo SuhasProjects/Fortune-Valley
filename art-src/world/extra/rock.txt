@@ -1,0 +1,10 @@
+size 10x7
+anchor 5,6
+--- 0
+..........
+...kkkk...
+..kzzssk..
+.kzssSSSk.
+.kssSSSSk.
+..kkkkkk..
+..........

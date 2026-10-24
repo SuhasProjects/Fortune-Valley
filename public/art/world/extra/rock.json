@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/rock.png",
+  "w": 10,
+  "h": 7,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    5,
+    6
+  ]
+}

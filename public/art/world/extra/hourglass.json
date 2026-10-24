@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/extra/hourglass.png",
+  "w": 9,
+  "h": 12,
+  "frames": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+  ],
+  "speed": 180
+}

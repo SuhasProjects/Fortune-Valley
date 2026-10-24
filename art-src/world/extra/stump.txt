@@ -1,0 +1,11 @@
+size 9x8
+anchor 4,7
+--- 0
+.........
+..kkkkk..
+.kbnnbWk.
+.knwwwWk.
+.kwwWWWk.
+..kWWWk..
+..kkkkk..
+.........
