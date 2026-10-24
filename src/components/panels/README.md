@@ -1,5 +1,7 @@
 # Financial Town panels — integrated handoff
 
+The branch is now published directly in the shared team repository as `SuhasProjects/financegamething:agent3-panels`, in addition to the fork. Its latest sync includes e50a76f and illustrated town 9cd321c, with the connected panels preserved. Current integration checks: 69 tests, typecheck/build, and four root desktop/mobile browser checks pass.
+
 ## Latest panel UX update
 
 Pulled archetype budget tuning from upstream/main 7879fb3. Bank now exposes the existing canonical transfer, set_extra_debt_payment, and set_min_cash_buffer actions under collapsible sections. Transfers and extra debt payments are one-time; recurring extra debt and cash buffer settings persist. The contribution buffer only limits savings/investment contributions, not bills, debt service, or shocks. No financial engine/schema changes were made.

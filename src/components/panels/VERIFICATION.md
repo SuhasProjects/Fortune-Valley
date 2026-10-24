@@ -1,5 +1,11 @@
 # Verification — October 24, 2026
 
+## Shared-repository checkpoint
+
+The completed Bank UX was published as 3f4e94f to both SuhasProjects/financegamething:agent3-panels and the user's fork. Subsequently merged shared-main e50a76f (including the explanation-enabled store) and frontendpixelart 9cd321c (illustrated backdrop and multi-building badges), retaining ConnectedBuildingPanel as the default content.
+
+This integrated version passes typecheck, production build, 69 unit/integration tests, and all four root desktop/mobile browser checks. Full-town screenshots were regenerated. The Bank-specific browser suite also passed its two viewport projects in the preceding UX checkpoint. No force pushes or shared-main rewrites were used.
+
 ## Latest Bank UX verification
 
 - Pulled archetype tuning 7879fb3 from upstream/main.
