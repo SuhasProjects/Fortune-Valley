@@ -39,7 +39,7 @@ netWorthOf(state) === cash + savings + stock + bond + etf − Σ debts   // the 
   - Home: `set_budget` (discretionary), `set_housing`; show `state.household`.
   - Hospital/Insurance: `set_insurance(line, planId|null)` using `state.assumptions.insurancePlans`; show claims from `state.realizedShocks`.
 - **Agent 4 flow**: notifications = `state.notifications` (kind `info` is routine; show the last N unread). Timeline = `state.timeline` (every entry has `netWorthAfter`; `action` holds the structured decision). Events = `state.activeEvents` (array; Type A are acknowledgements, Type B are decisions; `expiresAtMonth` is inclusive). Dispatch `apply_event_option` / `dismiss_event`.
-- **Agent 5 reveal**: consume `MonteCarloResult` from `useGameStore(s => s.finishPayload?.monteCarlo)`. `endingNetWorths` is sorted ascending (histogram-ready); `bands[m]` gives p10/median/p90 per month for a fan chart; `observedNetWorth` is the engine's actual value and `percentileOfObserved` = share of paths that ended **below** it (only defined when `observedHorizonMatches`). Always print `assumptionsSummary` and never describe the percentile as a score. Optional `comparison` for paired A/B.
+- **Agent 5 reveal**: consume `MonteCarloResult` from `useGameStore(s => s.finishPayload?.monteCarlo)`. `endingNetWorths` is sorted ascending (histogram-ready); `bands[m]` gives p10/median/p90 per month for a fan chart; `observedNetWorth` is the engine's actual value and `percentileOfObserved` = share of paths that ended **below** it (only defined when `observedHorizonMatches`). Always print `assumptionsSummary` and never describe the percentile as a score. Optional `comparison` for paired A/B. `finishPayload.explanation` (filled asynchronously by `requestExplanation()`, called automatically by `finishGame()`) holds the AI or offline-template explanation with its `source` label — show it, labeled, when present.
 
 ## Actions (discriminated union)
 
@@ -56,6 +56,10 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 ## AI gateway
 
 `POST /api/ai` with body `AiRequest` → `AiResponse` or `AiErrorResponse` (see domain.ts). Env (server only): `AI_API_KEY`, `AI_MODEL` (default `claude-opus-5-5`), `AI_ENABLED`, `AI_TIMEOUT_MS`. Set `VITE_AI_OFFLINE=true` to force client fallback. Browser code never sees the key.
+
+## Town shell (Agent 2)
+
+`App({ panels?, renderReveal? })`: Agent 3 passes `panels` as a partial `Record<BuildingId, ReactNode>`; Agent 5 passes `renderReveal(payload: FinishPayload)`. `TownScene` takes `eventBuildings: BuildingId[]`; `PanelHost` is the accessible dialog every panel renders inside. See `docs/TOWN_HANDOFF.md`.
 
 ## Theme tokens
 

@@ -78,6 +78,16 @@ describe('game store', () => {
     expect(s.finishPayload?.monteCarlo.pathsCompleted).toBe(1000);
     expect(s.finishPayload?.monteCarlo.observedNetWorth).toBeCloseTo(s.finishPayload!.monteCarlo.observedNetWorth);
   });
+  it('fills an explanation (offline template when the gateway is unavailable) after finishing', async () => {
+    useGameStore.getState().startGame(scenarios[1]!);
+    for (let i = 0; i < 3; i++) useGameStore.getState().advanceOneMonth();
+    useGameStore.getState().finishGame();
+    await useGameStore.getState().requestExplanation();
+    const payload = useGameStore.getState().finishPayload!;
+    expect(payload.explanation?.source).toBe('fallback');
+    expect(payload.explanation?.text).toMatch(/median ending net worth/i);
+    expect(payload.explanation?.text).toMatch(/illustrative/);
+  });
   it('does not retain personalized free text in game state', async () => {
     const privateText = 'my private details about a student loan';
     const result = await useGameStore.getState().generatePersonalized(privateText);
