@@ -34,7 +34,7 @@ export function MarketPanel({ state, dispatch }: PanelProps) {
       <button disabled={disabled || !!contributionError}>Save investment contribution</button>
     </form></details>{task.feedback}
   </>} consequence={<><p>Draft investment contribution: {money(draftPolicy.investmentContributionPerMonth)} / month. Saving an allocation changes future contributions; it does not rebalance existing positions. A diversified equity ETF may hold stocks and can fall in value.</p><PolicyPreview state={state} draftPolicy={draftPolicy} /></>} details={<>
-    <table><caption>Illustrative annual assumptions; not guaranteed returns</caption><thead><tr><th scope="col">Asset</th><th scope="col">Expected return assumption</th><th scope="col">Volatility assumption</th></tr></thead><tbody>{ASSET_CLASSES.map(asset => <tr key={asset}><th scope="row">{labels[asset]}</th><td>{percent(state.assumptions.assets[asset].expectedAnnualReturn)}</td><td>{percent(state.assumptions.assets[asset].annualVolatility)}</td></tr>)}</tbody></table>
+    <table><caption>Illustrative annual assumptions; not forecasts</caption><thead><tr><th scope="col">Asset</th><th scope="col">Expected return assumption</th><th scope="col">Volatility assumption</th></tr></thead><tbody>{ASSET_CLASSES.map(asset => <tr key={asset}><th scope="row">{labels[asset]}</th><td>{percent(state.assumptions.assets[asset].expectedAnnualReturn)}</td><td>{percent(state.assumptions.assets[asset].annualVolatility)}</td></tr>)}</tbody></table>
     <LedgerHistory state={state} categories={['investment_contribution', 'investment_return']} />
   </>} />;
 }

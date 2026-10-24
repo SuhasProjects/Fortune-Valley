@@ -4,13 +4,15 @@ Read against src/types/domain.ts, src/fixtures/index.ts, and the current engine/
 
 ## Shared pixel UI kit — owner: Agent 2 / kit owner
 
-No exported PixelPanel, Button, Input, Slider, Bar, or Toast kit exists in the checkout or fetched upstream/main tree. src/styles/pixel-tokens.css supplies tokens, not React components.
+No exported PixelPanel, Button, Input, Slider, Bar, or Toast kit exists in the checkout or any fetched team branch, including upstream/main, agent1-core, agent4-flow, and frontendpixelart. Checked file paths and component exports. src/styles/pixel-tokens.css supplies tokens, not React components.
 
 **Requested:** the canonical import path and supported component props. TODO(shared-ui-kit) marks the semantic shell/control boundaries. Until the owner supplies the kit, the reduced panels are an explicitly unskinned semantic integration scaffold. They add no local CSS, substitute pixel components, palette, gradients, shadows, fonts, or charts. Final pixel-kit acceptance remains blocked by this dependency.
 
 ## Live policy preview — owner: Agent 1
 
 The engine does not export previewPolicy(state, draftPolicy), and no canonical preview result type exists. **Requested:** that selector, its return type, and which draft changes it supports. PolicyPreview renders a clearly labeled unavailable stub and never generates runway, cash buffer, 12-month balances, or other projection numbers. Every draft is a canonical Policy.
+
+Policy has no discretionary budget or one-time debt payment field. Agent 1 must specify how those action drafts enter a preview; the UI does not append invented fields. The fetched engine branch now advertises previewMonth, but a one-month what-if is not the requested 12-month runway selector and is not available in this checkout's API. It is not mislabeled as a 12-month preview.
 
 ## Monthly pay summary — owner: Agent 1
 
