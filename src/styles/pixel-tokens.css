@@ -1,0 +1,58 @@
+/*
+ * Pixel-art theme tokens (Stardew-like palette). Shared by ALL agents so the
+ * town, panels, notifications AND charts read as one consistent system.
+ * Agent 2 may extend; do not rename existing tokens without telling the team.
+ *
+ * Rules: integer scaling only (--pixel multiples), image-rendering: pixelated on
+ * sprites, no sub-pixel borders, no blur/box-shadows with soft radii.
+ */
+:root {
+  --pixel: 4px;
+  --px2: calc(var(--pixel) * 2);
+  --px3: calc(var(--pixel) * 3);
+  --px4: calc(var(--pixel) * 4);
+
+  /* Palette */
+  --ft-bg: #2b2117;          /* dark wood */
+  --ft-panel: #f3e2b8;       /* parchment */
+  --ft-panel-dark: #d9b97c;  /* parchment shadow */
+  --ft-ink: #3b2a1a;         /* text on parchment */
+  --ft-ink-light: #f7efdc;   /* text on dark */
+  --ft-border: #5a3a1e;      /* wood border */
+  --ft-accent: #e5a33a;      /* gold */
+  --ft-grass: #6fae3f;
+  --ft-grass-dark: #4b7f2a;
+  --ft-water: #4a90c8;
+  --ft-positive: #58b847;
+  --ft-negative: #d9534f;
+  --ft-warning: #e8b043;
+  --ft-info: #6fa8dc;
+
+  /* Chart series (also used by Recharts via CSS vars) */
+  --ft-series-cash: #e5a33a;
+  --ft-series-savings: #6fa8dc;
+  --ft-series-stock: #d9534f;
+  --ft-series-bond: #8e7cc3;
+  --ft-series-etf: #58b847;
+  --ft-series-debt: #a05a2c;
+  --ft-series-band: rgba(111, 174, 63, 0.35);
+  --ft-series-observed: #ffffff;
+
+  --ft-font-body: 'Press Start 2P', 'VT323', ui-monospace, monospace;
+}
+
+.pixel-border {
+  border: var(--px2) solid var(--ft-border);
+  box-shadow: inset 0 0 0 var(--pixel) var(--ft-panel-dark);
+  border-radius: 0;
+}
+.pixel-panel {
+  background: var(--ft-panel);
+  color: var(--ft-ink);
+}
+.pixel-icon {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+}
+.pixel-sprite { image-rendering: pixelated; image-rendering: crisp-edges; }

@@ -1,58 +1,553 @@
-export type BuildingTarget = 'bank' | 'office' | 'home' | 'hospital' | 'market'
-export type GameStatus = 'setup' | 'playing' | 'paused' | 'finished'
+/**
+ * Financial Town — authoritative domain types.
+ * Owner: Agent 1. Any structural change here must be announced to the team and
+ * reflected in docs/INTEGRATION.md and src/fixtures/* in the same commit.
+ *
+ * Conventions
+ * - All money is USD in whole-dollar floats (we round to cents at write time).
+ * - `monthIndex` is 0-based from game start. `startMonth` + `monthIndex` gives the calendar label.
+ * - Rates are annual decimals unless the field name says `Monthly` (e.g. 0.07 = 7%/yr).
+ * - amountSigned: positive = inflow to the named account, negative = outflow.
+ * - Net worth invariant: cash + savings + stock + bond + etf − Σ debt balances.
+ */
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Identifiers & enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ArchetypeId = 'college_student' | 'entry_worker' | 'professional' | 'young_family';
+export type GameMode = 'sandbox' | 'personalized';
+export type GameStatus = 'setup' | 'playing' | 'paused' | 'finished';
+
+export type BuildingId = 'bank' | 'office' | 'home' | 'hospital' | 'market';
+
+export type AssetClass = 'stock' | 'bond' | 'etf';
+export const ASSET_CLASSES: readonly AssetClass[] = ['stock', 'bond', 'etf'] as const;
+
+/** Allocation weights over asset classes. Must sum to 1 (±0.001). */
+export type Allocation = Record<AssetClass, number>;
+
+export type InsuranceLine = 'health' | 'auto' | 'renters';
+export const INSURANCE_LINES: readonly InsuranceLine[] = ['health', 'auto', 'renters'] as const;
+
+export type DebtKind = 'student_loan' | 'credit_card' | 'auto_loan' | 'personal_loan' | 'overdraft';
+
+export type EmploymentStatus = 'employed' | 'unemployed' | 'student';
+export type HousingKind = 'rent' | 'dorm' | 'family' | 'own';
+
+/** Where money is drawn from when cash is insufficient (in order). */
+export type FundingSource = 'savings' | 'investments' | 'borrow';
+
+export type ShockKind = 'medical' | 'auto' | 'home' | 'job_loss';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Assumptions (demo, configurable, illustrative — never real-world forecasts)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AssetAssumption {
+  /** Expected annual arithmetic return, e.g. 0.07 */
+  expectedAnnualReturn: number;
+  /** Annual volatility (std dev of log return), e.g. 0.16 */
+  annualVolatility: number;
+  label: string;
+}
+
+export interface TaxBracket {
+  /** Upper bound of annual taxable income for this bracket; null = no cap. */
+  upTo: number | null;
+  rate: number;
+}
+
+export interface TaxAssumptions {
+  kind: 'illustrative_progressive';
+  standardDeductionAnnual: number;
+  brackets: TaxBracket[];
+  /** Flat payroll (FICA-like) rate applied to gross, illustrative. */
+  payrollRate: number;
+  note: string;
+}
+
+export interface InsurancePlan {
+  id: string;
+  line: InsuranceLine;
+  name: string;
+  monthlyPremium: number;
+  deductible: number;
+  /** Share of cost the insured still pays after the deductible (0..1). */
+  coinsurance: number;
+  /** Max insured out-of-pocket per claim; null = none. */
+  outOfPocketMax: number | null;
+  /** Max insurer payout per claim; null = none. */
+  coverageCap: number | null;
+}
+
+export interface ShockAssumption {
+  kind: Exclude<ShockKind, 'job_loss'>;
+  /** Probability the shock occurs in a given month (independent across months). */
+  monthlyIncidence: number;
+  /** Lognormal cost parameters: median cost and dispersion sigma (log space). */
+  costMedian: number;
+  costSigma: number;
+  costMin: number;
+  costMax: number;
+  coveredBy: InsuranceLine;
+  label: string;
+}
+
+export interface EmploymentAssumptions {
+  /** Monthly probability of involuntary job loss while employed. */
+  jobLossMonthlyIncidence: number;
+  unemploymentDurationMonthsMin: number;
+  unemploymentDurationMonthsMax: number;
+  /** Fraction of prior gross monthly pay received while unemployed (capped). */
+  unemploymentReplacementRate: number;
+  unemploymentBenefitMonthlyCap: number;
+  /** Annual raise applied every 12 months while employed. */
+  annualRaiseRate: number;
+}
 
 export interface Assumptions {
-  taxRate: number
-  monthlyReturn: number
-  savingsApy: number
-  shockChance: number
-  notes: string[]
+  version: 1;
+  assets: Record<AssetClass, AssetAssumption>;
+  /** Correlation of monthly log-return shocks between stock and etf, stock and bond. */
+  correlation: { stockEtf: number; stockBond: number };
+  savingsApy: number;
+  tax: TaxAssumptions;
+  insurancePlans: InsurancePlan[];
+  shocks: ShockAssumption[];
+  employment: EmploymentAssumptions;
+  /** APR charged on the overdraft debt created when cash would go negative. */
+  overdraftApr: number;
+  /** Months of essential spending the engine treats as the "liquidity shortfall" threshold (metric only). */
+  liquidityShortfallThresholdMonths: number;
+  disclaimer: string;
 }
 
-export interface Debt { id: string; name: string; balance: number; apr: number; minimumPayment: number }
-export interface InsurancePlan { id: string; name: string; premium: number; deductible: number; coverage: number }
+// ─────────────────────────────────────────────────────────────────────────────
+// Core financial state
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface Debt {
+  id: string;
+  name: string;
+  kind: DebtKind;
+  balance: number;
+  apr: number;
+  /** Required payment each month (engine pays min(balance+interest, minimumPayment + extra)). */
+  minimumPayment: number;
+}
+
+export interface Employment {
+  status: EmploymentStatus;
+  title: string;
+  grossAnnualSalary: number;
+  /** >0 while unemployed; decremented monthly. */
+  monthsUnemployedRemaining: number;
+  /** Salary to restore when re-employed. */
+  priorGrossAnnualSalary: number;
+}
+
+export interface Household {
+  housingKind: HousingKind;
+  housingMonthly: number;
+  /** Groceries, utilities, transport, etc. */
+  essentialsMonthly: number;
+  /** Player-controlled lifestyle spending. */
+  discretionaryMonthly: number;
+  dependents: number;
+}
+
+export type InsuranceState = Record<InsuranceLine, string | null>;
+
+export interface TaxProfile {
+  filingStatus: 'single' | 'married_joint';
+  note: string;
+}
+
+export interface MarketState {
+  /** Last realized monthly returns per class. */
+  lastMonthlyReturns: Allocation;
+  /** Cumulative growth index per class, starts at 1. */
+  index: Allocation;
+}
+
 export interface Policy {
-  savingsContributionPerMonth: number
-  investmentContributionPerMonth: number
-  extraDebtPaymentPerMonth: number
-  targetAllocation: { stock: number; bond: number; etf: number }
-  insurancePlanIds: string[]
-  emergencyFundingOrder: ('cash' | 'savings' | 'borrow')[]
-}
-export interface LedgerEntry { id: string; monthIndex: number; category: string; amountSigned: number; description: string }
-export interface GameNotification { id: string; monthIndex: number; kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; relatedBuilding?: BuildingTarget; read: boolean; amountSigned?: number }
-export interface TimelineEntry { id: string; monthIndex: number; type: 'choice' | 'shock' | 'milestone' | 'policy_change' | 'ai_event' | 'routine'; description: string; eventId?: string; snapshotRef?: string; data?: Record<string, unknown> }
-export type EventTemplate = 'offer_job' | 'change_housing' | 'change_insurance' | 'budget_choice' | 'loan_choice'
-export interface EventOption { id: string; label: string; action: GameAction }
-export interface GameEvent { id: string; type: 'A' | 'B'; title: string; body: string; buildingTarget: BuildingTarget; options: EventOption[]; expiresAtMonth?: number; source: 'engine' | 'ai' | 'fallback' }
-export interface ReplayAction { monthIndex: number; action: GameAction }
-
-export interface GameState {
-  monthIndex: number; status: GameStatus; cash: number; savings: number
-  investments: { stock: number; bond: number; etf: number }
-  debts: Debt[]
-  employment: { grossAnnualPay: number; status: 'employed' | 'part_time' | 'unemployed' }
-  household: { monthlyEssentialExpenses: number; rent: number }
-  insurance: InsurancePlan[]
-  taxProfile: { withholdingRate: number }
-  marketState: { lastMonthlyReturn: number }
-  activeEvent: GameEvent | null
-  ledger: LedgerEntry[]; notifications: GameNotification[]; timeline: TimelineEntry[]; policies: Policy
-  replayLog: ReplayAction[]
-  seed: number; scenarioId: string
+  savingsContributionPerMonth: number;
+  investmentContributionPerMonth: number;
+  targetAllocation: Allocation;
+  extraDebtPaymentPerMonth: number;
+  insurancePlanIds: InsuranceState;
+  /** Order to draw funds when cash is insufficient. Engine always uses cash first. */
+  emergencyFundingOrder: FundingSource[];
+  /** Cash floor the engine will not dip below for contributions (contributions are skipped/trimmed). */
+  minCashBuffer: number;
 }
 
-export interface GameConfig { scenarioId: string; title: string; description: string; mode: 'sandbox' | 'personalized'; startMonth: string; durationMonths: number; seed: number; assumptions: Assumptions; initialState: GameState; narrativeFocus: string[] }
+// ─────────────────────────────────────────────────────────────────────────────
+// Ledger, notifications, timeline
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type AccountRef = 'cash' | 'savings' | 'stock' | 'bond' | 'etf' | `debt:${string}`;
+
+export type LedgerCategory =
+  | 'salary'
+  | 'unemployment_benefit'
+  | 'tax_withholding'
+  | 'housing'
+  | 'essentials'
+  | 'discretionary'
+  | 'insurance_premium'
+  | 'debt_interest'
+  | 'debt_payment'
+  | 'savings_contribution'
+  | 'investment_contribution'
+  | 'savings_interest'
+  | 'investment_return'
+  | 'shock_cost'
+  | 'insurance_claim'
+  | 'emergency_funding'
+  | 'overdraft'
+  | 'event'
+  | 'transfer'
+  | 'loan_proceeds';
+
+export interface LedgerEntry {
+  id: string;
+  monthIndex: number;
+  category: LedgerCategory;
+  account: AccountRef;
+  amountSigned: number;
+  description: string;
+}
+
+export type NotificationKind = 'info' | 'positive' | 'negative' | 'decision';
+
+export interface GameNotification {
+  id: string;
+  monthIndex: number;
+  kind: NotificationKind;
+  summary: string;
+  details?: string;
+  relatedBuilding?: BuildingId;
+  /** Optional headline amount for the toast (display only; ledger is the source of truth). */
+  amountSigned?: number;
+  read: boolean;
+}
+
+export type TimelineEntryType = 'choice' | 'shock' | 'milestone' | 'policy_change' | 'ai_event';
+
+export interface TimelineEntry {
+  id: string;
+  monthIndex: number;
+  type: TimelineEntryType;
+  description: string;
+  eventId?: string;
+  /** Structured record of the action/choice so it can be replayed. */
+  action?: GameAction;
+  /** Net worth right after this entry. */
+  netWorthAfter: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Events (Type A = engine shocks, Type B = narrative opportunities)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Whitelisted effects an event option may carry. The engine validates bounds
+ * and applies them; no free-form balance edits are possible.
+ */
+export type EventEffect =
+  | { template: 'none' }
+  | { template: 'offer_job'; grossAnnualSalary: number; title: string }
+  | { template: 'change_housing'; housingMonthly: number; housingKind: HousingKind }
+  | { template: 'change_insurance'; line: InsuranceLine; planId: string | null }
+  | { template: 'budget_choice'; discretionaryMonthly: number }
+  | { template: 'loan_choice'; principal: number; apr: number; termMonths: number; name: string }
+  | { template: 'contribution_choice'; savingsContributionPerMonth: number; investmentContributionPerMonth: number };
+
+export type EventTemplate = EventEffect['template'];
+
+export interface EventOption {
+  id: string;
+  label: string;
+  description: string;
+  effect: EventEffect;
+}
+
+export type EventSource = 'engine' | 'ai' | 'fallback';
+
+export interface GameEvent {
+  id: string;
+  type: 'A' | 'B';
+  title: string;
+  body: string;
+  buildingTarget: BuildingId;
+  options: EventOption[];
+  createdAtMonth: number;
+  expiresAtMonth?: number;
+  source: EventSource;
+  /** For Type A: realized cost details for the timeline/learning text. */
+  shock?: RealizedShock;
+  /** Optional one-line learning focus provided by the AI director. */
+  learningNote?: string;
+}
+
+export interface RealizedShock {
+  kind: ShockKind;
+  grossCost: number;
+  insurerPaid: number;
+  outOfPocket: number;
+  planId: string | null;
+  fundedFrom: { source: 'cash' | FundingSource; amount: number }[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Actions
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type GameAction =
   | { type: 'advance_month' }
-  | { type: 'set_allocation'; allocation: Policy['targetAllocation'] }
-  | { type: 'set_contributions'; savings: number; investments: number }
+  | { type: 'set_allocation'; allocation: Allocation }
+  | { type: 'set_budget'; discretionaryMonthly: number }
+  | { type: 'set_housing'; housingMonthly: number; housingKind: HousingKind }
+  | { type: 'set_insurance'; line: InsuranceLine; planId: string | null }
+  | { type: 'set_contributions'; savingsContributionPerMonth: number; investmentContributionPerMonth: number }
+  | { type: 'set_extra_debt_payment'; amount: number }
+  | { type: 'set_min_cash_buffer'; amount: number }
   | { type: 'make_extra_payment'; debtId: string; amount: number }
-  | { type: 'set_insurance'; planIds: string[] }
+  | { type: 'transfer'; from: 'cash' | 'savings'; to: 'cash' | 'savings'; amount: number }
   | { type: 'apply_event_option'; eventId: string; optionId: string }
-  | { type: 'accept_job_offer'; eventId: string; grossAnnualPay: number }
-  | { type: 'decline_event'; eventId: string }
-  | { type: 'pause' } | { type: 'resume' } | { type: 'finish' }
+  | { type: 'dismiss_event'; eventId: string }
+  | { type: 'enqueue_event'; event: GameEvent }
+  | { type: 'mark_notifications_read' }
+  | { type: 'pause' }
+  | { type: 'resume' }
+  | { type: 'finish' };
 
-export interface FinishPayload { initialState: GameState; finalState: GameState; policyActions: ReplayAction[]; durationMonths: number; seed: number }
+export type GameActionType = GameAction['type'];
+
+export type ActionErrorCode =
+  | 'invalid_allocation'
+  | 'invalid_amount'
+  | 'insufficient_funds'
+  | 'unknown_debt'
+  | 'unknown_plan'
+  | 'unknown_event'
+  | 'unknown_option'
+  | 'event_expired'
+  | 'invalid_status'
+  | 'invalid_effect'
+  | 'duplicate_event'
+  | 'game_finished';
+
+export type ActionResult =
+  | { ok: true; state: GameState }
+  | { ok: false; code: ActionErrorCode; message: string; state: GameState };
+
+/** A logged, replayable player decision (everything except advance_month). */
+export interface PolicyLogEntry {
+  monthIndex: number;
+  action: GameAction;
+  /**
+   * For apply_event_option: the resolved effect, so Monte Carlo can replay the
+   * decision as a direct policy change even though the event itself was path-specific.
+   */
+  resolvedEffect?: EventEffect;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Game config & state
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface InitialState {
+  cash: number;
+  savings: number;
+  investments: Allocation;
+  debts: Debt[];
+  employment: Employment;
+  household: Household;
+  insurance: InsuranceState;
+  taxProfile: TaxProfile;
+  policy: Policy;
+}
+
+export interface GameConfig {
+  scenarioId: string;
+  title: string;
+  description: string;
+  mode: GameMode;
+  archetype?: ArchetypeId;
+  /** Calendar month of monthIndex 0, e.g. "2026-01". */
+  startMonth: string;
+  durationMonths: number;
+  seed: number;
+  assumptions: Assumptions;
+  initialState: InitialState;
+  /** Learning focus tags chosen by the player or inferred by AI. */
+  narrativeFocus: string[];
+  /** Which fields came from labeled defaults vs the player (personalized mode). */
+  defaultsApplied?: string[];
+}
+
+export interface GameState {
+  schemaVersion: 1;
+  scenarioId: string;
+  seed: number;
+  startMonth: string;
+  durationMonths: number;
+  monthIndex: number;
+  status: GameStatus;
+
+  cash: number;
+  savings: number;
+  investments: Allocation;
+  debts: Debt[];
+  employment: Employment;
+  household: Household;
+  insurance: InsuranceState;
+  taxProfile: TaxProfile;
+  marketState: MarketState;
+  policy: Policy;
+  assumptions: Assumptions;
+
+  activeEvents: GameEvent[];
+  ledger: LedgerEntry[];
+  notifications: GameNotification[];
+  timeline: TimelineEntry[];
+  policyLog: PolicyLogEntry[];
+  /** Net worth at the end of each month, index = monthIndex (0 = start). */
+  netWorthHistory: number[];
+  /** Months in which overdraft borrowing was needed. */
+  shortfallMonths: number[];
+  /** Realized Type A shocks, for reproducibility checks. */
+  realizedShocks: { monthIndex: number; shock: RealizedShock }[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Monte Carlo
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface MonteCarloSummary {
+  endingNetWorths: number[];
+  median: number;
+  p10: number;
+  p90: number;
+  mean: number;
+  probabilityNegativeNetWorth: number;
+  probabilityLiquidityShortfall: number;
+  /** Per-month median/p10/p90 of net worth across paths (for fan charts). */
+  bands: { monthIndex: number; p10: number; median: number; p90: number }[];
+}
+
+export interface MonteCarloComparison {
+  labelA: string;
+  labelB: string;
+  a: MonteCarloSummary;
+  b: MonteCarloSummary;
+  /** Median of per-path (A − B) ending net worth differences, paired by seed. */
+  pairedMedianDifference: number;
+  probabilityAOutperformsB: number;
+}
+
+export interface MonteCarloResult extends MonteCarloSummary {
+  seed: number;
+  pathsRequested: number;
+  pathsCompleted: number;
+  months: number;
+  /** Actual engine-computed ending net worth of the player's run. */
+  observedNetWorth: number;
+  /** Fraction of simulated paths that ended below the observed value; undefined if horizons differ. */
+  percentileOfObserved?: number;
+  observedHorizonMatches: boolean;
+  /** Count of logged actions that could not be replayed exactly and used the documented fallback. */
+  replayFallbacks: number;
+  assumptionsSummary: string[];
+  comparison?: MonteCarloComparison;
+  elapsedMs: number;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI contracts (browser ↔ server). Owned by Agent 1.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Compact, PII-free state summary sent to the AI director. */
+export interface StateSummary {
+  monthIndex: number;
+  monthLabel: string;
+  archetype?: ArchetypeId;
+  netWorth: number;
+  cash: number;
+  savings: number;
+  investmentsTotal: number;
+  debtTotal: number;
+  grossAnnualSalary: number;
+  employmentStatus: EmploymentStatus;
+  housingKind: HousingKind;
+  housingMonthly: number;
+  essentialsMonthly: number;
+  discretionaryMonthly: number;
+  insurance: InsuranceState;
+  policy: Pick<Policy, 'savingsContributionPerMonth' | 'investmentContributionPerMonth' | 'targetAllocation' | 'extraDebtPaymentPerMonth'>;
+  recentShocks: ShockKind[];
+  monthsOfEssentialsCovered: number;
+  narrativeFocus: string[];
+  /** 1 = beginner, 2 = intermediate, 3 = advanced; chosen by the engine from play so far. */
+  complexityLevel: 1 | 2 | 3;
+}
+
+export interface PersonalizedInput {
+  freeText: string;
+  age?: number;
+  grossAnnualIncome?: number;
+  monthlyRent?: number;
+  savings?: number;
+  debtBalance?: number;
+  debtApr?: number;
+  dependents?: number;
+}
+
+export type AiRequest =
+  | { kind: 'scenario'; input: PersonalizedInput }
+  | { kind: 'opportunity'; summary: StateSummary }
+  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> };
+
+/** The scenario the AI maps a prompt onto. Engine turns it into a GameConfig. */
+export interface ScenarioProposal {
+  baseArchetype: ArchetypeId;
+  title: string;
+  description: string;
+  overrides: {
+    grossAnnualSalary?: number;
+    housingMonthly?: number;
+    housingKind?: HousingKind;
+    essentialsMonthly?: number;
+    discretionaryMonthly?: number;
+    cash?: number;
+    savings?: number;
+    debts?: { name: string; kind: Exclude<DebtKind, 'overdraft'>; balance: number; apr: number; minimumPayment: number }[];
+    dependents?: number;
+    durationMonths?: number;
+  };
+  narrativeFocus: string[];
+  /** Human-readable list of fields the AI defaulted. */
+  defaultsApplied: string[];
+}
+
+export interface OpportunityProposal {
+  title: string;
+  body: string;
+  buildingTarget: BuildingId;
+  learningNote: string;
+  options: { label: string; description: string; effect: EventEffect }[];
+  expiresInMonths: number;
+}
+
+export type AiResponse =
+  | { kind: 'scenario'; source: 'ai' | 'fallback'; proposal: ScenarioProposal; warnings: string[] }
+  | { kind: 'opportunity'; source: 'ai' | 'fallback'; proposal: OpportunityProposal | null; warnings: string[] }
+  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
+
+export interface AiErrorResponse {
+  error: string;
+  code: 'invalid_request' | 'upstream_error' | 'timeout' | 'disabled' | 'schema_mismatch' | 'rate_limited';
+}

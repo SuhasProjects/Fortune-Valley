@@ -1,0 +1,6 @@
+@import 'tailwindcss';
+@import './pixel-tokens.css';
+@import './town.css';
+
+html, body, #root { min-height: 100%; }
+.pixel-sprite, .building-icon { image-rendering: pixelated; }
