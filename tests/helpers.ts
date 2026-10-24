@@ -24,6 +24,8 @@ export async function startStory(page: Page, life: 'College Student' | 'Entry-Le
 
 /** Assert the results (reveal) screen is showing after "Finish & reveal". */
 export async function expectReveal(page: Page) {
+  const finishNow = page.getByRole('button', { name: 'Finish now' })
+  if (await finishNow.isVisible()) await finishNow.click()
   await expect(page.getByRole('main', { name: 'Simulation results' })).toContainText('Same strategy, 1,000 futures')
 }
 

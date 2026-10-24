@@ -1,5 +1,8 @@
 {
-  "width": 128,
-  "height": 40,
-  "frames": 1
+  "src": "/art/title/mountain-near.png",
+  "w": 128,
+  "h": 40,
+  "frames": [
+    "0"
+  ]
 }

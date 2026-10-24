@@ -1,5 +1,4 @@
 /* Owned title layout and art. Materials come from Agent 2 or existing legacy classes. */
-@import './palette-fallback.css';
 .fv-owned { font-family:'VT323',ui-monospace,monospace; color:var(--c-outline); font-size:calc(4.5 * var(--px,4px)); font-variant-numeric:tabular-nums; }
 .fv-owned h1,.fv-owned h2,.fv-owned h3,.fv-title-menu button { font-family:'Pixelify Sans',ui-monospace,monospace; font-weight:700; }
 .fv-owned :focus-visible { outline:calc(2 * var(--px)) solid var(--c-gold); outline-offset:var(--px); }

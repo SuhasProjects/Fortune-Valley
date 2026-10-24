@@ -1,5 +1,8 @@
 {
-  "width": 6,
-  "height": 6,
-  "frames": 1
+  "src": "/art/title/pointer.png",
+  "w": 6,
+  "h": 6,
+  "frames": [
+    "0"
+  ]
 }

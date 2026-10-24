@@ -1,5 +1,8 @@
 {
-  "width": 24,
-  "height": 20,
-  "frames": 1
+  "src": "/art/title/cottage-blue.png",
+  "w": 24,
+  "h": 20,
+  "frames": [
+    "0"
+  ]
 }

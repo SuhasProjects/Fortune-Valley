@@ -13,6 +13,7 @@ afterEach(cleanup)
 describe('integrated app shell', () => {
   it('keeps the run intact across panel navigation and advances through store controls', () => {
     render(<App panels={{ bank: <p>Controlled bank content</p> }}/>)
+    fireEvent.click(screen.getByRole('button', { name: 'New Story' }))
     fireEvent.click(screen.getByRole('button', { name: /College Student/ }))
     fireEvent.click(screen.getByRole('button', { name: /Open Pine Bank/ }))
     expect(screen.getByText('Controlled bank content')).toBeTruthy()
@@ -27,6 +28,7 @@ describe('integrated app shell', () => {
   })
   it('opens full notification history and passes the actual finish payload to reveal', async () => {
     render(<App renderReveal={payload => <p>Reveal month {payload.finalState.monthIndex}</p>}/>)
+    fireEvent.click(screen.getByRole('button', { name: 'New Story' }))
     fireEvent.click(screen.getByRole('button', { name: /Entry-Level Worker/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
     fireEvent.click(screen.getByRole('button', { name: 'View all activity' }))

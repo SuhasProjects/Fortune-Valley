@@ -1,9 +1,8 @@
-import { useRef, useState, type KeyboardEvent, type ComponentType } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import type { BuildingId } from '@/types/domain'
+import { BuildingPortrait } from '@/game/art/Sprite'
 import { TitleModal } from './contracts'
 
-const portraits = import.meta.glob<{ BuildingPortrait: ComponentType<{ building: BuildingId }> }>('/src/game/art/Sprite.tsx', { eager: true })
-const Portrait = Object.values(portraits)[0]?.BuildingPortrait
 const tabs = ['How to play', 'The town', 'Controls', 'FAQ', 'About'] as const
 const steps = [
   ['Set the scene', 'Choose a starting life. Your town begins with a fictional income, living costs, savings, and debt.'],
@@ -38,7 +37,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
     <div className="fv-guide-tabs" role="tablist" aria-label="Guide chapters">{tabs.map((name, index) => <button type="button" className="pixel-button" ref={element => { refs.current[index] = element }} key={name} role="tab" id={`fv-guide-tab-${index}`} aria-controls="fv-guide-page" aria-selected={tab === index} tabIndex={tab === index ? 0 : -1} onKeyDown={event => navigate(event, index)} onClick={() => setTab(index)}>{name}</button>)}</div>
     <div role="tabpanel" id="fv-guide-page" aria-labelledby={`fv-guide-tab-${tab}`} tabIndex={0} className="fv-guide-page">
       {tab === 0 && <ol>{steps.map(([title, text]) => <li key={title}><h3>{title}</h3><p>{text}</p></li>)}</ol>}
-      {tab === 1 && buildings.map(([building, title, text]) => <article key={building}>{Portrait && <Portrait building={building}/>}<h3>{title}</h3><p>{text}</p></article>)}
+      {tab === 1 && buildings.map(([building, title, text]) => <article key={building}><BuildingPortrait building={building}/><h3>{title}</h3><p>{text}</p></article>)}
       {tab === 2 && <dl className="fv-shortcuts">{[['Space', 'Pause or resume'], ['N', 'Next month'], ['1–5', 'Open a building'], ['T', 'Timeline'], ['A', 'Activity'], ['Esc', 'Close a window or open the pause menu'], ['?', 'Guide']].map(([key, label]) => <div key={key}><dt><kbd>{key}</kbd></dt><dd>{label}</dd></div>)}</dl>}
       {tab === 3 && questions.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}
       {tab === 4 && <><h3>Fortune Valley</h3><p>A little town. A bigger perspective.</p><p>Fictional educational simulation. Assumptions are illustrative. For learning, not personal financial advice.</p><p>All returns, event probabilities, and financial assumptions are illustrative. These are learning scenarios, not forecasts.</p></>}

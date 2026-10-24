@@ -1,5 +1,9 @@
 {
-  "width": 32,
-  "height": 32,
-  "frames": 2
+  "src": "/art/title/parent.png",
+  "w": 32,
+  "h": 32,
+  "frames": [
+    "0",
+    "1"
+  ]
 }

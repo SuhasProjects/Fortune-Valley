@@ -1,5 +1,8 @@
 {
-  "width": 200,
-  "height": 56,
-  "frames": 1
+  "src": "/art/title/sign.png",
+  "w": 200,
+  "h": 56,
+  "frames": [
+    "0"
+  ]
 }

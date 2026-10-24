@@ -1,5 +1,8 @@
 {
-  "width": 20,
-  "height": 32,
-  "frames": 1
+  "src": "/art/title/pine.png",
+  "w": 20,
+  "h": 32,
+  "frames": [
+    "0"
+  ]
 }

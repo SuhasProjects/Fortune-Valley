@@ -1,5 +1,8 @@
 {
-  "width": 32,
-  "height": 16,
-  "frames": 1
+  "src": "/art/title/vine-top.png",
+  "w": 32,
+  "h": 16,
+  "frames": [
+    "0"
+  ]
 }

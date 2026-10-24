@@ -1,5 +1,8 @@
 {
-  "width": 16,
-  "height": 28,
-  "frames": 1
+  "src": "/art/title/vine-side.png",
+  "w": 16,
+  "h": 28,
+  "frames": [
+    "0"
+  ]
 }
