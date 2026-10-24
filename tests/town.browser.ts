@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test'
 test('town navigation, focus, month tick, history and finish', async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))
+  await page.route('**/api/ai', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"disabled"}' }))
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Your money. Your little world.' })).toBeVisible()
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', await page.evaluate(() => innerWidth))
@@ -24,13 +25,13 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
     await expect(button).toBeFocused()
   }
   await page.getByRole('button', { name: /Next month/ }).click()
-  await expect(page.getByText('Month 1 / 24')).toBeVisible()
+  await expect(page.getByText(/^Month 1 \/ \d+$/)).toBeVisible()
   await page.getByRole('button', { name: /Pause/ }).click()
   await expect(page.getByRole('button', { name: /Next month/ })).toBeDisabled()
   await page.getByRole('button', { name: /Resume/ }).click()
   await page.getByRole('button', { name: /Next month/ }).click()
   await page.getByRole('button', { name: /Next month/ }).click()
-  await expect(page.getByRole('button', { name: /Decision waiting/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Decision waiting/ }).first()).toBeVisible()
   await page.getByRole('button', { name: 'View all activity' }).click()
   await expect(page.getByRole('dialog', { name: 'Town activity' })).toBeVisible()
   await page.getByRole('button', { name: 'Close panel' }).click()
@@ -42,7 +43,7 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
   await page.mouse.click(2, 2)
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('button', { name: /Finish & reveal/ }).click()
-  await expect(page.getByRole('dialog', { name: 'Your next chapter' })).toContainText('1,000-path study has not been run')
+  await expect(page.getByRole('dialog', { name: 'Your next chapter' })).toContainText('Same strategy, 1,000 futures')
   await page.getByRole('button', { name: /Choose a new story/ }).click()
   await expect(page.getByRole('heading', { name: 'Your money. Your little world.' })).toBeVisible()
   expect(errors).toEqual([])

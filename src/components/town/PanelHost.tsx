@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
-import type { BuildingTarget } from '../../types/domain'
+import type { BuildingId } from '../../types/domain'
 import { buildings } from './buildings'
-export interface PanelHostProps { building?: BuildingTarget; title?: string; onClose: () => void; children: ReactNode }
+export interface PanelHostProps { building?: BuildingId; title?: string; onClose: () => void; children: ReactNode }
 export function PanelHost({ building, title, onClose, children }: PanelHostProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const heading = useId()

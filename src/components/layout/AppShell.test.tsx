@@ -20,7 +20,7 @@ describe('integrated app shell', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
     expect(useGameStore.getState().game?.monthIndex).toBe(1)
-    expect(screen.getByText('Month 1 / 24')).toBeTruthy()
+    expect(screen.getByText(`Month 1 / ${useGameStore.getState().config!.durationMonths}`)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /Pause/ }))
     expect((screen.getByRole('button', { name: /Next month/ }) as HTMLButtonElement).disabled).toBe(true)
     expect(useGameStore.getState().game?.status).toBe('paused')
