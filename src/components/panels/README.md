@@ -1,36 +1,37 @@
-﻿# Financial panels — centered parchment update
+﻿# Financial panels — current team integration
 
-The latest user request authorizes the scoped parchment presentation in scroll-panel.css. All source changes remain in src/components/panels/; the root app, host, engine, store, and AI code are unchanged.
+Based this pass on shared main 81d020c, then reapplied the approved centered parchment/help design. Agent 1's canonical engine supplies every preview/pay/claim number; no financial math, tax logic, Monte Carlo implementation, or AI code is added in the panels.
 
-## Current behavior
+## What now works
 
-- Financial dialogs are centered and up to 860px wide. Other dialog types keep their existing layout. The host override is scoped with :has(.ft-sheet).
-- A warm yellow parchment frame uses a stepped clip-path for lightly torn edges, with no image downloads or soft-shadow/gradient dependency.
-- Main views show balances, required inputs, Save buttons, and short monthly/one-time amounts. History stays collapsed.
-- The corner ? opens a short guide. Escape or its close button restores focus to ?. A second Escape closes the host modal. Clicking elsewhere dismisses help.
-- All amounts and actions still use canonical state/engine contracts. No financial or tax calculations were added.
+- Live 12-month illustration through previewHorizon: savings and investment policy drafts, Home discretionary-budget overrides, and actual Insurance overrides. A compact cash/borrowing result appears while editing; ? opens the current-versus-draft table. Both paths use the same simulated luck and are explicitly illustrative.
+- One-time debt payment preview through applyAction and previewMonth. It shows cash/debt after payment and an optional next-month illustration without changing the real state or calling store dispatch.
+- Office uses selectPaySummary for monthly gross, withholding, income/payroll breakdown, and take-home. Last actual pay remains separate from the estimate.
+- Insurance compares the engine's settleClaim result for an illustrative $5,000 medical bill under the two catalog choices.
+- The shared app's event cards remain reachable. Styling accounts for those cards without changing App or the flow components.
 
-The public API remains BuildingPanel { building, state, dispatch }. The registry uses canonical bank/market/hospital/home/office IDs; ConnectedBuildingPanel still delegates to Agent 4's store.
+Canonical API: BuildingPanel { building, state, dispatch }. The registry remains bank / market / hospital / home / office. The slim store connector, explicit Save actions, collapsed history, and corner help behavior are unchanged.
 
-## Development and checks
+## Preview and stress route
 
 ```powershell
 npm.cmd exec vite -- --config src/components/panels/vite.config.ts --host 127.0.0.1 --port 5174
 ```
 
-Open http://127.0.0.1:5174/ for the real town, or /dev/stress-states for all 40 panel/state combinations.
+Open http://127.0.0.1:5174/ for the current town or /dev/stress-states for all 40 panel/state combinations. The default root dev server also runs the integrated app; only the special stress route needs the owned config.
+
+## Checks
 
 ```powershell
 npm.cmd run typecheck
 npm.cmd test
-npm.cmd run build
+npm.cmd run test:browser
 npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts
+npm.cmd run build
 ```
 
-Current checks: 61 tests, typecheck, build, and four desktop/mobile browser checks pass. Screenshots are in screenshots/, including desktop-centered-bank.png, mobile-centered-bank.png and the matching bank-help images.
+113 tests, six root desktop/mobile checks, four panel desktop/mobile checks, typecheck and build pass. Current screenshots are in screenshots/ and the root suite's docs/screenshots/. Preview tests compare the displayed values to engine outputs and verify that original state is untouched. No credentials were added.
 
-## Existing limitations
+## Remaining coordination
 
-The shared React pixel kit was not found in the published branches. The current scoped styling follows the user's explicit parchment request; it is not claimed to be that missing kit.
-
-The 12-month preview and complete take-home estimate remain unavailable. They are kept concise and explained in help, not calculated in the UI. See MISSING.md. No credentials were added to source or the repository.
+A shared React pixel component kit still has not landed; the scoped parchment skin remains the latest user-approved design. Engine contracts previously listed as missing are now resolved. See MISSING.md for that remaining kit note. Production deployment is owned by the team/Vercel project; pushing this branch does not itself deploy it.

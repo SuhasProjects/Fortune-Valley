@@ -19,9 +19,8 @@ export function HomePanel({ state, dispatch }: PanelProps) {
     <output htmlFor={id}>{error ? 'Invalid amount' : `${money(Number(budget))} / month`}</output>
     {error && <p id={`${id}-help`}>{error}</p>}
     <button disabled={disabled || !!error}>Save budget</button>{task.feedback}
-  </form>} consequence={<p>After Save · {error ? 'Check amount' : `${money(-Number(budget))} / month`}</p>} help={<>
+  </form>} consequence={<><p>After Save · {error ? 'Check amount' : `${money(-Number(budget))} / month`}</p><PolicyPreview state={state} overrides={{ household: { discretionaryMonthly: Number(budget) } }} invalid={!!error} compact /></>} help={<>
     <p>This changes flexible spending. Housing and essentials stay the same.</p>
-    {/* TODO(Agent 1): Policy has no budget field. Never invent one for a preview. */}
-    <PolicyPreview state={state} draftPolicy={state.policy} />
+    <PolicyPreview state={state} overrides={{ household: { discretionaryMonthly: Number(budget) } }} invalid={!!error} />
   </>} details={<LedgerHistory state={state} categories={['housing', 'essentials', 'discretionary']} />} />;
 }

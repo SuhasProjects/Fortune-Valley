@@ -8,6 +8,10 @@
 }
 .panel-dialog:has(.ft-sheet)::backdrop { background: #30291888; backdrop-filter: none; }
 .panel-dialog:has(.ft-sheet) > .panel-content { padding: 0; overflow: visible; }
+.panel-dialog:has(.ft-sheet) > .panel-content:has(> .event-card) { max-height: calc(100dvh - 48px); overflow-y: auto; background: #fbefcd; }
+.panel-dialog:has(.ft-sheet) > .panel-content > .event-card { margin: 0; padding: 20px 32px; max-height: 35dvh; overflow-y: auto; background: #fbefcd; box-shadow: none; border: 0; border-bottom: 1px solid #d8c493; font-size: 16px; }
+.panel-dialog:has(.ft-sheet) > .panel-content > .event-card h2 { font-size: 22px; }
+.panel-dialog:has(.ft-sheet) > .panel-content > .event-card small { font-size: 12px; }
 .panel-dialog:has(.ft-sheet) > .panel-heading {
   position: relative; height: 0; min-height: 0; padding: 0; border: 0; background: transparent; z-index: 5;
 }
@@ -71,6 +75,9 @@
 .ft-sheet__history li { margin: 8px 0; }
 .ft-sheet__consequence { margin-top: 16px; color: var(--sheet-muted); font-size: 12px; }
 .ft-sheet__consequence p { margin: 0; }
+.ft-preview { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--sheet-line); font-size: 12px; }
+.ft-preview small { color: var(--sheet-muted); font-size: 11px; }
+.ft-sheet form > .ft-preview { flex-basis: 100%; }
 .ft-sheet footer { flex-shrink: 0; margin-top: 18px; color: var(--sheet-muted); font-size: 10px; }
 .ft-sheet__sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .ft-sheet__help { position: relative; margin-left: auto; }

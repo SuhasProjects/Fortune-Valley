@@ -1,14 +1,16 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { applyAction, createGame } from '../../../engine';
+import { applyAction, createGame, previewHorizon, selectPaySummary, settleClaim } from '../../../engine';
 import { scenarios } from '../../../data/scenarios';
 import { BOUNDS } from '../../../config/defaults';
 import type { BuildingId, GameEvent } from '../../../types/domain';
 import { BuildingPanel, panelRegistry } from '../panelRegistry';
 import { StressStatesPage } from '../dev/StressStatesPage';
 import { stressFixtures } from '../dev/stressFixtures';
-import { amountError } from './shared';
+import { PolicyPreview } from '../PolicyPreview';
+import { PaymentPreview } from '../PaymentPreview';
+import { amountError, money } from './shared';
 
 afterEach(cleanup);
 const initial = () => applyAction(createGame(scenarios[1]!), { type: 'resume' }).state;
@@ -19,7 +21,7 @@ describe('canonical component contract and shell', () => {
     render(<BuildingPanel building="bank" state={initial()} dispatch={dispatchFor()} />);
     for (const name of ['Current status', 'Decision', 'Projected consequence']) expect(screen.getByRole('region', { name })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Help for Bank' }));
-    expect(screen.getByText(/Preview unavailable/)).toBeTruthy();
+    expect(screen.getByLabelText('12-month preview details')).toBeTruthy();
   });
   it('renders every panel for four starting lives without undefined or NaN', () => {
     for (const config of scenarios) for (const building of Object.keys(panelRegistry) as BuildingId[]) {
@@ -114,12 +116,14 @@ describe('Insurance, Home and Office', () => {
     fireEvent.change(slider, { target: { value: '120' } }); fireEvent.click(screen.getByRole('button', { name: 'Save budget' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_budget', discretionaryMonthly: 120 }));
   });
-  it('keeps Office read-only and marks the missing tax estimate instead of calculating it', () => {
-    render(<BuildingPanel building="office" state={initial()} dispatch={dispatchFor()} />);
+  it('keeps Office read-only and displays the canonical pay summary', () => {
+    const state = initial(); const pay = selectPaySummary(state);
+    render(<BuildingPanel building="office" state={state} dispatch={dispatchFor(state)} />);
     expect(screen.queryByRole('spinbutton')).toBeNull(); expect(screen.queryByRole('slider')).toBeNull();
-    expect(screen.getByText('Take-home estimate')).toBeTruthy();
+    expect(screen.getByText('Take-home / month')).toBeTruthy();
+    expect(screen.getByText(money(pay.takeHomeMonthly))).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Help for Office' }));
-    expect(screen.getByText('Illustrative tax estimate unavailable.')).toBeTruthy();
+    expect(screen.getByText(/Illustrative tax estimate; includes/)).toBeTruthy();
   });
   it('accepts and declines using the canonical engine event and option IDs', async () => {
     const state = initial();
@@ -165,5 +169,43 @@ describe('concise help popup', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Help for Home' }));
     fireEvent.pointerDown(document.body);
     expect(screen.queryByRole('dialog', { name: 'Home help' })).toBeNull();
+  });
+});
+
+describe('engine-owned what-if displays', () => {
+  it('uses the 12-month household override and leaves real state untouched', () => {
+    const state = initial(); const original = structuredClone(state);
+    const overrides = { household: { discretionaryMonthly: 120 } };
+    const expected = previewHorizon(state, overrides, 12).withChange.at(-1)!;
+    render(<PolicyPreview state={state} overrides={overrides} compact />);
+    expect(screen.getByLabelText('12-month policy preview').textContent).toContain(money(expected.cash));
+    expect(state).toEqual(original);
+  });
+  it('uses insurance overrides in the horizon rather than only policy plan IDs', () => {
+    const state = initial(); const overrides = { insurance: { health: 'health_plus' } };
+    const expected = previewHorizon(state, overrides, 12).withChange.at(-1)!;
+    render(<PolicyPreview state={state} overrides={overrides} />);
+    expect(screen.getByLabelText('12-month preview details').textContent).toContain(money(expected.netWorth));
+    expect(state.insurance.health).not.toBe('health_plus');
+  });
+  it('uses the engine for a one-time payment preview without dispatching it', () => {
+    const state = initial(); const original = structuredClone(state); const debtId = state.debts[0]!.id;
+    const expected = applyAction(state, { type: 'make_extra_payment', debtId, amount: 10 });
+    expect(expected.ok).toBe(true);
+    render(<PaymentPreview state={state} debtId={debtId} amount={10} />);
+    expect(screen.getByLabelText('One-time payment preview').textContent).toContain(money(expected.state.cash));
+    expect(state).toEqual(original);
+  });
+  it('displays engine-calculated out-of-pocket costs for the illustrative bill', () => {
+    const state = initial();
+    const plan = state.assumptions.insurancePlans.find(value => value.id === 'health_plus')!;
+    render(<BuildingPanel building="hospital" state={state} dispatch={dispatchFor(state)} />);
+    expect(screen.getByRole('table', { name: 'Illustrative health choices for a $5,000 medical bill' }).textContent).toContain(money(settleClaim(5000, plan).outOfPocket));
+  });
+  it('shows engine validation errors instead of a fabricated projection', () => {
+    render(<PolicyPreview state={initial()} overrides={{ household: { discretionaryMonthly: -1 } }} compact />);
+    const preview = screen.getByLabelText('12-month policy preview');
+    expect(preview.textContent).toContain('budget');
+    expect(preview.textContent).not.toContain('After 12 months');
   });
 });

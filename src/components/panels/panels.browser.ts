@@ -20,10 +20,11 @@ test('canonical stress route renders every panel and applies only saved engine a
   await savings.fill('-1');
   await expect(bank.getByRole('button', { name: 'Save savings contribution', exact: true })).toBeDisabled();
   await savings.fill('300');
+  await expect(bank.getByLabel('12-month policy preview')).toContainText('After 12 months');
   await bank.getByRole('button', { name: 'Save savings contribution', exact: true }).click();
   await expect(bank.getByText('Saved.', { exact: true })).toBeVisible();
   await bank.getByRole('button', { name: 'Help for Bank' }).click();
-  await expect(bank.getByLabel('12-month policy preview')).toContainText('Preview unavailable');
+  await expect(bank.getByLabel('12-month preview details')).toContainText('Change a value');
   await bank.getByRole('button', { name: 'Close help' }).click();
   await bank.screenshot({ path: fileURLToPath(new URL(`screenshots/${info.project.name}-stress-bank.png`, import.meta.url)) });
 
@@ -53,6 +54,8 @@ test('financial sheet is centered, compact, and keeps help separate from the mod
   expect(box!.width).toBeLessThanOrEqual(viewport.width - 20);
   if (info.project.name === 'desktop') expect(box!.width).toBeGreaterThan(700);
   await expect(dialog.getByText('Extra payments use cash and reduce the debt.', { exact: true })).toHaveCount(0);
+  await dialog.getByLabel('Monthly savings contribution (USD)').fill('300');
+  await expect(dialog.getByLabel('12-month policy preview')).toContainText('After 12 months');
   await page.screenshot({ path: fileURLToPath(new URL(`screenshots/${info.project.name}-centered-bank.png`, import.meta.url)) });
   await dialog.getByRole('button', { name: 'Help for Bank' }).click();
   await expect(dialog.getByRole('dialog', { name: 'Bank help' })).toBeVisible();

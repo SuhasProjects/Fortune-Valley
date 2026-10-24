@@ -3,6 +3,7 @@ import { netWorthOf } from '../../../engine';
 import { BOUNDS } from '../../../config/defaults';
 import { PanelShell } from '../PanelShell';
 import { PolicyPreview } from '../PolicyPreview';
+import { PaymentPreview } from '../PaymentPreview';
 import type { PanelProps } from '../panelTypes';
 import { amountError, editable, LedgerHistory, money, MoneyInput, percent, useAction, useDraft } from './shared';
 
@@ -32,8 +33,9 @@ export function BankPanel({ state, dispatch }: PanelProps) {
         <label htmlFor={id}>Debt</label><select id={id} value={debtId} disabled={disabled || !state.debts.length} onChange={event => { setDebtId(event.target.value); setPayment(''); }}>{state.debts.map(value => <option key={value.id} value={value.id}>{value.name}</option>)}</select>
         <MoneyInput label="One-time debt payment" raw={payment} onChange={setPayment} min={paymentMax > 0 ? .01 : 0} max={paymentMax} disabled={disabled || paymentMax <= 0} />
         <p>{!paymentError ? `${money(-Number(payment))} once` : `Up to ${money(paymentMax)}`}</p>
+        {!paymentError && debt && <PaymentPreview state={state} debtId={debt.id} amount={Number(payment)} />}
         <button disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</button>
       </form>
     </details>{task.feedback}
-  </>} consequence={<p>Savings after Save · {money(draftPolicy.savingsContributionPerMonth)} / month</p>} help={<><ul><li>Savings repeats each month after bills.</li><li>Extra payments use cash and reduce the debt.</li><li>Edits apply when you save.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} /></>} details={<LedgerHistory state={state} categories={['savings_contribution', 'savings_interest', 'debt_payment', 'debt_interest']} />} />;
+  </>} consequence={<><p>Savings after Save · {money(draftPolicy.savingsContributionPerMonth)} / month</p><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} compact /></>} help={<><ul><li>Savings repeats each month after bills.</li><li>Extra payments use cash and reduce the debt.</li><li>Edits apply when you save.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} /></>} details={<LedgerHistory state={state} categories={['savings_contribution', 'savings_interest', 'debt_payment', 'debt_interest']} />} />;
 }
