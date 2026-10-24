@@ -18,7 +18,7 @@ describe('canonical component contract and shell', () => {
     expect(Object.keys(panelRegistry).sort()).toEqual(['bank', 'home', 'hospital', 'market', 'office']);
     render(<BuildingPanel building="bank" state={initial()} dispatch={dispatchFor()} />);
     for (const name of ['Current status', 'Decision', 'Projected consequence']) expect(screen.getByRole('region', { name })).toBeTruthy();
-    expect(screen.getByText(/Preview unavailable/)).toBeTruthy();
+    expect(screen.getByLabelText('12-month policy preview')).toBeTruthy(); // engine previewHorizon now supplies the preview
   });
   it('renders every panel for four starting lives without undefined or NaN', () => {
     for (const config of scenarios) for (const building of Object.keys(panelRegistry) as BuildingId[]) {
