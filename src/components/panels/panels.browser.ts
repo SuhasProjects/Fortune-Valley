@@ -44,7 +44,8 @@ test('canonical stress route renders every panel and applies only saved engine a
 test('financial sheet is centered, compact, and keeps help separate from the modal', async ({ page }, info) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Entry-Level Worker/ }).click();
-  await page.getByRole('button', { name: /Open Pine Bank:/ }).click();
+  await page.getByRole('button', { name: /Open Pine Bank:/ }).focus();
+  await page.keyboard.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Pine Bank', exact: true });
   await expect(dialog).toBeVisible();
   const box = await dialog.boundingBox(); const viewport = page.viewportSize()!;
@@ -67,3 +68,32 @@ test('financial sheet is centered, compact, and keeps help separate from the mod
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
 });
+
+for (const viewport of [{ width: 1366, height: 768 }, { width: 1440, height: 900 }]) {
+  test(`all building windows fit and keep keyboard focus at ${viewport.width}x${viewport.height}`, async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'Laptop layout checks; mobile Bank is covered separately.');
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.getByRole('button', { name: /Entry-Level Worker/ }).click();
+    for (const name of ['Pine Bank', 'Town Office', 'Health House', 'Your Home', 'Market Hall']) {
+      const opener = page.getByRole('button', { name: new RegExp(`Open ${name}:`) });
+      await opener.focus(); await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name, exact: true });
+      await expect(dialog).toBeVisible();
+      const box = await dialog.boundingBox();
+      expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+      await expect(dialog.getByRole('heading', { name: 'Now', exact: true })).toBeVisible();
+      await expect(dialog.getByRole('heading', { name: 'Your decision', exact: true })).toBeVisible();
+      await expect(dialog.getByRole('heading', { name: 'What happens next', exact: true })).toBeVisible();
+      await expect(dialog).not.toContainText(/NaN|undefined/);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.keyboard.press('Tab');
+      expect(await page.evaluate(() => !!document.activeElement?.closest('dialog'))).toBe(true);
+      await dialog.screenshot({ path: fileURLToPath(new URL(`screenshots/window-${viewport.width}-${name.toLowerCase().replaceAll(' ', '-')}.png`, import.meta.url)) });
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0); await expect(opener).toBeFocused();
+    }
+  });
+}

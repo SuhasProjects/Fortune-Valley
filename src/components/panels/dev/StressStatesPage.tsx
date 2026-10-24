@@ -1,3 +1,4 @@
+import { Board } from '../../../ui';
 import { useState } from 'react';
 import type { BuildingId, GameState } from '../../../types/domain';
 import { applyAction } from '../../../engine';
@@ -17,8 +18,8 @@ function StressCase({ title, initialState }: { title: string; initialState: Game
 }
 export function StressStatesPage() {
   const [fixtures] = useState(stressFixtures);
-  return <main><h1>Financial panels · stress states</h1>
+  return <Board as="main" className="ft-stress" style={{ '--px': '4px' } as React.CSSProperties}><h1>Financial panels · stress states</h1>
     <p>Fixture sandbox · Changes stay on this page.</p>
     {fixtures.map(fixture => <StressCase key={fixture.id} title={fixture.title} initialState={fixture.state} />)}
-  </main>;
+  </Board>;
 }

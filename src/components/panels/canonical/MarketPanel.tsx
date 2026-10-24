@@ -1,3 +1,4 @@
+import { Button, Field } from '../../../ui';
 import { useEffect, useId, useState } from 'react';
 import { ASSET_CLASSES, type Allocation, type AssetClass } from '../../../types/domain';
 import { BOUNDS } from '../../../config/defaults';
@@ -29,17 +30,17 @@ export function MarketPanel({ state, dispatch }: PanelProps) {
   return <PanelShell title="Market" status={<dl>{ASSET_CLASSES.map(asset => <div key={asset}><dt>{shortLabels[asset]}</dt><dd>{money(state.investments[asset])}</dd></div>)}</dl>} decision={<>
     <form onSubmit={event => { event.preventDefault(); if (!disabled && valid) void task.send({ type: 'set_allocation', allocation }); }}>
       <fieldset disabled={disabled}><legend>Where new investments go</legend>
-        <div className="ft-allocation">{ASSET_CLASSES.map(asset => <div key={asset} role="group" aria-label={`${shortLabels[asset]} allocation`}><label htmlFor={`${id}-${asset}`}>{shortLabels[asset]} (%)</label><input id={`${id}-${asset}`} aria-label={`${labels[asset]} (%)`} type="number" min={0} max={100} step="any" value={weights[asset]} onChange={event => setWeights({ ...weights, [asset]: event.target.value })} aria-invalid={!valid} aria-describedby={`${id}-total`} />
+        <div className="ft-allocation">{ASSET_CLASSES.map(asset => <div key={asset} role="group" aria-label={`${shortLabels[asset]} allocation`}><span className={`ft-asset-chip ft-asset-chip--${asset}`} aria-hidden="true"/><Field label={`${shortLabels[asset]} (%)`} id={`${id}-${asset}`} aria-label={`${labels[asset]} (%)`} type="number" min={0} max={100} step="any" value={weights[asset]} onChange={event => setWeights({ ...weights, [asset]: event.target.value })} aria-invalid={!valid} aria-describedby={`${id}-total`} />
           <div><small>Last month · {percent(state.marketState.lastMonthlyReturns[asset])}</small></div>
           <div><small>Annual assumption · {percent(state.assumptions.assets[asset].expectedAnnualReturn)} · volatility {percent(state.assumptions.assets[asset].annualVolatility)}</small></div>
         </div>)}</div>
-        <p id={`${id}-total`} aria-live="polite">{Number.isFinite(total) ? `${Number(total.toFixed(6))}%` : 'Invalid total'}{inlineError && ` · ${inlineError}`}</p>
-        <button disabled={disabled || !valid}>Save allocation</button>
+        <div className="ft-allocation-bar" aria-hidden="true">{ASSET_CLASSES.map(asset => <span key={asset} className={`ft-asset-chip--${asset}`} style={{ width: `${Math.max(0, Math.min(100, Number(weights[asset]) || 0))}%` }}/>)}</div><p id={`${id}-total`} aria-live="polite">{Number.isFinite(total) ? `${Number(total.toFixed(6))}%` : 'Invalid total'}{inlineError && ` · ${inlineError}`}</p>
+        <Button type="submit" variant="primary" disabled={disabled || !valid}>Save allocation</Button>
       </fieldset>
     </form>
     <details><summary>Monthly investing</summary><form onSubmit={event => { event.preventDefault(); if (!disabled && !contributionError) void task.send({ type: 'set_contributions', savingsContributionPerMonth: state.policy.savingsContributionPerMonth, investmentContributionPerMonth: Number(contribution) }); }}>
       <MoneyInput label="Monthly investment contribution" raw={contribution} onChange={setContribution} max={BOUNDS.contributionMax} disabled={disabled} />
-      <button disabled={disabled || !!contributionError}>Save investment contribution</button>
+      <Button type="submit" variant="primary" disabled={disabled || !!contributionError}>Save investment contribution</Button>
     </form></details>{task.feedback}
   </>} consequence={<><p>Investing after Save · {money(draftPolicy.investmentContributionPerMonth)} / month</p><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!valid || !!contributionError} compact /></>} help={<><ul><li>Percentages apply to new investments.</li><li>Existing holdings stay as they are.</li><li>An equity ETF spreads holdings, but can still fall.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!valid || !!contributionError} /></>} details={<>
     <div className="ft-table-scroll"><table><caption>Illustrative annual assumptions</caption><thead><tr><th scope="col">Asset</th><th scope="col">Return</th><th scope="col">Volatility</th><th scope="col">Last month</th></tr></thead><tbody>{ASSET_CLASSES.map(asset => <tr key={asset}><th scope="row">{shortLabels[asset]}</th><td>{percent(state.assumptions.assets[asset].expectedAnnualReturn)}</td><td>{percent(state.assumptions.assets[asset].annualVolatility)}</td><td>{percent(state.marketState.lastMonthlyReturns[asset])}</td></tr>)}</tbody></table></div>

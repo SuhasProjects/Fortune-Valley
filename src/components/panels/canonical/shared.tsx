@@ -1,3 +1,4 @@
+import { Field, Tag } from '../../../ui';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { GameAction, GameState, LedgerCategory } from '../../../types/domain';
 import { monthLabel } from '../../../engine';
@@ -24,6 +25,11 @@ export function useAction(dispatch: PanelDispatch) {
   const [message, setMessage] = useState<{ error: boolean; text: string }>();
   const locked = useRef(false); const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (!message || message.error) return;
+    const timer = setTimeout(() => setMessage(undefined), 2000);
+    return () => clearTimeout(timer);
+  }, [message]);
   async function send(action: GameAction) {
     if (locked.current) return false;
     locked.current = true; setPending(true); setMessage(undefined);
@@ -36,7 +42,7 @@ export function useAction(dispatch: PanelDispatch) {
       return false;
     } finally { locked.current = false; if (mounted.current) setPending(false); }
   }
-  return { pending, send, feedback: <div aria-live="polite">{pending ? 'Saving…' : message && <p role={message.error ? 'alert' : 'status'}>{message.text}</p>}</div> };
+  return { pending, send, feedback: <div aria-live="polite">{pending ? 'Saving…' : message && <p role={message.error ? 'alert' : 'status'}>{message.error ? <span className="fv-field__error">{message.text}</span> : <Tag tone="green">{message.text}</Tag>}</p>}</div> };
 }
 
 /** Accessible amount input; all limits come from the canonical state/config. */
@@ -46,10 +52,7 @@ export function MoneyInput({ label, raw, onChange, min = 0, max, step = .01, dis
   const id = useId(); const [touched, setTouched] = useState(false);
   useEffect(() => { if (!raw) setTouched(false); }, [raw]);
   const error = amountError(raw, min, max, step);
-  return <div className="ft-field"><label htmlFor={id}>{label}</label>
-    <input id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} aria-invalid={touched && !!error} aria-describedby={touched && error ? `${id}-help` : undefined} />
-    {touched && error && <p className="ft-field__error" id={`${id}-help`}>{error}</p>}
-  </div>;
+  return <div className="ft-money-field"><span aria-hidden="true">$</span><Field label={label} id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} error={touched ? error : undefined} /></div>;
 }
 
 export function LedgerHistory({ state, categories }: { state: GameState; categories: LedgerCategory[] }) {
