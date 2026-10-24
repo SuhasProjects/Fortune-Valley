@@ -1,4 +1,5 @@
-﻿import { useMemo } from 'react';
+﻿import { Inset } from '../../ui';
+import { useMemo } from 'react';
 import type { GameState, Policy } from '../../types/domain';
 import { previewHorizon, type PreviewOverrides } from '../../engine';
 import { money } from './canonical/shared';
@@ -27,7 +28,10 @@ export function PolicyPreview({ state, draftPolicy, overrides, invalid = false, 
   if (!baseline || !draft) return <aside aria-label={label}>Preview unavailable.</aside>;
   const shortfall = result.monthsUntilShortfall.withChange;
   const borrowing = shortfall === null ? 'No borrowing in 12 months' : `First borrowing: month ${shortfall}`;
-  if (compact) return <aside className="ft-preview" aria-label={label} role="status"><p>After 12 months · cash <strong>{money(draft.cash)}</strong></p><small>{borrowing} · Illustration</small></aside>;
+  const scale = Math.max(1, ...result.withChange.map(point => Math.abs(point.cash)));
+  if (compact) return <aside className="ft-preview" aria-label={label} role="status"><Inset><p>After 12 months · cash <strong>{money(draft.cash)}</strong></p>
+    <div className="ft-cash-bars" role="img" aria-label="Illustrative monthly cash across the next 12 months">{result.withChange.map((point, index) => <span key={index} data-negative={point.cash < 0} style={{ height: `calc(${Math.max(1, Math.round(Math.abs(point.cash) / scale * 12))} * var(--px))` }} title={`Month ${index + 1}: ${money(point.cash)}`}/>)}</div>
+    <small>{borrowing} · Illustration</small></Inset></aside>;
   return <aside aria-label={label}>
     <div className="ft-table-scroll"><table><caption>12-month illustration</caption><thead><tr><th scope="col">Balance</th><th scope="col">Current</th><th scope="col">Draft</th></tr></thead><tbody>
       <tr><th scope="row">Cash</th><td>{money(baseline.cash)}</td><td>{money(draft.cash)}</td></tr>

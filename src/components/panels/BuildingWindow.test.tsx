@@ -7,6 +7,7 @@ import { useGameStore } from '../../stores/useGameStore';
 import type { BuildingId, GameEvent } from '../../types/domain';
 import { buildings } from '../town/buildings';
 import { BuildingWindow } from './BuildingWindow';
+import { KEEPER_LINES } from './KeeperGreeting';
 
 const initialStore = useGameStore.getState();
 const eventFor = (building: BuildingId, type: 'A' | 'B' = 'A'): GameEvent => ({
@@ -55,5 +56,30 @@ describe('BuildingWindow public contract', () => {
     useGameStore.setState({ game: null });
     render(<BuildingWindow building="bank" onClose={vi.fn()} />);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+// These cover the new presentation's data boundaries, without re-testing the engine.
+describe('keeper and notice presentation', () => {
+  it('chooses a short static keeper line by month', () => {
+    const game = useGameStore.getState().game!;
+    useGameStore.setState({ game: { ...game, monthIndex: 3 } });
+    render(<BuildingWindow building="bank" onClose={vi.fn()} />);
+    expect(screen.getByText(KEEPER_LINES.bank[1]!)).toBeTruthy();
+    for (const lines of Object.values(KEEPER_LINES)) for (const line of lines) {
+      expect(line.length).toBeLessThan(70);
+      expect(line).not.toMatch(/\d/);
+    }
+  });
+  it('renders shock receipt values and option descriptions directly from the event', () => {
+    const game = useGameStore.getState().game!;
+    const event = eventFor('hospital');
+    event.shock = { kind: 'medical', grossCost: 5000, insurerPaid: 3200, outOfPocket: 1800, planId: 'health_plus', fundedFrom: [] };
+    useGameStore.setState({ game: { ...game, activeEvents: [event] } });
+    render(<BuildingWindow building="hospital" onClose={vi.fn()} />);
+    const notice = screen.getByRole('region', { name: 'hospital notice' });
+    for (const value of ['$5,000', '$3,200', '$1,800']) expect(within(notice).getByText(value)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Acknowledge notice' }).getAttribute('aria-describedby')).toBe('event-hospital-A-acknowledge-description');
+    expect(document.getElementById('event-hospital-A-acknowledge-description')?.textContent).toBe('Dismiss this notice.');
   });
 });

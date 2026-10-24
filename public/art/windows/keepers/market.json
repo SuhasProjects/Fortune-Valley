@@ -1,0 +1,10 @@
+{
+  "src": "/art/windows/keepers/market.png",
+  "w": 24,
+  "h": 24,
+  "frames": [
+    "open",
+    "blink"
+  ],
+  "speed": 900
+}
