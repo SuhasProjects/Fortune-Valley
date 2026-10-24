@@ -7,8 +7,11 @@ Branch: `agent5-title-reveal`.
 screen in the spirit of Stardew Valley: a big hanging wooden **"Fortune Valley"** sign wrapped in vines, mountains fading
 into a light haze behind a green valley (no clouds), and three chunky wooden buttons: **New Story**, **Custom Story**,
 **Continue**. Behind those buttons are the story picker, the "write your own story" letter, and a Guide book that holds the
-how-to-play and FAQ text (so the game is first and the website stuff is tucked away). The last screen is the results: the
-same town at dusk with a big parchment ledger showing your 1,000 futures in clear, game-styled charts.
+how-to-play and FAQ text (so the game is first and the website stuff is tucked away). The last screen is **the ending,
+the most important screen in the game**: the town at dusk with a parchment ledger showing a simple chart of straight
+lines from where you started to where 1,000 futures ended (unlucky, typical, lucky, plus a highlighted line for what
+actually happened to you), and two dropdowns that let you change any one past decision and see the old and new charts
+side by side, so you can judge a choice by both its typical result and its spread.
 
 ---
 
@@ -55,6 +58,7 @@ same town at dusk with a big parchment ledger showing your 1,000 futures in clea
 `src/game/title/TitleScreen.tsx` (renders today's `Landing` for now), `src/game/title/GuideWindow.tsx`
 (`{ onClose }`, a Modal named `Guide`, used by Agent 4's pause menu), `src/game/reveal/RevealScreen.tsx`
 (`{ payload, onPlayAgain }`, renders `RevealChart` inside a full-screen wrapper). Keep helpers passing.
+The ending itself depends on Agent 1's ending API (stub lands with their Phase 0), so start real work on the title side.
 
 ---
 
@@ -130,33 +134,77 @@ Assumptions are illustrative. For learning, not personal financial advice."). No
 
 ---
 
-## 6. Results (`src/game/reveal/RevealScreen.tsx`)
+## 6. Results: the ending (`src/game/reveal/`), the most important screen in the game
 
-- `GameStage` with `world={<TownWorld timeOfDay="dusk"/>}` (no `onBuildingClick`, so it's decorative) and, in the UI layer,
-  a large ledger `Board` (about 260×160 art px at scale 4, internal scroll if needed) that drops in over 3 steps.
-- Header plaque **Your Next Chapter**. Keep a heading with the text `Same strategy, 1,000 futures` (helpers check it) and
-  update `expectReveal` to the new structure (e.g. a `region` named `Simulation results`).
-- **Headline:** "You finished month 24 with **$12,340**" (`mc.observedNetWorth`, `Money`), the percentile sentence (only when
-  `observedHorizonMatches`, "not a grade" wording kept), four stat tiles with icons.
-- **Tabs** (Agent 2): **Futures**, **Spread**, **Your choices vs default**, **Why?**
-  - *Futures* (Recharts `ComposedChart`): `stepAfter` lines, no smoothing, no animation, crisp strokes
-    (`strokeWidth = px/2`, from `useStageScale()`), VT323 ticks, `P` dashed grid. Band = `--c-leaf` at 30%, median
-    `--c-leaf-dark`, your run `--c-gold` with a 1-px `--c-outline` underlay line, zero line dashed `--c-outline`.
-    **Hover crosshair:** vertical 1-art-px line + parchment tooltip (month label, 10th–90th, median, yours).
-    **Direct labels** at the right end of the median and your line (no legend needed; keep the legend for screen readers).
-    **Strategy toggle** (`Your strategy` / `Default policy`) switching the band and median between `comparison.a.bands`
-    and `comparison.b.bands` when `mc.comparison` exists (hide the toggle otherwise).
-  - *Spread*: histogram of `histogram(mc.endingNetWorths, 20)` as square-cornered bars, your outcome as a gold marker
-    labelled `You`.
-  - *Your choices vs default*: two horizontal pixel bars for `a.median` and `b.median`, the paired median difference, and
-    "In 63% of futures your choices beat the default" from `probabilityAOutperformsB` (format only).
-  - *Why?*: `payload.explanation.text` with source tag (`AI explanation` / `Offline explanation (template)`), plus a
-    Field "Ask about your results" + `Ask` → `requestExplanation(question)` with a loading state. The answer replaces the
-    explanation (that's how the store works).
-  - Keep the table view and assumptions as collapsibles at the bottom of *Futures* (accessibility).
-- Buttons: primary `Choose a new story` (keep this name; it calls `onPlayAgain`).
-- Chart colours must come from palette CSS variables (read them with `getComputedStyle` once and pass them to Recharts),
-  so they match the world. Update or replace `REVEAL_COLORS` accordingly; update `RevealChart.test.tsx` (yours).
+**This replaces the old results design.** No fan chart, no histogram, no default-policy bars. The goal is that a
+first-time player understands, in a few seconds, *where 1,000 versions of their life ended* and *what one different
+decision would have changed*. All numbers come from Agent 1's ending API (`@/engine`, AGENT_1 §9). The UI does **no
+math**: deltas, spreads and line endpoints are all engine values. Only axis scaling and pixel placement happen in the UI.
+
+**Engine API you call** (stubbed in Agent 1's Phase 0 with fake data, real soon after; build against the stub):
+`outcomeLines(mc, startNetWorth)` → `{ months, start, p10, median, p90, yourEvents, spread }`;
+`listDecisions(config, policyLog)` → `DecisionChoice[]` (`{ id, label, alternatives: {id,label}[] }`, first entry `all` when
+any decision exists); `runWhatIfAsync({ config, policyLog, finishMonteCarlo, startNetWorth, observedNetWorth, decisionId,
+alternativeId }, signal)` → `{ decisionLabel, alternativeLabel, original, changed, delta: {p10, median, p90, yourEvents, spread},
+yourEventsComparable, replayFallbacks }`. Inputs come from `FinishPayload`: `config`, `policyLog`, `monteCarlo`,
+`finalState.netWorthHistory[0]` (start) and `monteCarlo.observedNetWorth`.
+
+**Layout:** `GameStage` with `world={<TownWorld timeOfDay="dusk"/>}` (no `onBuildingClick`, so it's decorative). In the UI
+layer goes a large ledger `Board` (about 260×165 art px at scale 4; internal `ScrollArea` if needed) that drops in over 3
+steps, with header plaque **Your Next Chapter**. Sections, top to bottom:
+
+1. **Headline:** "You finished month 24 with **$12,340**" (`Money`), and one sentence: "8 in 10 of your 1,000 futures
+   ended between **$X** and **$Y**." (`p10`, `p90`). Keep a heading with the text `Same strategy, 1,000 futures` (the
+   helpers check it; you own `expectReveal` and may change it to a `region` named `Simulation results`).
+
+2. **`OutcomeChart`** (one component, used three times): net worth (y) vs month (x, 0 → `months`). Draw **straight lines**
+   from the common origin `(0, start)` to each ending:
+   - **Lucky (90th percentile)** → `p90`, `--c-money-up`;
+   - **Typical (median)** → `median`, `--c-outline`, 2× thickness;
+   - **Unlucky (10th percentile)** → `p10`, `--c-money-down`;
+   - a flat light wedge (`--c-leaf-light` at 25%) filling between the lucky and unlucky lines, the visual "spread";
+   - **What actually happened** → `yourEvents`, the **highlighted** line: `--c-gold`, thickest, with a 1-art-px
+     `--c-outline` underlay and an end marker (a small pixel coin);
+   - a dashed `$0` line when the range crosses zero; start point labelled "Start $S".
+   - **Direct labels** at each line's right end: name and value in VT323 (no legend; nudge labels apart vertically so
+     they never overlap; keep a visually hidden legend and a small table version for screen readers).
+   - Hover/focus on a line or its label highlights it and shows a parchment tooltip ("Typical future: $9,800 after 24
+     months").
+   - Props: `{ lines: OutcomeLines; yDomain: [number, number]; title: string; highlightLabel?: string }`. Implement with
+     Recharts `LineChart` (each line has two points, `type="linear"`, `isAnimationActive={false}`) plus an `Area` with range
+     values for the wedge, or with a hand-written SVG if that renders crisper. Either way use `shapeRendering="crispEdges"`,
+     stroke widths in `--px` multiples (from `useStageScale()`), VT323 axis ticks via `usd()`, and a dotted `P` grid.
+   - Line drawing animation: each line extends from the origin in 4 stepped frames, staggered (unlucky, typical, lucky,
+     then yours last). None under reduced motion.
+
+3. **"What if you'd chosen differently?"**: two kit `Select`s side by side:
+   *Pick a decision* (`listDecisions` labels, e.g. "Month 3 · Save $300/month") → *Instead…* (that decision's
+   `alternatives`, first one preselected). Changing either runs `runWhatIfAsync` (abort the previous run, show
+   "Re-running 1,000 futures…" with the hourglass/coin animation over the second chart, keep the first chart visible).
+   Results are cached by the engine; switching back is instant.
+   - Then **two `OutcomeChart`s side by side** (stacked under ~1100 px wide) with the **same `yDomain`** (min/max over both
+     results' start and endings, padded ~8%; that's display scaling, which is allowed): left **What you did**
+     (`result.original`), right **If you had: {alternativeLabel}** (`result.changed`). On the right chart the gold line is
+     labelled "Your exact events, with this change".
+   - **Change strip** under the charts: three small kit `Inset` tiles from `result.delta`: *Typical outcome* `+$1,240`,
+     *Your exact events* `−$310`, *Spread (lucky vs unlucky)* `narrower by $2,000` / `wider by …` (sign of `delta.spread`),
+     green/red by sign. Then one plain-language sentence picked by the **signs** of `delta.median` and `delta.spread`
+     (four templates, e.g. "Typically better off, and outcomes were less spread out: safer *and* richer."), never advice.
+   - If `yourEventsComparable` is false, show the exact-events tile with a small note "estimated from a replay of your
+     game" (wording from Agent 1). If `replayFallbacks > 0`, a tiny footnote "N later decisions couldn't apply in some futures".
+   - If the player made **no decisions** (`listDecisions` is empty), replace this section with a friendly card: "You
+     didn't change any settings this time. Next story, visit a building and make a choice to compare." No selects.
+
+4. **Why?**: `payload.explanation.text` with source tag (`AI explanation` / `Offline explanation (template)`), plus a Field
+   "Ask about your results" + `Ask` → `requestExplanation(question)` with a loading state (the answer replaces the explanation).
+5. Collapsible **Details**: the assumptions list (`mc.assumptionsSummary`), seed, paths, compute time.
+6. Primary button **Choose a new story** (keep this exact name; calls `onPlayAgain`).
+
+Retire `src/components/reveal/RevealChart.tsx` (fan chart and histogram) once `RevealScreen` no longer imports it, and
+replace its test. Colours come from palette CSS variables (read with `getComputedStyle` once, pass to Recharts).
+
+**Build order for you:** title screen, picker, letter and guide first (no dependency). Build the results against Agent 1's
+stub as soon as it merges, and switch to the real numbers when the real API lands; your code shouldn't need to change.
 
 ---
 
@@ -169,11 +217,13 @@ Assumptions are illustrative. For learning, not personal financial advice."). No
 - `tests/title.browser.ts`: title shows the `Fortune Valley` heading in Pixelify Sans, three menu buttons, Continue disabled
   without a save and enabled with one, keyboard Left/Right/Enter works, Options and Guide open and close, no page scroll at
   1280×720 / 1440×900 / 1920×1080, custom story with `/api/ai` stubbed to 503 produces an offline story and starts it.
-- `tests/reveal.browser.ts`: play 2 months, finish, the reveal shows the headline, each tab renders, hovering the fan
-  chart shows the crosshair tooltip, strategy toggle switches, `Why?` with stubbed AI shows the offline answer, `Choose a new
-  story` returns to the title.
-- Unit tests for StoryPicker (four cards, names, starts the fixed-seed config) and the reveal (no NaN, toggle hidden without
-  comparison, percentile hidden when horizons differ).
+- `tests/reveal.browser.ts`: start a story, make a Bank savings change, play 2 months, finish; the reveal shows the headline
+  and one chart with four labelled lines; pick that decision → "Keep what you had before" shows two charts with identical
+  y-axis ticks and a change strip; switching alternatives aborts/replaces the run; `Why?` with stubbed AI shows the offline
+  answer; `Choose a new story` returns to the title. Also: finishing with no decisions shows the friendly card instead of selects.
+- Unit tests for StoryPicker (four cards, names, starts the fixed-seed config) and the ending: `OutcomeChart` renders exactly
+  the engine values as labels (no NaN), shared `yDomain` covers both results, change-strip signs and the four sentence
+  templates, stale what-if results are ignored after a newer selection (mock `runWhatIfAsync`).
 
 ---
 
@@ -182,6 +232,7 @@ Assumptions are illustrative. For learning, not personal financial advice."). No
 - [ ] Title looks like a game title screen: vines clearly visible on the sign, hazy mountains, no clouds, wood buttons
       with text on wood, no website chrome, crisp at every size.
 - [ ] Picker, letter and guide feel in-world and are fully keyboard-usable.
-- [ ] Results: dusk town behind a parchment ledger, crosshair, direct labels, strategy toggle, Why? all working; nothing
-      computed in UI.
+- [ ] Ending: dusk town behind a parchment ledger; straight-line chart (unlucky/typical/lucky + highlighted "what actually
+      happened"); decision dropdowns produce side-by-side old/new charts on the same axes with a clear change strip; a
+      first-time player gets it in seconds; nothing computed in UI.
 - [ ] Helpers updated so every agent's browser tests pass; old landing and its CSS deleted.

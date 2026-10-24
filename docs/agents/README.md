@@ -25,7 +25,8 @@ stays as the **target to match**, not as something we display.
 
 - **Agent 1 (Claude)** builds the town itself: the tools that turn pixel drawings into game graphics, every building,
   tree, path and the river, the animations (fountain, water, smoke, hover glow), and the code that scales it crisply to
-  any laptop screen without stretching. It also merges everyone's work.
+  any laptop screen without stretching. It also adds the engine pieces behind the new ending ("what if I'd chosen
+  differently?" re-runs of the 1,000 futures) and merges everyone's work.
 - **Agent 2** builds the "material" everything else is made from: wooden buttons, parchment frames, name plaques, little
   pixel icons, sliders and inputs. With those it builds the top bar (money, date) and the bottom bar (pause, next month).
 - **Agent 3** rebuilds the five building windows (Bank, Office, Health House, Home, Market) so they look like part of the
@@ -33,8 +34,10 @@ stays as the **target to match**, not as something we display.
 - **Agent 4** makes the game flow: switching between title, game and results, the month clock, pop-up notices, the
   timeline, a pause menu, settings, saving, the "computing 1,000 futures" moment, and small sound effects.
 - **Agent 5** builds the first and last screens: a Stardew-Valley-style title screen (big wooden "Fortune Valley" sign with
-  vines, mountains in the haze, three wooden buttons), the story picker, the custom-story screen, and a full-screen
-  results page with better charts.
+  vines, mountains in the haze, three wooden buttons), the story picker, the custom-story screen, and the full-screen
+  ending, **the most important screen in the game**: a simple chart of straight lines from where you started to where
+  1,000 futures ended (bad luck, typical, good luck, plus a highlighted line for what actually happened to you), and a
+  dropdown that lets you change any one of your decisions and see the old and new charts side by side.
 
 Everyone works in their own folders, so nobody overwrites anyone else. Agent 1 merges in a fixed order (section 9).
 
@@ -44,8 +47,9 @@ Everyone works in their own folders, so nobody overwrites anyone else. Agent 1 m
 
 Fortune Valley is a **cozy pixel-art life sim about money**. Open it and you are in a game, not on a website: a title
 screen with a hanging wooden sign over a hazy valley, then a sunny top-down village where five buildings are where you
-make your money decisions. Time passes month by month. At the end, a dusk view of the same village and a parchment
-ledger show 1,000 possible futures.
+make your money decisions. Time passes month by month. **The ending is the point of the game:** a dusk view of the
+same village and a parchment ledger show where 1,000 possible futures land, as straight lines anyone can read, and let the
+player change one past decision to see how the typical outcome, the spread, and "my exact luck" would have moved.
 
 **Feel:** warm, polished, slightly rustic, readable. Stardew Valley is the reference for *quality and feel*, not
 something to copy. Everything on screen looks like it belongs in the same world: the HUD is a parchment board, buttons
@@ -292,8 +296,19 @@ Options (gear) and Guide (book). No website chrome.
 
 ### Results (reveal)
 The same town at dusk (Agent 1's `timeOfDay="dusk"`: lit windows, lamp glow, fireflies), non-interactive, with a large
-parchment **ledger** over it: outcome headline, tabs for *Futures / Spread / Choices vs default / Why?*, pixel-styled charts,
-and a wood **Play again** button.
+parchment **ledger** over it:
+1. **Headline:** where you actually ended.
+2. **Your 1,000 futures:** one chart of net worth vs month with **straight lines** from the starting point (month 0) to
+   the ending value of the **10th percentile** ("bad luck"), **median** ("typical") and **90th percentile** ("good luck"),
+   plus a thick highlighted gold line to **your actual ending** ("what really happened"). Straight lines on purpose: no
+   month-by-month wiggles, no fan chart, no histogram. 10th/90th because 8 in 10 futures land between those lines; 5/95
+   is dominated by rare disasters and 25/75 hides real risk.
+3. **What if you'd chosen differently?** Two dropdowns (*pick a decision* → *instead…*), which re-run the same 1,000 futures
+   with the same luck and that one decision changed, then show **two charts side by side with the same axes**:
+   *What you did* and *If you had…*. Each has the same three lines plus the gold "your exact events" line (on the new chart:
+   your game's exact events replayed with the changed decision). Under them, a plain-language change strip: typical
+   outcome ±$, your exact luck ±$, spread wider/narrower by $.
+4. **Why?** (AI or offline explanation, ask your own question), and a wood **Choose a new story** button.
 
 ---
 
@@ -359,6 +374,11 @@ export function sfx(name: 'click'|'open'|'close'|'coin'|'month'|'alert'|'reveal'
 // Agent 5: src/game/title/TitleScreen.tsx, src/game/reveal/RevealScreen.tsx
 export function TitleScreen(): JSX.Element            // starts games through the store itself
 export function RevealScreen(props: { payload: FinishPayload; onPlayAgain: () => void }): JSX.Element
+// Agent 1: ending engine API, exported from @/engine (details in AGENT_1 §9). Agent 5 calls it directly from the reveal.
+export function outcomeLines(mc: MonteCarloResult, startNetWorth: number): OutcomeLines
+export function listDecisions(config: GameConfig, policyLog: PolicyLogEntry[]): DecisionChoice[]
+export function runWhatIfAsync(input: WhatIfInput, signal?: AbortSignal): Promise<WhatIfResult>
+
 // Agent 5: src/game/title/GuideWindow.tsx: how to play, town, controls, FAQ; also opened from Agent 4's pause menu
 export function GuideWindow(props: { onClose: () => void }): JSX.Element
 
@@ -431,7 +451,7 @@ Agent 3 may commit its own panel screenshots.
 
 **Merge order (Agent 1 merges; nobody else merges to `main`):**
 Phase 0 stubs (all five) → Agent 2 kit core → Agent 1 pipeline + palette → Agent 1 world v1 → Agent 2 HUD/control bar →
-Agent 4 GameScreen/router → Agent 3 windows → Agent 5 title → Agent 5 reveal → polish PRs from everyone → Agent 1 final
+Agent 4 GameScreen/router → Agent 3 windows → Agent 5 title → **Agent 1 ending engine API** → Agent 5 reveal → polish PRs from everyone → Agent 1 final
 cleanup (delete legacy CSS/components, regenerate screenshots, update docs).
 
 **Done for the whole team means:**

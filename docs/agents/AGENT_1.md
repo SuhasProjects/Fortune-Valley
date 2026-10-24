@@ -6,7 +6,9 @@ Branch: `agent1-world`. You are also the **only one who merges to `main`**.
 **Plain English:** you build the town itself, made from real pieces instead of one picture: the tool that turns
 text-drawn pixel art into game graphics, the ground (grass, winding paths, river), the five buildings and every prop,
 the animations, the hover and "decision waiting" effects, the crisp no-stretch scaling, and a dusk version for the
-results screen. Then you merge everyone's work in order and do the final cleanup.
+results screen. You also add the engine pieces behind the new ending (the most important screen): a list of the
+player's decisions with alternatives, and "what if I'd chosen differently?" re-runs of the 1,000 futures, including a
+replay of the player's exact game with one decision changed. Then you merge everyone's work in order and do the final cleanup.
 
 You get the heaviest load because the town *is* the game's look, and the previous human attempts (canvas-drawn art, then
 a pasted image) were rejected. Quality is the whole job: the target is
@@ -48,6 +50,10 @@ Push `[agent1] contracts: GameStage, TownWorld, Sprite, landmarks, palette` with
 - `art-src/palette.json` (keys/names/hex from README §4) and generated `src/styles/palette.css`
   (`:root { --c-outline: #4a311c; … }`). Ask Agent 2 to `@import './palette.css'` from `index.css` (their file),
   or import it from `GameStage.tsx` yourself until they do.
+- **Ending API stub** (§9): the types plus `outcomeLines`, `listDecisions`, `runWhatIfAsync` exported from `@/engine`.
+  `outcomeLines` can be real already (it's trivial). The other two may return plausible fake data, clearly marked
+  `// STUB`, so Agent 5 can build the results screen against the final shapes. Implement them for real right after the
+  stubs merge; Agent 5's results screen is blocked on them.
 
 Then merge the five Phase 0 stubs in this order: 2, 1, 4, 3, 5. Resolve only trivial conflicts; bounce anything bigger.
 
@@ -217,7 +223,99 @@ inside a fixed box; add a `size` prop if Agent 3 asks for a smaller one.
 
 ---
 
-## 9. Done checklist
+## 9. The ending engine API (`src/engine/whatIf.ts`, `src/engine/whatIf.worker.ts`)
+
+The game ending changed and is now **the most important screen**. After 1,000 Monte Carlo futures, the player sees
+straight lines from their starting net worth to the 10th percentile, median and 90th percentile endings, plus a highlighted
+line to their actual ending. A dropdown lets them change **one** past decision and see the same chart re-run beside the
+original. Agent 5 builds the screen (AGENT_5 §6); you build everything numeric. The UI does no math, not even
+subtraction for the deltas.
+
+**What exists:** `runMonteCarlo(config, policyLog, observedState, {paths, seed, months})` replays `policyLog` on
+`paths` independent seeds `pathSeed(baseSeed, i)` (`replayPath` creates `createGame({...config, seed})` and applies each logged
+action at its month; `apply_event_option` entries replay via `resolvedEffect`; entries that no longer apply count as
+`replayFallbacks`). `compareStrategies(config, logA, logB, labels, {paths, seed, months})` runs both logs on the **same**
+path seeds (paired luck). `MonteCarloSummary` already has `p10`, `median`, `p90`. The finish payload holds `config`,
+`policyLog`, `finalState` (`netWorthHistory[0]` is the starting net worth) and `monteCarlo` (`seed`, `pathsRequested`,
+`months`, `observedNetWorth`). `PolicyLogEntry = { monthIndex, action, resolvedEffect?, context? }`.
+
+**Types and functions (export all from `src/engine/index.ts`; add the types to `src/types/domain.ts`):**
+
+```ts
+export interface OutcomeLines {
+  months: number; start: number;          // line origin: (0, start)
+  p10: number; median: number; p90: number; // endings for "bad luck", "typical", "good luck"
+  yourEvents: number;                      // ending of the player's exact game (original: observed; what-if: exact replay)
+  spread: number;                          // p90 - p10
+}
+export function outcomeLines(mc: MonteCarloResult, startNetWorth: number): OutcomeLines   // pure, from existing fields
+
+export interface DecisionAlternative { id: string; label: string }   // e.g. "Keep saving $150/month (before)", "Don't make this payment"
+export interface DecisionChoice {
+  id: string;                  // stable: `${logIndex}` or 'all'
+  logIndex: number | null;     // null for 'all'
+  monthIndex: number | null;
+  label: string;               // "Month 3 · Save $300/month", "Month 7 · Accepted job offer: Junior analyst"
+  alternatives: DecisionAlternative[];  // never empty
+}
+export function listDecisions(config: GameConfig, policyLog: PolicyLogEntry[]): DecisionChoice[]
+
+export interface WhatIfInput { config: GameConfig; policyLog: PolicyLogEntry[]; finishMonteCarlo: MonteCarloResult;
+  startNetWorth: number; observedNetWorth: number; decisionId: string; alternativeId: string }
+export interface WhatIfResult {
+  decisionLabel: string; alternativeLabel: string;
+  original: OutcomeLines; changed: OutcomeLines;
+  delta: { p10: number; median: number; p90: number; yourEvents: number; spread: number };  // changed - original
+  yourEventsComparable: boolean;   // false if the exact replay could not reproduce the original game (see below)
+  replayFallbacks: number;
+}
+export function runWhatIf(input: WhatIfInput): WhatIfResult                      // synchronous core, used by tests
+export function runWhatIfAsync(input: WhatIfInput, signal?: AbortSignal): Promise<WhatIfResult>   // Web Worker
+```
+
+**Rules:**
+1. **Which decisions are listed:** every policy-changing entry (`set_contributions`, `set_allocation`, `set_budget`,
+   `set_insurance`, `make_extra_payment`, `apply_event_option`, plus any other action `hasPolicyDecisions` treats as a decision).
+   Skip pause/resume/finish/notification actions. Order by month. Prepend `{ id: 'all', label: 'All my decisions',
+   alternatives: [{ id: 'defaults', label: 'Never change anything (default plan)' }] }` when there is at least one decision.
+   Labels are engine-generated plain English with formatted dollar amounts (reuse a shared `describeAction`; add one if missing).
+2. **Alternatives per action** (always include "undo"):
+   - `set_contributions`, `set_budget`, `set_allocation`, `set_insurance`: **"Keep what you had before"** (the value in
+     force just before this entry; derive it by replaying the log up to that entry, or record `previous` on the entry at
+     apply time), plus 2 meaningful variants: contributions/budget at **half** and **double** the chosen amount (clamped to
+     `BOUNDS`); allocation presets **All bonds**, **All diversified ETF**, **60/40 ETF/bonds**; insurance: every other health plan.
+   - `make_extra_payment`: "Don't make this payment" and "Pay double" (capped by what the replay allows; the engine's
+     validation decides, and a rejected action counts as a fallback).
+   - `apply_event_option`: every **other** option of that event. The log currently only keeps the chosen option's
+     `resolvedEffect`, so **extend `PolicyLogEntry` with `alternatives?: { optionId, label, effect }[]`** recorded when the
+     choice is applied (in `applyAction`), bump `SAVE_SCHEMA_VERSION` and accept old saves (missing alternatives → only "undo").
+3. **Changed log:** copy the log, replace (or remove, for "undo"/"don't") that one entry, leave the others alone. Later
+   entries that no longer make sense in the changed world fall back exactly as Monte Carlo does today (counted).
+4. **The 1,000 changed futures must be paired with the finish run:** same `seed = finishMonteCarlo.seed`, same `paths`,
+   same `months`, so the only difference between the two charts is the decision, not the luck. `original` is built
+   from `finishMonteCarlo` via `outcomeLines` (don't recompute it).
+5. **"Your exact events" line:** `original.yourEvents = observedNetWorth`. `changed.yourEvents` = replay of the changed log
+   on the **played game's own seed** (`config.seed`) for `months` months. First prove that replaying the *unchanged* log on
+   `config.seed` reproduces `observedNetWorth`. Write that test for all four premade lives with a few scripted decisions. If it
+   doesn't match (live Type B AI events are not reproduced by `replayPath`; job-offer context), make the exact replay
+   inject the recorded events, or set `yourEventsComparable = false` and compute `delta.yourEvents` against the unchanged
+   replay instead of the observed value. Never show a delta that mixes replay error with the decision's effect.
+6. **Performance:** 1,000 paths currently take ~1 s on the main thread. `runWhatIfAsync` runs `runWhatIf` in a module
+   Web Worker (`new Worker(new URL('./whatIf.worker.ts', import.meta.url), { type: 'module' })`, which Vite supports), honours
+   `AbortSignal` (terminate the worker), and falls back to a `setTimeout`-yielded main-thread run when `Worker` is
+   unavailable (jsdom/Vitest). Cache results by `${decisionId}:${alternativeId}` inside the module for the current payload.
+   Target < 1.5 s per what-if on a laptop.
+7. **Determinism:** same input → identical result. All numbers rounded like the rest of the engine (`round2`).
+
+**Tests (`tests/engine/whatIf.test.ts`):** `outcomeLines` maps fields; `listDecisions` labels and alternatives for each
+action type, 'all' only when decisions exist; undo equals the baseline comparison when there is a single decision; changed
+run uses the finish seed (an unchanged alternative gives `delta` all zeros); exact-replay reproduction test (rule 5);
+determinism; old saves without `alternatives` still load; the async wrapper resolves the same result as the sync core and
+rejects on abort.
+
+---
+
+## 10. Done checklist
 
 - [ ] `npm run art` rebuilds every PNG byte-for-byte deterministically; compiler tests pass.
 - [ ] Town at 1440×900 vs reference via `art:compare`: same layout, buildings recognisably the same, same palette, no
@@ -227,3 +325,4 @@ inside a fixed box; add a `size` prop if Agent 3 asks for a smaller one.
 - [ ] Hover, focus, open-door and decision badge states all work by mouse and keyboard.
 - [ ] Dusk mode looks good behind Agent 5's results ledger.
 - [ ] Old image-based town and its CSS are deleted; all suites green on `main`.
+- [ ] Ending API (§9) is real, paired with the finish run, exact-replay verified, off the main thread, fully tested.
