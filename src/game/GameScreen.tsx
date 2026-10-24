@@ -11,7 +11,7 @@ import { useShortcuts } from './flow/useShortcuts'
 import { ActivityWindow } from './flow/ActivityWindow'
 import { TimelineWindow } from './flow/TimelineWindow'
 import { ConfirmDialog } from './flow/ConfirmDialog'
-import { OptionsWindow } from './settings'
+import { OptionsWindow, setSetting, useSettings } from './settings'
 import { sfx } from './audio/sfx'
 import { GameStage } from './stage/GameStage'
 import { TownWorld } from './world/TownWorld'
@@ -20,6 +20,7 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   const store = useGameStore()
   const netWorth = useGameStore(selectNetWorth)
   const debt = useGameStore(selectDebtTotal)
+  const settings = useSettings()
   const [menu, setMenu] = useState<'pause' | 'options' | 'guide' | null>(null)
   const [finishConfirm, setFinishConfirm] = useState(false)
   const [confirm, setConfirm] = useState<'restart' | 'delete-save' | null>(null)
@@ -30,6 +31,7 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   const previousCash = useRef<number | null>(null)
   const previousTypeB = useRef(0)
   const pauseWasAlreadyPaused = useRef(false)
+  const previousModalOpen = useRef(false)
   useEffect(() => {
     if (!store.lastActionError) return
     const timeout = window.setTimeout(store.clearActionError, 5_000)
@@ -39,6 +41,7 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   const { game, config } = store
   const panel = store.openBuildingId
   const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || finishConfirm || confirm)
+  const [tipStep, setTipStep] = useState(() => settings.tips && !settings.tipsSeen && game.monthIndex === 0 ? 0 : -1)
   const openPause = () => {
     pauseWasAlreadyPaused.current = game.status === 'paused'
     setMenu('pause')
@@ -94,6 +97,14 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     document.addEventListener('click', click)
     return () => document.removeEventListener('click', click)
   }, [])
+  useEffect(() => {
+    if (modalOpen !== previousModalOpen.current) sfx(modalOpen ? 'open' : 'close')
+    previousModalOpen.current = modalOpen
+  }, [modalOpen])
+  const nextTip = () => {
+    if (tipStep < 2) setTipStep(step => step + 1)
+    else { setTipStep(-1); setSetting('tipsSeen', true) }
+  }
   const hud = <header className="town-hud"><div className="hud-brand"><span className="brand-mark"><PixelIcon/></span><div className="wordmark">FINANCIAL TOWN<small>{config.title}</small></div></div><dl className="hud-stats"><div className="hud-date"><dt><PixelIcon kind="calendar"/>{monthLabel(config.startMonth,game.monthIndex)}</dt><dd>Month {game.monthIndex} / {config.durationMonths}</dd></div><div><dt><PixelIcon kind="coin"/>Cash</dt><dd>{usd(game.cash)}</dd></div><div><dt><PixelIcon kind="leaf"/>Savings</dt><dd>{usd(game.savings)}</dd></div><div><dt><PixelIcon kind="book"/>Debt</dt><dd>{usd(debt)}</dd></div><div className="hud-net"><dt><PixelIcon kind="coin"/>Net worth</dt><dd>{usd(netWorth)}</dd></div></dl><button className="pixel-button" onClick={store.openTimeline}>Timeline ↗</button></header>
   const gameStatus = <>{<span className="offline-tag">{game.status === 'paused' ? 'PAUSED' : game.status === 'finished' ? 'STORY COMPLETE' : store.aiStatus === 'loading' ? 'PREPARING OPPORTUNITY' : store.aiStatus === 'online' ? 'AI CONNECTED' : 'OFFLINE READY'}</span>}{saved && <span className="offline-tag" role="status">✓ Saved</span>}<button className="icon-button" aria-label="Open pause menu" onClick={openPause}>⚙</button></>
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
@@ -102,6 +113,11 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     <FullscreenGameView hud={hud} status={gameStatus} blocked={modalOpen || finishing} onFinish={requestFinish}>
     {store.lastActionError && <p className="action-error pixel-panel" role="alert">{store.lastActionError}</p>}
     {monthBanner && <div className="month-banner pixel-panel" role="status">Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</div>}
+    {tipStep >= 0 && <aside className={`coach-tip coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
+      <strong>{tipStep === 0 ? 'Explore the town' : tipStep === 1 ? 'Control the calendar' : 'Watch your whole picture'}</strong>
+      <p>{tipStep === 0 ? 'Each building holds a different part of your financial life.' : tipStep === 1 ? 'Advance when you are ready, or let auto-time move the story.' : 'Your cash, savings, debt, and net worth update together in the HUD.'}</p>
+      <button className="pixel-button" onClick={nextTip}>{tipStep === 2 ? 'Got it' : 'Next tip'}</button>
+    </aside>}
     {panel && <PanelHost building={panel} onClose={store.closeBuilding}>{game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')).map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
     {store.timelineOpen && <TimelineWindow entries={game.timeline} startMonth={config.startMonth} onClose={store.closeTimeline}/>}
     {store.historyOpen && <ActivityWindow notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={building => { store.setHistoryOpen(false); store.openBuilding(building) }}/>}

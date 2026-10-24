@@ -9,9 +9,10 @@ interface ToastProps {
   notification: GameNotification
   dismiss: (id: string) => void
   openBuilding?: (building: NonNullable<GameNotification['relatedBuilding']>) => void
+  reduceMotion?: boolean
 }
 
-function Toast({ notification: item, dismiss, openBuilding }: ToastProps) {
+function Toast({ notification: item, dismiss, openBuilding, reduceMotion }: ToastProps) {
   const [hovered, setHovered] = useState(false)
   const remaining = useRef(6_000)
   const started = useRef(0)
@@ -25,7 +26,7 @@ function Toast({ notification: item, dismiss, openBuilding }: ToastProps) {
     }
   }, [dismiss, hovered, item.id, item.kind])
   const icon = item.kind === 'decision' ? '🔔' : item.kind === 'positive' ? '●' : item.kind === 'negative' ? '◒' : '▤'
-  return <motion.article className={`pixel-panel notice notice--${item.kind}`} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ opacity: 0 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+  return <motion.article className={`pixel-panel notice notice--${item.kind}`} initial={reduceMotion ? false : { y: 12, opacity: 0 }} animate={reduceMotion ? undefined : { y: 0, opacity: 1 }} exit={reduceMotion ? undefined : { opacity: 0 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
     <div><small>{icon} · Month {item.monthIndex}</small><button className="icon-button" aria-label={`Dismiss ${item.summary}`} onClick={() => dismiss(item.id)}>×</button></div>
     <strong>{item.summary}</strong>
     {item.amountSigned !== undefined && <span className={item.amountSigned < 0 ? 'money-negative' : 'money-positive'}>{usd(item.amountSigned, true)}</span>}
@@ -38,7 +39,7 @@ export function ToastStack({ notifications, onOpenBuilding, onViewAll, onDismiss
   const { reduceMotion } = useSettings()
   const visible = notifications.filter(item => !item.read).sort((a, b) => Number(b.kind === 'decision') - Number(a.kind === 'decision') || b.monthIndex - a.monthIndex).slice(0, 3)
   return <aside className="notification-stack" aria-label="Recent financial activity" aria-live="polite">
-    <AnimatePresence initial={false}>{visible.map(item => <Toast key={item.id} notification={item} dismiss={onDismiss} openBuilding={onOpenBuilding}/>)}</AnimatePresence>
+    <AnimatePresence initial={false}>{visible.map(item => <Toast key={item.id} notification={item} dismiss={onDismiss} openBuilding={onOpenBuilding} reduceMotion={reduceMotion}/>)}</AnimatePresence>
     {notifications.length > 0 && <button className="pixel-button history-button" onClick={onViewAll}>View all activity</button>}
     {reduceMotion && <span className="sr-only">Animations reduced</span>}
   </aside>
