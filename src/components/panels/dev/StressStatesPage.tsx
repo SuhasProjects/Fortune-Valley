@@ -18,7 +18,7 @@ function StressCase({ title, initialState }: { title: string; initialState: Game
 export function StressStatesPage() {
   const [fixtures] = useState(stressFixtures);
   return <main><h1>Financial panels · stress states</h1>
-    <p>Engine fixture sandbox. Changes stay on this page. Shared pixel kit hookup is pending; this dev page intentionally has no local styling.</p>
+    <p>Fixture sandbox · Changes stay on this page.</p>
     {fixtures.map(fixture => <StressCase key={fixture.id} title={fixture.title} initialState={fixture.state} />)}
   </main>;
 }
