@@ -9,3 +9,4 @@ export { settleClaim, applyEffect, describeEffect, activePlan } from './events';
 export { validateAllocation, validateEffect, validateConfig, validatePlanId } from './validation';
 export { makeRng, monthRng, hashSeed, pathSeed, type Rng } from './rng';
 export * from './selectors';
+export { serializeSave, parseSave, defaultStorage, SAVE_STORAGE_KEY, SAVE_SCHEMA_VERSION, type SaveFile, type ParsedSave, type KeyValueStorage } from './persistence';

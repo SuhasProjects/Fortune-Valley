@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { scenarios } from './data/scenarios'
 import { GameClock, NotificationStack, monthLabel, usd } from './components/flow'
 import { selectDebtTotal, selectNetWorth, useGameStore, type FinishPayload } from './stores/useGameStore'
@@ -9,6 +9,7 @@ import type { BuildingId } from './types/domain'
 import { ConnectedBuildingPanel } from './components/panels/ConnectedBuildingPanel'
 import { PixelIcon, PixelPortrait, WorldBackdrop } from './components/layout/PixelArt'
 import EngineHarness from './dev/EngineHarness'
+import { RevealChart } from './components/reveal'
 
 // Agent 3 supplies controlled panels. Agent 5 mounts its computed reveal here.
 export interface AppProps {
@@ -25,6 +26,7 @@ function Town({ panels = {}, renderReveal }: AppProps) {
   const store = useGameStore()
   const netWorth = useGameStore(selectNetWorth)
   const debt = useGameStore(selectDebtTotal)
+  useEffect(() => { store.refreshSavedGame() }, [])
   if (!store.game || !store.config) return <main className="town-landing">
     <WorldBackdrop/>
     <header className="landing-nav"><a className="wordmark" href="#"><PixelIcon/> FINANCIAL TOWN</a><span className="offline-tag">PLAYABLE OFFLINE</span></header>
@@ -35,6 +37,7 @@ function Town({ panels = {}, renderReveal }: AppProps) {
       <a className="pixel-button pixel-button--gold hero-play" href="#starting-lives"><PixelIcon kind="leaf"/> Begin your story <span aria-hidden="true">&rarr;</span></a>
       <div className="hero-details"><span>No scores to chase</span><span>Your choices carry forward</span><span>A new story every time</span></div>
     </section>
+    {store.savedGame && <section className="personalization pixel-panel" aria-label="Saved game"><div><span className="eyebrow">SAVED GAME</span><h2>Continue {store.savedGame.title}</h2><p>Month {store.savedGame.monthIndex}, saved on this device.</p></div><div><button className="pixel-button pixel-button--gold" onClick={() => store.loadSavedGame()}>Continue →</button> <button className="pixel-button" onClick={store.clearSavedGame}>Delete save</button></div></section>}
     <section id="starting-lives" className="starting-lives quest-board">
       <div className="board-pin pin-left"/><div className="board-pin pin-right"/>
       <div className="section-heading"><PixelIcon kind="book"/><div><span className="eyebrow">NEW SAVE FILE</span><h2>Choose your starting life</h2></div><span>Who will you be?</span></div>
@@ -54,7 +57,7 @@ function Town({ panels = {}, renderReveal }: AppProps) {
     {panel && !store.finishPayload && <PanelHost building={panel} onClose={store.closeBuilding}>{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
     {store.timelineOpen && !store.finishPayload && <PanelHost title="Your timeline" onClose={store.closeTimeline}>{game.timeline.length ? <ol className="story-list">{game.timeline.map(e=><li key={e.id}><span className="eyebrow">MONTH {e.monthIndex} · {e.type.replaceAll('_',' ')}</span><p>{e.description}</p></li>)}</ol> : <p>Your story starts here. Advance a month or make a decision to add to your timeline.</p>}</PanelHost>}
     {store.historyOpen && !store.finishPayload && <PanelHost title="Town activity" onClose={()=>store.setHistoryOpen(false)}><ol className="story-list">{game.notifications.map(n=><li key={n.id}><span className="eyebrow">MONTH {n.monthIndex} · {n.kind}</span><h3>{n.summary}</h3>{n.details && <p>{n.details}</p>}{n.amountSigned !== undefined && <strong>{usd(n.amountSigned,true)}</strong>}{n.relatedBuilding && <button className="pixel-button" onClick={()=>{ store.setHistoryOpen(false); store.openBuilding(n.relatedBuilding!) }}>Open building →</button>}</li>)}</ol></PanelHost>}
-    {store.finishPayload && <PanelHost title="Your next chapter" onClose={store.resetGame}>{renderReveal ? renderReveal(store.finishPayload) : <><span className="eyebrow">ACTUAL PLAY OUTCOME</span><h3 className="observed-value">{usd(netWorth)}</h3><p>Observed net worth after {game.monthIndex} months, with {game.policyLog.length} recorded policy decisions.</p><div className="computed-reveal"><h3>Same strategy, {store.finishPayload.monteCarlo.pathsCompleted.toLocaleString()} futures</h3><p>Your strategy was replayed over {store.finishPayload.monteCarlo.months} months.</p><dl><div><dt>Median ending net worth</dt><dd>{usd(store.finishPayload.monteCarlo.median)}</dd></div><div><dt>10th to 90th percentile range</dt><dd>{usd(store.finishPayload.monteCarlo.p10)} to {usd(store.finishPayload.monteCarlo.p90)}</dd></div><div><dt>Probability of negative net worth</dt><dd>{Math.round(store.finishPayload.monteCarlo.probabilityNegativeNetWorth * 100)}%</dd></div><div><dt>Probability of emergency borrowing</dt><dd>{Math.round(store.finishPayload.monteCarlo.probabilityLiquidityShortfall * 100)}%</dd></div></dl>{store.finishPayload.monteCarlo.percentileOfObserved !== undefined ? <p>About {Math.round(store.finishPayload.monteCarlo.percentileOfObserved * 100)}% of simulated paths ended below your observed outcome. This reflects uncertainty, not a grade for your choices.</p> : <p>The observed and simulated horizons differ, so no observed percentile is shown.</p>}<details><summary>Simulation assumptions</summary><ul>{store.finishPayload.monteCarlo.assumptionsSummary.map(note => <li key={note}>{note}</li>)}</ul></details></div><button className="pixel-button pixel-button--gold" onClick={store.resetGame}>Choose a new story →</button></>}</PanelHost>}
+    {store.finishPayload && <PanelHost title="Your next chapter" onClose={store.resetGame}>{renderReveal ? renderReveal(store.finishPayload) : <RevealChart payload={store.finishPayload} onReset={store.resetGame}/>}</PanelHost>}
     {game.status === 'finished' && !store.finishPayload && <div className="completion-banner pixel-panel"><p>Your final month is complete.</p><button className="pixel-button pixel-button--gold" onClick={store.finishGame}>Review your story →</button></div>}
   </GameShell>
 }

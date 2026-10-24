@@ -65,6 +65,10 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 
 `finishPayload.monteCarlo.comparison` (when the player made any decision) pairs the player's strategy against the default policy under identical luck: `a`/`b` summaries, `pairedMedianDifference`, `probabilityAOutperformsB`. `histogram(endingNetWorths, bins)` returns chart-ready buckets. Full gateway examples: `docs/AI_API.md`.
 
+## Save & resume (one slot)
+
+The store autosaves after every month (`saveGame()`), exposes `savedGame` metadata for a "Continue" button, `loadSavedGame()`, `clearSavedGame()` and `refreshSavedGame()` (call once at app start). Saves are schema-versioned (`SAVE_SCHEMA_VERSION`), validated and reconciled on load; anything invalid is discarded rather than loaded. Storage is `localStorage` when available, otherwise persistence is silently off.
+
 ## Town shell (Agent 2)
 
 `App({ panels?, renderReveal? })`: Agent 3 passes `panels` as a partial `Record<BuildingId, ReactNode>`; Agent 5 passes `renderReveal(payload: FinishPayload)`. `TownScene` takes `eventBuildings: BuildingId[]`; `PanelHost` is the accessible dialog every panel renders inside. See `docs/TOWN_HANDOFF.md`.
