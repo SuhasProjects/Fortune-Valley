@@ -1,0 +1,15 @@
+{
+  "src": "/art/world/buildings/hospital.png",
+  "w": 69,
+  "h": 47,
+  "frames": [
+    "0",
+    "hover",
+    "lit",
+    "lights"
+  ],
+  "anchor": [
+    34,
+    46
+  ]
+}

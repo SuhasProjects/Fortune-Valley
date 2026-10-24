@@ -1,0 +1,11 @@
+size 3x3
+frames 2
+speed 500
+--- 0
+.i.
+iOi
+.i.
+--- 1
+...
+.i.
+...

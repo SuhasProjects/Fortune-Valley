@@ -1,0 +1,22 @@
+/* One frame of a horizontal sprite sheet, sized in art pixels times --px. Frame = --i; loops over --loop frames. */
+.fv-sprite {
+  display: block;
+  width: calc(var(--w) * var(--px, 4px));
+  height: calc(var(--h) * var(--px, 4px));
+  background-repeat: no-repeat;
+  background-size: calc(var(--w) * var(--n) * var(--px, 4px)) calc(var(--h) * var(--px, 4px));
+  background-position: calc(var(--i) * var(--w) * var(--px, 4px) * -1) 0;
+  image-rendering: pixelated;
+}
+.fv-sprite--animate {
+  animation: fv-sheet var(--dur) steps(var(--loop)) infinite;
+}
+@keyframes fv-sheet {
+  from { background-position-x: 0; }
+  to { background-position-x: calc(var(--loop) * var(--w) * var(--px, 4px) * -1); }
+}
+.fv-portrait { display: inline-block; }
+@media (prefers-reduced-motion: reduce) {
+  .fv-sprite--animate { animation: none; }
+}
+.fv-still .fv-sprite--animate { animation: none; }

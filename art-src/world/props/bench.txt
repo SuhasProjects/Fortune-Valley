@@ -1,0 +1,14 @@
+size 19x11
+anchor 9,10
+--- 0
+...................
+...kkkkkkkkkkkkk...
+.YkDDDDDDDDDDDDDk..
+..kbbbbbbbbbbbbbKG.
+..kbbbbbbbbbbbbbk..
+.KKwwwwwwwwwwwwwkw.
+.KDDnnDDDDnnnnnnnk.
+.kWWKkkkkkkkkkwWWK.
+.Jwk..........KwwJ.
+.GWW..........KkkG.
+...................

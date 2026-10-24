@@ -1,0 +1,15 @@
+{
+  "src": "/art/world/buildings/office.png",
+  "w": 68,
+  "h": 42,
+  "frames": [
+    "0",
+    "hover",
+    "lit",
+    "lights"
+  ],
+  "anchor": [
+    34,
+    41
+  ]
+}

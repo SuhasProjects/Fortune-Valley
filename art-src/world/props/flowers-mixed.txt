@@ -1,0 +1,24 @@
+size 11x9
+frames 2
+anchor 5,8
+speed 800
+--- 0
+...........
+........QQ.
+.......QOO.
+.......qOO.
+.qQqqttGqQ.
+.qaaqttttt.
+..qqjtQQtt.
+.ttttQ..Qt.
+...........
+--- 1
+...........
+.........QQ
+........QOO
+........qOO
+.qQqqttGqQ.
+.qaaqttttt.
+..qqjtQQtt.
+.ttttQ..Qt.
+...........

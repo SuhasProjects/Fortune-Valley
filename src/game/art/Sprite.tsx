@@ -1,26 +1,39 @@
+import type { CSSProperties } from 'react'
 import type { BuildingId } from '@/types/domain'
 import { BUILDINGS } from '../world/landmarks'
+import { SPRITES, type SpriteName } from './manifest'
+import './sprite.css'
 
-/** Name of a compiled sprite (`art-src/<path>.txt` → `public/art/<path>.png`). Narrowed to a union once the manifest is generated. */
-export type SpriteName = string
+export type { SpriteName }
 
 export interface SpriteProps {
   name: SpriteName
-  frame?: number
-  /** Loop through the sprite's frames at its authored speed. */
+  /** Frame index, or a derived variant by name (`hover`, `lit`, `lights`). */
+  frame?: number | string
+  /** Loop through the authored frames at the sprite's own speed (variants are never part of the loop). */
   animate?: boolean
   className?: string
   /** Accessible label; omitted = decorative. */
   label?: string
+  style?: CSSProperties
 }
 
-// STUB (Phase 0): a labelled placeholder box until the art pipeline and manifest land. Props are final.
-export function Sprite({ name, className, label }: SpriteProps) {
-  return <span className={`fv-sprite fv-sprite--stub ${className ?? ''}`} data-sprite={name} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}
-    style={{ display: 'inline-block', width: 'calc(16 * var(--px, 4px))', height: 'calc(16 * var(--px, 4px))', background: 'var(--c-parchment-shadow)', outline: 'var(--px, 4px) solid var(--c-outline)' }}/>
+const isAuthored = (frameName: string) => /^\d+$/.test(frameName)
+
+/** Draw one frame of a compiled sprite sheet at the current `--px` zoom. */
+export function Sprite({ name, frame = 0, animate = false, className, label, style }: SpriteProps) {
+  const meta = SPRITES[name]
+  const index = typeof frame === 'number' ? frame : Math.max(0, meta.frames.indexOf(frame))
+  const loop = meta.frames.filter(isAuthored).length
+  const vars = {
+    '--w': meta.w, '--h': meta.h, '--n': meta.frames.length, '--i': index,
+    '--loop': loop, '--dur': `${loop * (meta.speed ?? 250)}ms`, backgroundImage: `url(${meta.src})`, ...style,
+  } as CSSProperties
+  return <span className={`fv-sprite${animate && loop > 1 ? ' fv-sprite--animate' : ''}${className ? ` ${className}` : ''}`}
+    style={vars} data-sprite={name} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true}/>
 }
 
 /** Building portrait for window headers, the story picker and the guide. */
 export function BuildingPortrait({ building }: { building: BuildingId }) {
-  return <Sprite name={`world/buildings/${building}`} label={BUILDINGS[building].title}/>
+  return <Sprite name={`world/buildings/${building}`} label={BUILDINGS[building].title} className="fv-portrait"/>
 }

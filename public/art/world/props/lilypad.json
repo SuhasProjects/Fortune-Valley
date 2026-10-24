@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/lilypad.png",
+  "w": 9,
+  "h": 7,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    4,
+    6
+  ],
+  "speed": 900
+}
