@@ -80,6 +80,7 @@ for (const viewport of [{ width: 1366, height: 768 }, { width: 1440, height: 900
       await opener.focus(); await page.keyboard.press('Enter');
       const dialog = page.getByRole('dialog', { name, exact: true });
       await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('heading', { name, exact: true })).toBeVisible();
       const box = await dialog.boundingBox();
       expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.y).toBeGreaterThanOrEqual(0);
       expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
