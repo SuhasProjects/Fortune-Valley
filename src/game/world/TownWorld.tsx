@@ -55,7 +55,7 @@ export function TownWorld({ onBuildingClick, eventBuildings = [], openBuilding =
         const inner = <>
           <Sprite name={sprite} className="fv-building__base"/>
           <Sprite name={sprite} frame="hover" className="fv-building__hover"/>
-          <span className="fv-plaque"><span>{title}</span></span>
+          <span className="fv-town-plaque"><span>{title}</span></span>
           {event && <span className="fv-badge" aria-label="Decision waiting"><Sprite name="world/fx/badge"/></span>}
         </>
         return interactive
