@@ -21,7 +21,7 @@ Path alias `@/` → `src/`. Run `npm run typecheck && npm test` before every PR.
 
 ```ts
 createGame(config: GameConfig): GameState                       // throws on invalid config
-advanceMonth(state: GameState, opts?: { lean?, inPlace?, rng? }): GameState   // pure; status 'finished' → returns input
+advanceMonth(state: GameState, opts?: { lean?, inPlace?, rng? }): GameState   // pure; status 'finished' or 'paused' → returns input
 applyAction(state: GameState, action: GameAction): ActionResult // { ok:true, state } | { ok:false, code, message, state: original }
 runMonteCarlo(config, policyLog, observedState, { paths?=1000, seed?=config.seed, months? }): MonteCarloResult
 compareStrategies(config, logA, logB, { a, b }, { months, paths?, seed? }): MonteCarloComparison

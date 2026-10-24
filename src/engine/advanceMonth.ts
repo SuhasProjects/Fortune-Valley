@@ -48,7 +48,7 @@ export function annualWithholding(s: GameState, annualGross: number): { incomeTa
 }
 
 export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameState {
-  if (input.status === 'finished') return input;
+  if (input.status === 'finished' || input.status === 'paused') return input;
   const s: GameState = opts.inPlace ? input : structuredClone(input);
   const lean = opts.lean === true;
   const m = s.monthIndex;
