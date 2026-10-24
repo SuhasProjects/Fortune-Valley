@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { scenarios } from '../data/scenarios';
+import { fixtureEventB } from '../fixtures';
 import { useGameStore } from './useGameStore';
 
 beforeEach(() => useGameStore.getState().resetGame());
@@ -25,6 +26,38 @@ describe('game store', () => {
     expect(game.policyLog[0]?.monthIndex).toBe(1);
     for (let i = 0; i < 3; i++) useGameStore.getState().advanceOneMonth();
     expect(useGameStore.getState().game!.policy.savingsContributionPerMonth).toBe(333);
+  });
+  it('posts one unique notification set for a month without duplicates', () => {
+    useGameStore.getState().startGame(scenarios[0]!);
+    const initialCount = useGameStore.getState().game!.notifications.length;
+    useGameStore.getState().advanceOneMonth();
+    const notifications = useGameStore.getState().game!.notifications;
+    const newlyPosted = notifications.slice(initialCount);
+    expect(notifications.length).toBeGreaterThan(0);
+    expect(new Set(notifications.map((item) => item.id)).size).toBe(notifications.length);
+    expect(newlyPosted.length).toBeGreaterThan(0);
+    expect(newlyPosted.every((item) => item.monthIndex === useGameStore.getState().game!.monthIndex - 1)).toBe(true);
+  });
+  it('routes a Type B event to its building and cannot resolve it twice', () => {
+    useGameStore.getState().startGame(scenarios[1]!);
+    const enqueue = useGameStore.getState().dispatchAction({ type: 'enqueue_event', event: fixtureEventB });
+    expect(enqueue?.ok).toBe(true);
+    expect(useGameStore.getState().game!.activeEvents[0]?.buildingTarget).toBe(fixtureEventB.buildingTarget);
+    const action = { type: 'apply_event_option' as const, eventId: fixtureEventB.id, optionId: fixtureEventB.options[0]!.id };
+    expect(useGameStore.getState().dispatchAction(action)?.ok).toBe(true);
+    const after = useGameStore.getState().game;
+    const duplicate = useGameStore.getState().dispatchAction(action);
+    expect(duplicate?.ok).toBe(false);
+    expect(duplicate && !duplicate.ok ? duplicate.code : null).toBe('unknown_event');
+    expect(useGameStore.getState().game).toBe(after);
+  });
+  it('invalidates pending request versions when a newer game starts', () => {
+    const before = useGameStore.getState().requestVersion;
+    useGameStore.getState().startGame(scenarios[0]!);
+    const first = useGameStore.getState().requestVersion;
+    useGameStore.getState().startGame(scenarios[1]!);
+    expect(first).toBe(before + 1);
+    expect(useGameStore.getState().requestVersion).toBe(first + 1);
   });
   it('rejects an invalid allocation without mutating state', () => {
     useGameStore.getState().startGame(scenarios[1]!);
