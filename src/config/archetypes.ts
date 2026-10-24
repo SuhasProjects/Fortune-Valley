@@ -33,8 +33,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
     initialState: base({
       cash: 800,
       savings: 300,
-      employment: { status: 'employed', title: 'Part-time barista', grossAnnualSalary: 18000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 18000 },
-      household: { housingKind: 'dorm', housingMonthly: 650, essentialsMonthly: 450, discretionaryMonthly: 200, dependents: 0 },
+      employment: { status: 'employed', title: 'Part-time barista', grossAnnualSalary: 22000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 22000 },
+      household: { housingKind: 'dorm', housingMonthly: 550, essentialsMonthly: 400, discretionaryMonthly: 180, dependents: 0 },
       debts: [
         { id: 'cc_1', name: 'Credit card', kind: 'credit_card', balance: 1200, apr: 0.249, minimumPayment: 40 },
         { id: 'student_1', name: 'Student loan', kind: 'student_loan', balance: 14000, apr: 0.055, minimumPayment: 0 },
@@ -51,11 +51,11 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
     initialState: base({
       cash: 2200,
       savings: 1500,
-      employment: { status: 'employed', title: 'Junior analyst', grossAnnualSalary: 52000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 52000 },
+      employment: { status: 'employed', title: 'Junior analyst', grossAnnualSalary: 58000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 58000 },
       household: { housingKind: 'rent', housingMonthly: 1350, essentialsMonthly: 900, discretionaryMonthly: 450, dependents: 0 },
       debts: [
-        { id: 'student_1', name: 'Student loan', kind: 'student_loan', balance: 24000, apr: 0.06, minimumPayment: 270 },
-        { id: 'auto_1', name: 'Car loan', kind: 'auto_loan', balance: 11000, apr: 0.079, minimumPayment: 260 },
+        { id: 'student_1', name: 'Student loan', kind: 'student_loan', balance: 18000, apr: 0.06, minimumPayment: 200 },
+        { id: 'auto_1', name: 'Car loan', kind: 'auto_loan', balance: 9000, apr: 0.079, minimumPayment: 220 },
       ],
       insurance: { health: 'health_basic', auto: 'auto_liability', renters: null },
       policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 250, investmentContributionPerMonth: 150, insurancePlanIds: { health: 'health_basic', auto: 'auto_liability', renters: null } },
@@ -86,8 +86,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
       cash: 3000,
       savings: 4000,
       investments: { stock: 0, bond: 2000, etf: 6000 },
-      employment: { status: 'employed', title: 'Operations manager', grossAnnualSalary: 78000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 78000 },
-      household: { housingKind: 'rent', housingMonthly: 1900, essentialsMonthly: 2100, discretionaryMonthly: 500, dependents: 2 },
+      employment: { status: 'employed', title: 'Operations manager', grossAnnualSalary: 86000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 86000 },
+      household: { housingKind: 'rent', housingMonthly: 1900, essentialsMonthly: 2100, discretionaryMonthly: 450, dependents: 2 },
       debts: [
         { id: 'cc_1', name: 'Credit card', kind: 'credit_card', balance: 4500, apr: 0.229, minimumPayment: 135 },
         { id: 'auto_1', name: 'Minivan loan', kind: 'auto_loan', balance: 16000, apr: 0.071, minimumPayment: 380 },
