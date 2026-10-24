@@ -1,0 +1,1 @@
+.fv-icon { width: calc(var(--icon-size) * var(--px)); height: calc(var(--icon-size) * var(--px)); image-rendering: pixelated; flex: none; display: inline-block; vertical-align: middle; }

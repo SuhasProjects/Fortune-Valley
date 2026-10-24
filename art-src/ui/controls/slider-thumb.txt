@@ -1,0 +1,9 @@
+size 5x7
+--- 0
+.kkk.
+knQnk
+knnnk
+knWnk
+knnnk
+kbbbk
+.kkk.

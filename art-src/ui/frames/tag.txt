@@ -1,0 +1,9 @@
+size 6x6
+slice 2
+--- 0
+.kkkk.
+kJJJJk
+kJJJJk
+kJJJJk
+kJJJJk
+.kkkk.

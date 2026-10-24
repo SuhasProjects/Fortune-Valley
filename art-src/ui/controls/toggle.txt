@@ -1,0 +1,18 @@
+size 14x7
+frames 2
+--- 0
+.kkkkkkkkkkkk.
+kWWWWWWWWWWWWk
+kknQnkWWWWWWWk
+kknnnkWWWWWWWk
+kkbbbkWWWWWWWk
+kWWWWWWWWWWWWk
+.kkkkkkkkkkkk.
+--- 1
+.kkkkkkkkkkkk.
+kMMMMMMMMMMMMk
+kMMMMMMMMknQnk
+kMMMMMMMMknnnk
+kMMMMMMMMkbbbk
+kMMMMMMMMMMMMk
+.kkkkkkkkkkkk.

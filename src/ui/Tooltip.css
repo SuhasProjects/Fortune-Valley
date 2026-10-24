@@ -1,0 +1,3 @@
+.fv-tooltip { display: inline-flex; position: relative; }
+.fv-tooltip__bubble { visibility: hidden; position: absolute; bottom: calc(100% + 2 * var(--px)); left: 0; z-index: var(--z-toast); min-width: max-content; max-width: calc(60 * var(--px)); padding: calc(2 * var(--px)); border: var(--px) solid var(--c-outline); background: var(--c-parchment-light); color: var(--c-outline); font: var(--fs-label)/1.1 var(--font-body); pointer-events: none; }
+.fv-tooltip:hover .fv-tooltip__bubble, .fv-tooltip:focus-within .fv-tooltip__bubble { visibility: visible; transition: visibility 0s 300ms; }

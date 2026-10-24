@@ -1,0 +1,11 @@
+size 8x8
+slice 3
+--- 0
+.PPPPPP.
+PppppppP
+PppppppP
+PppppppP
+PppppppP
+PppppppP
+PppppppP
+.PPPPPP.

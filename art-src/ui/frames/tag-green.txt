@@ -1,0 +1,9 @@
+size 6x6
+slice 2
+--- 0
+.kkkk.
+kMMMMk
+kMMMMk
+kMMMMk
+kMMMMk
+.kkkk.

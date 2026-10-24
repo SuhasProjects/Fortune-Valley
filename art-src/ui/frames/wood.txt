@@ -1,0 +1,19 @@
+size 16x16
+slice 5
+--- 0
+.kkkkkkkkkkkkkk.
+kbbbbbbbbbbbbbbk
+kbzWwwwwwwwwSbbk
+kbWWwwwwwwwwWWbk
+kbwwbbbbbbbbwwbk
+kbwwbwwwwwwbwwbk
+kbwwbwwwwwwbwwbk
+kbwwWwwwwwwWwwbk
+kbWWWWWWWWWWWWbk
+kbwwbwwwwwwbwwbk
+kbwwbwwwwwwbwwbk
+kbwwWWWWWWWWwwbk
+kbWWwwwwwwwwWWbk
+kbSWWWWWWWWWzWbk
+kbWWWWWWWWWWWWbk
+.kkkkkkkkkkkkkk.

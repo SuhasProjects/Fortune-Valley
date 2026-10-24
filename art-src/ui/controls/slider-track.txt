@@ -1,0 +1,7 @@
+size 6x4
+slice 2
+--- 0
+kkkkkk
+kWWWWk
+kPPPPk
+kkkkkk
