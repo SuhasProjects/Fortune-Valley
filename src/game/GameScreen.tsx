@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { EventCard, monthLabel } from '../components/flow'
 import { useGameStore } from '../stores/useGameStore'
-import { PanelHost } from '../components/town/PanelHost'
-import type { BuildingId } from '../types/domain'
+import type { BuildingId, GameConfig, GameState } from '../types/domain'
 import { ConnectedBuildingPanel } from '../components/panels/ConnectedBuildingPanel'
+import { freshScenario, scenarioById } from '../data/scenarios'
 import { ToastStack } from './flow/ToastStack'
 import { useShortcuts } from './flow/useShortcuts'
 import { ActivityWindow } from './flow/ActivityWindow'
@@ -13,73 +13,124 @@ import { OptionsWindow, setSetting, useSettings } from './settings'
 import { sfx } from './audio/sfx'
 import { GameStage } from './stage/GameStage'
 import { TownWorld } from './world/TownWorld'
+import { BUILDINGS } from './world/landmarks'
 import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
+import { GuideWindow } from './title/GuideWindow'
 import { useGameClock } from '../hooks/useGameClock'
-import { IconButton, Tag } from '../ui'
+import { Board, Button, IconButton, Modal, Plaque, Tag } from '../ui'
+import './flow/flow.css'
 
-export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId, ReactNode>> }) {
+type Menu = 'pause' | 'options' | 'guide' | null
+type Confirm = 'restart' | 'delete-save' | 'finish' | null
+const tips = [
+  ['Explore the town', 'Each building holds a different part of your financial life. Click one, or press 1 to 5.'],
+  ['Control the calendar', 'Advance when you are ready (N), pause with Space, or let auto-time move the story.'],
+  ['Watch your whole picture', 'Cash, savings, debt and net worth update together in the board above.'],
+] as const
+
+export interface GameScreenProps { panels?: Partial<Record<BuildingId, ReactNode>> }
+
+/** The town screen: Agent 1's stage and world, Agent 2's HUD, Agent 3's building panels, and the flow layer. */
+export function GameScreen({ panels = {} }: GameScreenProps) {
+  const game = useGameStore(state => state.game)
+  const config = useGameStore(state => state.config)
+  if (!game || !config) return null
+  return <TownScreen game={game} config={config} panels={panels}/>
+}
+
+function TownScreen({ game, config, panels }: { game: GameState; config: GameConfig; panels: Partial<Record<BuildingId, ReactNode>> }) {
   const store = useGameStore()
   const settings = useSettings()
-  const [menu, setMenu] = useState<'pause' | 'options' | 'guide' | null>(null)
-  const [finishConfirm, setFinishConfirm] = useState(false)
-  const [confirm, setConfirm] = useState<'restart' | 'delete-save' | null>(null)
+  const [menu, setMenu] = useState<Menu>(null)
+  const [confirm, setConfirm] = useState<Confirm>(null)
   const [finishing, setFinishing] = useState(false)
   const [monthBanner, setMonthBanner] = useState(false)
   const [saved, setSaved] = useState(false)
-  const previousMonth = useRef<number | null>(null)
-  const previousCash = useRef<number | null>(null)
-  const previousTypeB = useRef(0)
-  const pauseWasAlreadyPaused = useRef(false)
-  const previousModalOpen = useRef(false)
-  useEffect(() => {
-    if (!store.lastActionError) return
-    const timeout = window.setTimeout(store.clearActionError, 5_000)
-    return () => window.clearTimeout(timeout)
-  }, [store.lastActionError, store.clearActionError])
-  if (!store.game || !store.config) return null
-  const { game, config } = store
-  const panel = store.openBuildingId
-  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || finishConfirm || confirm)
   const [tipStep, setTipStep] = useState(() => settings.tips && !settings.tipsSeen && game.monthIndex === 0 ? 0 : -1)
-  const clock = useGameClock({ enabled: settings.autoAdvanceSeconds > 0, intervalMs: Math.max(1, settings.autoAdvanceSeconds) * 1_000, blocked: game.activeEvents.length > 0 || modalOpen || finishing })
-  const openPause = () => {
+  const previousMonth = useRef(game.monthIndex)
+  const previousCash = useRef(game.cash)
+  const previousTypeB = useRef(game.activeEvents.filter(event => event.type === 'B').length)
+  const pauseWasAlreadyPaused = useRef(false)
+  const guideReturnsToPause = useRef(false)
+  const previousModalOpen = useRef(false)
+  const finishStarted = useRef(false)
+
+  const panel = store.openBuildingId
+  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || confirm)
+  const clock = useGameClock({
+    enabled: settings.autoAdvanceSeconds > 0,
+    intervalMs: Math.max(1, settings.autoAdvanceSeconds) * 1_000,
+    blocked: game.activeEvents.length > 0 || modalOpen || finishing,
+  })
+
+  const openPause = useCallback(() => {
     pauseWasAlreadyPaused.current = game.status === 'paused'
     setMenu('pause')
-    store.setPaused(true)
-  }
-  const closePause = () => {
+    if (game.status === 'playing') store.setPaused(true)
+  }, [game.status, store])
+  const closePause = useCallback(() => {
     setMenu(null)
-    if (!pauseWasAlreadyPaused.current) store.setPaused(false)
-  }
-  const closeTop = () => {
-    if (confirm) setConfirm(null)
-    else if (finishConfirm) setFinishConfirm(false)
-    else if (menu) setMenu(null)
-    else if (store.historyOpen) store.setHistoryOpen(false)
-    else if (store.timelineOpen) store.closeTimeline()
-    else if (panel) store.closeBuilding()
-    else openPause()
-  }
-  const beginFinish = async () => {
-    setFinishConfirm(false)
+    if (!pauseWasAlreadyPaused.current && game.status === 'paused') store.setPaused(false)
+  }, [game.status, store])
+  const resume = () => { setMenu(null); if (game.status === 'paused') store.setPaused(false) }
+  const openGuide = (fromPause: boolean) => { guideReturnsToPause.current = fromPause; setMenu('guide') }
+  const closeGuide = () => setMenu(guideReturnsToPause.current ? 'pause' : null)
+
+  const beginFinish = useCallback(async () => {
+    if (finishStarted.current) return
+    finishStarted.current = true
+    setConfirm(null)
     setFinishing(true)
     sfx('reveal')
     const started = performance.now()
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
     const remaining = Math.max(0, 900 - (performance.now() - started))
-    window.setTimeout(() => store.finishGame(), remaining)
-  }
-  const requestFinish = () => game.monthIndex < config.durationMonths ? setFinishConfirm(true) : void beginFinish()
-  useShortcuts({ pause: () => store.setPaused(game.status === 'playing'), advance: store.advanceOneMonth, openBuilding: store.openBuilding, timeline: store.openTimeline, activity: () => store.setHistoryOpen(true), escape: closeTop, guide: () => setMenu('guide'), modalOpen })
+    window.setTimeout(() => useGameStore.getState().finishGame(), remaining)
+  }, [])
+  const requestFinish = useCallback(() => {
+    if (finishStarted.current) return
+    if (game.monthIndex < config.durationMonths) setConfirm('finish')
+    else void beginFinish()
+  }, [beginFinish, config.durationMonths, game.monthIndex])
+
+  const closeTop = useCallback(() => {
+    if (confirm) setConfirm(null)
+    else if (menu === 'guide') closeGuide()
+    else if (menu === 'options') setMenu('pause')
+    else if (menu === 'pause') closePause()
+    else if (store.historyOpen) store.setHistoryOpen(false)
+    else if (store.timelineOpen) store.closeTimeline()
+    else if (panel) store.closeBuilding()
+    else if (!finishing) openPause()
+  }, [closePause, confirm, finishing, menu, openPause, panel, store])
+
+  useShortcuts({
+    pause: () => store.setPaused(game.status === 'playing'),
+    advance: clock.advanceNow,
+    openBuilding: store.openBuilding,
+    timeline: store.openTimeline,
+    activity: () => store.setHistoryOpen(true),
+    escape: closeTop,
+    guide: () => openGuide(false),
+    modalOpen: modalOpen || finishing,
+  })
+
   useEffect(() => {
-    if (previousMonth.current !== null && previousMonth.current !== game.monthIndex) {
-      setMonthBanner(true); sfx('month')
-      if (previousCash.current !== null && game.cash > previousCash.current) sfx('coin')
+    if (!store.lastActionError) return
+    const timeout = window.setTimeout(store.clearActionError, 5_000)
+    return () => window.clearTimeout(timeout)
+  }, [store.lastActionError, store.clearActionError])
+  useEffect(() => {
+    if (previousMonth.current !== game.monthIndex) {
+      setMonthBanner(true)
+      sfx('month')
+      if (game.cash > previousCash.current) sfx('coin')
+      previousMonth.current = game.monthIndex
+      previousCash.current = game.cash
       const timeout = window.setTimeout(() => setMonthBanner(false), 1_200)
-      previousMonth.current = game.monthIndex; previousCash.current = game.cash
       return () => window.clearTimeout(timeout)
     }
-    previousMonth.current = game.monthIndex; previousCash.current = game.cash
+    previousCash.current = game.cash
   }, [game.monthIndex, game.cash])
   useEffect(() => {
     const count = game.activeEvents.filter(event => event.type === 'B').length
@@ -101,45 +152,79 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     if (modalOpen !== previousModalOpen.current) sfx(modalOpen ? 'open' : 'close')
     previousModalOpen.current = modalOpen
   }, [modalOpen])
+
   const nextTip = () => {
     if (tipStep < 2) setTipStep(step => step + 1)
     else { setTipStep(-1); setSetting('tipsSeen', true) }
   }
+  const saveAndQuit = () => {
+    closePause()
+    store.saveGame()
+    store.resetGame()
+  }
+  const restart = () => {
+    setConfirm(null)
+    setMenu(null)
+    finishStarted.current = false
+    const archetype = scenarioById(config.scenarioId)?.archetype
+    store.startGame(archetype ? freshScenario(archetype) : config)
+  }
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
-  return <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
-    <a className="skip-link" href="#town-main">Skip to town controls</a>
-    <Hud onOpenTimeline={store.openTimeline}/>
-    <div className="fv-status-tools"><StatusTag/>{saved && <Tag tone="green">✓ Saved</Tag>}<IconButton icon="gear" label="Open pause menu" onClick={openPause}/></div>
-    <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
-    <main id="town-main" className="fv-game-flow" aria-label="Financial Town game">
-    {store.lastActionError && <p className="action-error pixel-panel" role="alert">{store.lastActionError}</p>}
-    {monthBanner && <div className="month-banner pixel-panel" role="status">Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</div>}
-    {tipStep >= 0 && <aside className={`coach-tip coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
-      <strong>{tipStep === 0 ? 'Explore the town' : tipStep === 1 ? 'Control the calendar' : 'Watch your whole picture'}</strong>
-      <p>{tipStep === 0 ? 'Each building holds a different part of your financial life.' : tipStep === 1 ? 'Advance when you are ready, or let auto-time move the story.' : 'Your cash, savings, debt, and net worth update together in the HUD.'}</p>
-      <button className="pixel-button" onClick={nextTip}>{tipStep === 2 ? 'Got it' : 'Next tip'}</button>
-    </aside>}
-    {panel && <PanelHost building={panel} onClose={store.closeBuilding}>{game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')).map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
-    {store.timelineOpen && <TimelineWindow entries={game.timeline} startMonth={config.startMonth} onClose={store.closeTimeline}/>}
-    {store.historyOpen && <ActivityWindow notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={building => { store.setHistoryOpen(false); store.openBuilding(building) }}/>}
-    {menu === 'pause' && <PanelHost title="Paused" onClose={closePause}><button className="pixel-button pixel-button--gold" onClick={() => { setMenu(null); store.setPaused(false) }}>Resume</button><button className="pixel-button" onClick={() => setMenu('options')}>Options</button><button className="pixel-button" onClick={() => setMenu('guide')}>Guide</button><button className="pixel-button" onClick={() => { store.saveGame(); store.resetGame() }}>Save &amp; quit to title</button><button className="pixel-button pixel-button--danger" onClick={() => { setMenu(null); setConfirm('restart') }}>Restart this story</button></PanelHost>}
-    {menu === 'options' && <PanelHost title="Options" onClose={() => setMenu('pause')}><OptionsWindow onClose={() => setMenu('pause')} onDeleteSave={() => { setMenu(null); setConfirm('delete-save') }}/></PanelHost>}
-    {menu === 'guide' && <PanelHost title="Guide" onClose={() => setMenu('pause')}><p>Space pauses, N advances, 1–5 open buildings, T opens the timeline, A opens activity, and Esc closes the top window.</p></PanelHost>}
-    {finishConfirm && <PanelHost title="Finish early?" onClose={() => setFinishConfirm(false)}><p>You've played {game.monthIndex} of {config.durationMonths} months. Results will use the months you played.</p><button className="pixel-button pixel-button--gold" onClick={() => void beginFinish()}>Finish now</button><button className="pixel-button" onClick={() => setFinishConfirm(false)}>Keep playing</button></PanelHost>}
-    {confirm === 'restart' && <ConfirmDialog
-      title="Restart this story?" body="Your current progress will be replaced with a fresh version of this story."
-      confirmLabel="Restart" danger onCancel={() => { setConfirm(null); setMenu('pause') }}
-      onConfirm={() => { setConfirm(null); store.startGame(config) }}/>
-    }
-    {confirm === 'delete-save' && <ConfirmDialog
-      title="Delete saved game?" body="Your saved run will be permanently removed. Your current run will stay open."
-      confirmLabel="Delete save" danger onCancel={() => { setConfirm(null); setMenu('options') }}
-      onConfirm={() => { store.clearSavedGame(); setConfirm(null); setMenu('options') }}/>
-    }
-    {finishing && <div className="finish-overlay" role="status"><div className="pixel-panel"><h2>Counting 1,000 possible futures…</h2><p aria-hidden="true">● ● ● ● ●</p></div></div>}
-    {game.status === 'finished' && !finishing && <div className="completion-banner pixel-panel"><p>Your {config.durationMonths} months are complete.</p><button className="pixel-button pixel-button--gold" onClick={() => void beginFinish()}>Review your story →</button></div>}
-    </main>
-    <div className="activity-area"><ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={()=>store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/></div>
-    <HudFooter/>
-  </GameStage>
+  const panelEvents = panel ? game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')) : []
+  const tip = tipStep >= 0 ? tips[tipStep] : null
+
+  return <main aria-label="Fortune Valley town">
+    <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
+      <Hud onOpenTimeline={store.openTimeline}/>
+      <div className="fv-flow-tools"><StatusTag/>{saved && <Tag tone="green">Saved</Tag>}<IconButton size="sm" icon="gear" label="Open pause menu" onClick={openPause}/></div>
+      <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
+      <ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/>
+      <HudFooter/>
+      {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
+      {monthBanner && <Board className="fv-month-banner" role="status" data-reduce-motion={settings.reduceMotion || undefined}>Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</Board>}
+      {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
+        <strong>{tip[0]}</strong><p>{tip[1]}</p>
+        <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === 2 ? 'Got it' : 'Next tip'}</Button>
+      </Board>}
+      {game.status === 'finished' && !finishing && <Board as="section" padding="lg" className="fv-completion-banner" aria-label="Story complete">
+        <p>Your {config.durationMonths} months are complete.</p>
+        <Button variant="primary" size="lg" iconRight="arrow-right" onClick={() => void beginFinish()}>Review your story</Button>
+      </Board>}
+      {panel && <Modal title={BUILDINGS[panel].title} plaque={<Plaque tone="wood">{BUILDINGS[panel].hint}</Plaque>} onClose={store.closeBuilding} width="lg">
+        {panelEvents.map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}
+        {panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}
+      </Modal>}
+      {store.timelineOpen && <TimelineWindow entries={game.timeline} startMonth={config.startMonth} onClose={store.closeTimeline}/>}
+      {store.historyOpen && <ActivityWindow notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={building => { store.setHistoryOpen(false); store.openBuilding(building) }}/>}
+      {menu === 'pause' && <Modal title="Paused" onClose={closePause} width="sm">
+        <div className="fv-menu-list">
+          <Button variant="primary" icon="play" onClick={resume}>Resume</Button>
+          <Button icon="gear" onClick={() => setMenu('options')}>Options</Button>
+          <Button icon="book" onClick={() => openGuide(true)}>Guide</Button>
+          <Button icon="save" onClick={saveAndQuit}>Save &amp; quit to title</Button>
+          <Button icon="warning" onClick={() => setConfirm('restart')}>Restart this story</Button>
+        </div>
+      </Modal>}
+      {menu === 'options' && <Modal title="Options" onClose={() => setMenu('pause')} width="sm">
+        <OptionsWindow onClose={() => setMenu('pause')} onDeleteSave={() => setConfirm('delete-save')}/>
+      </Modal>}
+      {menu === 'guide' && <GuideWindow onClose={closeGuide}/>}
+      {confirm === 'finish' && <ConfirmDialog
+        title="Finish early?" body={`You've played ${game.monthIndex} of ${config.durationMonths} months. Results will use the months you played.`}
+        confirmLabel="Finish now" cancelLabel="Keep playing" onCancel={() => setConfirm(null)} onConfirm={() => void beginFinish()}/>}
+      {confirm === 'restart' && <ConfirmDialog
+        title="Restart this story?" body="Your current progress will be replaced with a fresh version of this story."
+        confirmLabel="Restart" danger onCancel={() => setConfirm(null)} onConfirm={restart}/>}
+      {confirm === 'delete-save' && <ConfirmDialog
+        title="Delete saved game?" body="Your saved run will be permanently removed. Your current run will stay open."
+        confirmLabel="Delete save" danger onCancel={() => setConfirm(null)} onConfirm={() => { store.clearSavedGame(); setConfirm(null) }}/>}
+      {finishing && <div className="fv-finish-overlay" role="status" aria-live="assertive">
+        <Board padding="lg" className="fv-finish-card" data-reduce-motion={settings.reduceMotion || undefined}>
+          <h2>Counting 1,000 possible futures…</h2>
+          <p>Same choices, different luck. Hold on.</p>
+          <span className="fv-counter" aria-hidden="true"><i/><i/><i/><i/><i/></span>
+        </Board>
+      </div>}
+    </GameStage>
+  </main>
 }

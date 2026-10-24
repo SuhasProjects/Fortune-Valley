@@ -57,7 +57,7 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
   await expect(page.getByRole('dialog', { name: 'Town activity' })).toBeVisible()
   await page.getByRole('button', { name: 'Close panel' }).click()
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', await page.evaluate(() => innerWidth))
-  await expect(page.locator('.activity-area .notice')).toHaveCount(3)
+  await expect(page.getByRole('region', { name: 'Recent financial activity' }).locator('.notice')).toHaveCount(3)
   await page.screenshot({ path: `docs/screenshots/${testInfo.project.name}-town.png`, fullPage: true })
   await page.getByRole('button', { name: /Open Pine Bank/ }).click()
   await page.screenshot({ path: `docs/screenshots/${testInfo.project.name}-panel.png`, fullPage: true })
