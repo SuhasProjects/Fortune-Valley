@@ -1,0 +1,11 @@
+size 16x8
+anchor 8,7
+--- 0
+................
+.kk..........kk.
+.knk........knk.
+.kbkkkkkkkkkkbk.
+.kwwwwwwwwwwwwk.
+.kWkkkkkkkkkkWk.
+.kk..........kk.
+................

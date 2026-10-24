@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/well.png",
+  "w": 16,
+  "h": 18,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    8,
+    17
+  ]
+}
