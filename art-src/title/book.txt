@@ -1,0 +1,10 @@
+size 8x8
+--- 0
+kkkkkkkk
+kQQkpppk
+kQPkPppk
+kQQkpppk
+kQPkPppk
+kQQkpppk
+kQQkpppk
+kkkkkkkk
