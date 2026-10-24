@@ -1201,6 +1201,165 @@ const sprites = {
       41
     ]
   },
+  "world/extra/clock-hand": {
+    "src": "/art/world/extra/clock-hand.png",
+    "w": 7,
+    "h": 7,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11"
+    ],
+    "speed": 900
+  },
+  "world/extra/fence-h": {
+    "src": "/art/world/extra/fence-h.png",
+    "w": 16,
+    "h": 8,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      8,
+      7
+    ]
+  },
+  "world/extra/fence-post": {
+    "src": "/art/world/extra/fence-post.png",
+    "w": 7,
+    "h": 12,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      11
+    ]
+  },
+  "world/extra/hay-bale": {
+    "src": "/art/world/extra/hay-bale.png",
+    "w": 12,
+    "h": 9,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      6,
+      8
+    ]
+  },
+  "world/extra/hourglass": {
+    "src": "/art/world/extra/hourglass.png",
+    "w": 9,
+    "h": 12,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "speed": 180
+  },
+  "world/extra/mailbox": {
+    "src": "/art/world/extra/mailbox.png",
+    "w": 6,
+    "h": 10,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      9
+    ]
+  },
+  "world/extra/pine-tree": {
+    "src": "/art/world/extra/pine-tree.png",
+    "w": 18,
+    "h": 28,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      9,
+      27
+    ]
+  },
+  "world/extra/rock": {
+    "src": "/art/world/extra/rock.png",
+    "w": 10,
+    "h": 7,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      6
+    ]
+  },
+  "world/extra/signpost": {
+    "src": "/art/world/extra/signpost.png",
+    "w": 10,
+    "h": 16,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      15
+    ]
+  },
+  "world/extra/stump": {
+    "src": "/art/world/extra/stump.png",
+    "w": 9,
+    "h": 8,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      4,
+      7
+    ]
+  },
+  "world/extra/villager-walk": {
+    "src": "/art/world/extra/villager-walk.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "lit"
+    ],
+    "anchor": [
+      6,
+      15
+    ],
+    "speed": 160
+  },
+  "world/extra/well": {
+    "src": "/art/world/extra/well.png",
+    "w": 16,
+    "h": 18,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      8,
+      17
+    ]
+  },
   "world/fx/badge": {
     "src": "/art/world/fx/badge.png",
     "w": 11,
