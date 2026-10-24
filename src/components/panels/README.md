@@ -1,6 +1,6 @@
-﻿# Financial Town panels — integrated handoff
+# Financial Town panels — integrated handoff
 
-The panel branch combines canonical engine/flow commit c202e0a from upstream/main with Agent 2 town commit f69c091 from upstream/frontendpixelart. All five buildings mount real store-controlled panels through ConnectedBuildingPanel in App.tsx. Agent 2's native PanelHost owns focus containment, Escape/backdrop close, initial focus, and restoration.
+The panel branch combines latest shared integration 8fbcb06 from upstream/main, including valley theme dd020ef, hardened Agent 4 flow, and the canonical engine/AI gateway. All five buildings mount real store-controlled panels through ConnectedBuildingPanel in App.tsx. Agent 2's native PanelHost owns focus containment, Escape/backdrop close, initial focus, and restoration.
 
 ## Run from repository root
 
@@ -50,4 +50,4 @@ No schema or financial engine implementation was changed during this integration
 
 ## Validation
 
-See VERIFICATION.md. Typecheck/build, 31 unit/integration tests, and 4 desktop/mobile browser checks pass. Updated screenshots are in docs/screenshots/. Browser coverage includes real policy persistence, responsive overflow, keyboard navigation, focus, notifications, timeline/finish, and runtime errors. Other browser engines and live AI credentials were not tested.
+See VERIFICATION.md. Typecheck/build, 61 unit/integration tests, and 4 desktop/mobile browser checks pass. Updated screenshots are in docs/screenshots/. Browser coverage includes real policy persistence, responsive overflow, keyboard navigation, focus, notifications, timeline/finish, and runtime errors. Other browser engines and live AI credentials were not tested.

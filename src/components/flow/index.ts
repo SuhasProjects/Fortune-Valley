@@ -1,4 +1,5 @@
 export * from './NotificationStack'
+export * from './NotificationHistory'
 export * from './TimelineDrawer'
 export * from './GameClock'
 export * from './EventCard'

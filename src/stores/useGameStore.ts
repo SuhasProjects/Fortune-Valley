@@ -61,16 +61,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startGame: (config) => {
     const game = createGame(config);
     const started = applyAction(game, { type: 'resume' });
-    set({ config: structuredClone(config), game: started.ok ? started.state : game, finishPayload: null, openBuildingId: null, timelineOpen: false, lastActionError: null });
+    set((s) => ({
+      config: structuredClone(config),
+      game: started.ok ? started.state : game,
+      finishPayload: null,
+      openBuildingId: null,
+      timelineOpen: false,
+      historyOpen: false,
+      personalizationLoading: false,
+      personalizationError: null,
+      lastActionError: null,
+      aiStatus: 'idle',
+      requestVersion: s.requestVersion + 1,
+    }));
   },
 
   advanceOneMonth: () => {
-    const { game, requestVersion } = get();
+    const { game } = get();
     if (!game || game.status !== 'playing') return;
     const next = advanceMonth(game);
     set({ game: next });
     if (shouldRequestOpportunity(game, next)) {
-      void get().requestOpportunity().then(() => { if (get().requestVersion !== requestVersion) return; });
+      void get().requestOpportunity();
     }
   },
 
@@ -93,17 +105,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
   markAllNotificationsRead: () => { get().dispatchAction({ type: 'mark_notifications_read' }); },
 
   requestOpportunity: async () => {
-    const { game, config, requestVersion } = get();
-    if (!game || !config) return;
+    const { game, config, requestVersion, aiStatus } = get();
+    if (!game || !config || aiStatus === 'loading' || game.activeEvents.some((event) => event.type === 'B')) return;
+    const scenarioId = game.scenarioId;
+    const monthIndex = game.monthIndex;
     set({ aiStatus: 'loading' });
-    const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
-    const result = await proposeOpportunity(summary);
-    const current = get();
-    if (!current.game || current.requestVersion !== requestVersion || current.game.monthIndex !== game.monthIndex) { set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' }); return; }
-    set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' });
-    if (!result.proposal) return;
-    const event = proposalToEvent(result.proposal, current.game, result.source);
-    if (event) get().dispatchAction({ type: 'enqueue_event', event });
+    try {
+      const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
+      const result = await proposeOpportunity(summary);
+      const current = get();
+      if (!current.game || current.requestVersion !== requestVersion || current.game.scenarioId !== scenarioId || current.game.monthIndex !== monthIndex || current.game.status === 'finished') return;
+      set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' });
+      if (!result.proposal || current.game.activeEvents.some((event) => event.type === 'B')) return;
+      const event = proposalToEvent(result.proposal, current.game, result.source);
+      if (event) get().dispatchAction({ type: 'enqueue_event', event });
+    } catch {
+      const current = get();
+      if (current.requestVersion === requestVersion && current.game?.scenarioId === scenarioId) set({ aiStatus: 'offline' });
+    }
   },
 
   finishGame: () => {
@@ -112,7 +131,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const r = game.status === 'finished' ? { ok: true as const, state: game } : applyAction(game, { type: 'finish' });
     const finalState = r.ok ? r.state : game;
     const monteCarlo = runMonteCarlo(config, finalState.policyLog, finalState);
-    set({ game: finalState, finishPayload: { config: structuredClone(config), finalState, policyLog: finalState.policyLog, monteCarlo } });
+    set((s) => ({ game: finalState, finishPayload: { config: structuredClone(config), finalState, policyLog: finalState.policyLog, monteCarlo }, aiStatus: 'idle', requestVersion: s.requestVersion + 1 }));
   },
 
   resetGame: () => set((s) => ({ game: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),

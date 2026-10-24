@@ -1,6 +1,6 @@
 # Integration update — Agent 3
 
-The original branch notes below describe f69c091. The integrated panel branch now uses canonical BuildingId, the real engine/store, connected panels, and a computed plain-text Monte Carlo reveal. App retains panels/renderReveal extension points. Typecheck/build, 31 unit tests, and 4 desktop/mobile browser checks pass. See ../src/components/panels/README.md and VERIFICATION.md for current contracts.
+The original branch notes below describe f69c091. The integrated panel branch now uses canonical BuildingId, the real engine/store, connected panels, and a computed plain-text Monte Carlo reveal. App retains panels/renderReveal extension points. Typecheck/build, 61 unit tests, and 4 desktop/mobile browser checks pass. See ../src/components/panels/README.md and VERIFICATION.md for current contracts.
 
 # Agent 2: town and app shell
 
@@ -19,7 +19,7 @@ The checked-in runtime is Agent 4's temporary offline adapter. Detailed panel mo
 
 ## Design system
 
-Original SVG art uses crisp edges and a fixed pixel grid. All panels, HUD, controls, notifications and graph defaults share a dark forest / warm parchment palette, square corners, hard shadows, monospace text, and `--pixel: 4px`. No font download is needed. Graph colors: `--chart-grid`, `--chart-observed`, `--chart-positive`, `--chart-negative`. Future Recharts surfaces inherit crisp edges and monospace text; Agent 5 should disable chart animation for reduced motion and avoid smoothing pixel-styled lines.
+Original SVG art uses crisp edges and a fixed pixel grid. The cozy valley theme in `styles/valley.css` gives all panels, HUD, controls, notifications and graph defaults warm parchment surfaces, wooden borders, square corners, hard shadows, monospace text, and `--pixel: 4px`. Buildings have roof shingles, wall texture and flower boxes; the map includes layered foliage, fences, flower beds, benches and patterned water. No font download is needed. Graph colors: `--chart-grid`, `--chart-observed`, `--chart-positive`, `--chart-negative`. Future Recharts surfaces inherit crisp edges and monospace text; Agent 5 should disable chart animation for reduced motion and avoid smoothing pixel-styled lines.
 
 Map is 380–620px high on desktop, 430px on narrow phones; the page scrolls vertically when required. All interactive controls retain visible focus. Motion is subtle and disabled by `prefers-reduced-motion`.
 

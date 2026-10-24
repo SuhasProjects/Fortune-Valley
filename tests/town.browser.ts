@@ -75,7 +75,7 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
   await page.mouse.click(2, 2)
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await page.getByRole('button', { name: /Finish & reveal/ }).click()
-  await expect(page.getByRole('dialog', { name: 'Your next chapter' })).toContainText('1,000 seeded futures')
+  await expect(page.getByRole('dialog', { name: 'Your next chapter' })).toContainText('SAME STRATEGY, 1,000 OTHER LIVES')
   await page.getByRole('button', { name: /Choose a new story/ }).click()
   await expect(page.getByRole('heading', { name: 'Your money. Your little world.' })).toBeVisible()
   expect(errors).toEqual([])

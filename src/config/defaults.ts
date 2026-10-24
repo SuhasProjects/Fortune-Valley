@@ -89,5 +89,6 @@ export const BOUNDS = {
   allocationTolerance: 0.001,
 } as const;
 
-export const DEFAULT_DURATION_MONTHS = 60;
+/** Default playable horizon. 24 months keeps a session short; Monte Carlo replays whatever horizon was played. */
+export const DEFAULT_DURATION_MONTHS = 24;
 export const DEFAULT_MONTE_CARLO_PATHS = 1000;

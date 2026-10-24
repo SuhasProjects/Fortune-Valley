@@ -20,6 +20,8 @@ export type GameMode = 'sandbox' | 'personalized';
 export type GameStatus = 'setup' | 'playing' | 'paused' | 'finished';
 
 export type BuildingId = 'bank' | 'office' | 'home' | 'hospital' | 'market';
+/** Alias kept for Agent 2's town components. */
+export type BuildingTarget = BuildingId;
 
 export type AssetClass = 'stock' | 'bond' | 'etf';
 export const ASSET_CLASSES: readonly AssetClass[] = ['stock', 'bond', 'etf'] as const;

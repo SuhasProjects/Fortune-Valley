@@ -1,11 +1,11 @@
-﻿# Verification — October 24, 2026
+# Verification — October 24, 2026
 
-Integrated upstream/main c202e0a (Agent 1 canonical engine plus Agent 4 flow) and upstream/frontendpixelart f69c091 (Agent 2 town and dialog shell) into agent3-panels.
+Integrated upstream/main 8fbcb06 (canonical engine/AI gateway, hardened Agent 4 flow, and Agent 2 valley theme dd020ef) into agent3-panels.
 
 ## Commands
 
 - npm.cmd run typecheck — passed, app and Node/server configuration.
-- npm.cmd test — passed, 31 tests across 5 files.
+- npm.cmd test — passed, 61 tests across 7 files.
 - npm.cmd run build — passed, production Vite bundle.
 - npm.cmd run test:browser — passed, 4 tests across desktop 1366x768 and mobile 390x844.
 
