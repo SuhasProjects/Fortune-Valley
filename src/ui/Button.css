@@ -12,7 +12,7 @@
 .fv-button:hover:not(:disabled) { border-image-source: url('/art/ui/frames/button-hover.png'); }
 .fv-button--ghost:hover:not(:disabled) { border-image-source: url('/art/ui/frames/ghost.png'); color: var(--c-ink); }
 .fv-button--text:hover:not(:disabled) { border-image: none; color: var(--c-wood); }
-.fv-button:active:not(:disabled) { border-image-source: url('/art/ui/frames/button-pressed.png'); }
+.fv-button:active:not(:disabled), .fv-button[aria-pressed='true']:not(.fv-button--ghost, .fv-button--text) { border-image-source: url('/art/ui/frames/button-pressed.png'); }
 .fv-button--ghost:active:not(:disabled), .fv-button--text:active:not(:disabled) { border-image-source: none; }
 .fv-button--ghost:active:not(:disabled) { border-image: url('/art/ui/frames/ghost.png') 3 fill / calc(3 * var(--px)) / 0 stretch; }
 .fv-button:active:not(:disabled) .fv-button__content > * { transform: translateY(var(--px)); }
