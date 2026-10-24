@@ -1,0 +1,15 @@
+size 7x12
+anchor 3,11
+--- 0
+.......
+..kkk..
+.kbnk..
+.kwwk..
+.knwk..
+.kwwk..
+.knwk..
+.kwwk..
+.kWwk..
+.kWWk..
+..kk...
+.......

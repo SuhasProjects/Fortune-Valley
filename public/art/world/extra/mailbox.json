@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/mailbox.png",
+  "w": 6,
+  "h": 10,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    3,
+    9
+  ]
+}

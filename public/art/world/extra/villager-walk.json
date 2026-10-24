@@ -1,0 +1,17 @@
+{
+  "src": "/art/world/extra/villager-walk.png",
+  "w": 12,
+  "h": 16,
+  "frames": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "lit"
+  ],
+  "anchor": [
+    6,
+    15
+  ],
+  "speed": 160
+}
