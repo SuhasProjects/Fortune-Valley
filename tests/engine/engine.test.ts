@@ -15,6 +15,16 @@ describe('determinism', () => {
     expect(a).toEqual(b);
     expect(JSON.stringify(a.ledger)).toBe(JSON.stringify(b.ledger));
   });
+  it('paused games cannot advance through the engine, and resume restores ticking', () => {
+    const playing = advanceMonth(start());
+    const paused = applyAction(playing, { type: 'pause' }).state;
+    const snapshot = structuredClone(paused);
+    expect(advanceMonth(paused)).toBe(paused);
+    expect(advanceMonth(paused, { lean: true, inPlace: true })).toBe(paused);
+    expect(paused).toEqual(snapshot);
+    const resumed = applyAction(paused, { type: 'resume' }).state;
+    expect(advanceMonth(resumed).monthIndex).toBe(playing.monthIndex + 1);
+  });
   it('different seeds → different market paths', () => {
     const a = play(start('professional', 1, 12), 12);
     const b = play(start('professional', 2, 12), 12);

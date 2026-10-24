@@ -110,3 +110,17 @@ describe('AI gateway', () => {
     expect(createGame(cfg).status).toBe('setup');
   });
 });
+
+describe('gateway error privacy', () => {
+  it('does not return arbitrary exception messages or provider error bodies to the browser', async () => {
+    const { UpstreamError } = await import('../../api/_lib/openaiCompatible');
+    const body = JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' });
+    for (const error of [new Error('private prompt and api-key=secret'), new UpstreamError(500, 'private prompt and api-key=secret')]) {
+      const client: ModelClient = { async parse() { throw error; } };
+      const response = await handleAiRequest(body, { AI_API_KEY: 'secret' }, client);
+      expect(response.status).toBe(502);
+      expect(response.body).toMatchObject({ code: 'upstream_error' });
+      expect(JSON.stringify(response.body)).not.toMatch(/secret|private prompt/);
+    }
+  });
+});

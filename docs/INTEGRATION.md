@@ -21,7 +21,7 @@ Path alias `@/` → `src/`. Run `npm run typecheck && npm test` before every PR.
 
 ```ts
 createGame(config: GameConfig): GameState                       // throws on invalid config
-advanceMonth(state: GameState, opts?: { lean?, inPlace?, rng? }): GameState   // pure; status 'finished' → returns input
+advanceMonth(state: GameState, opts?: { lean?, inPlace?, rng? }): GameState   // pure; status 'finished' or 'paused' → returns input
 applyAction(state: GameState, action: GameAction): ActionResult // { ok:true, state } | { ok:false, code, message, state: original }
 runMonteCarlo(config, policyLog, observedState, { paths?=1000, seed?=config.seed, months? }): MonteCarloResult
 compareStrategies(config, logA, logB, { a, b }, { months, paths?, seed? }): MonteCarloComparison
@@ -72,3 +72,7 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 ## Theme tokens
 
 `src/styles/pixel-tokens.css` defines `--pixel`, palette and chart series colors (`--ft-series-*`). Use them in Tailwind via `bg-[var(--ft-panel)]` etc., and in Recharts via `stroke="var(--ft-series-etf)"`. Integer pixel scaling only; `image-rendering: pixelated` on sprites.
+
+## Core reliability update
+
+No schema fields or existing exports changed. Financial transfers now conserve cents using normalized largest-remainder allocation (ties: stock, bond, ETF). Config/assumption and action/event inputs are copied, so caller edits cannot rewrite the active run or replay history. Initial insurance and policy plan ids must agree. Malformed assumptions/configurations fail before simulation. Monte Carlo rejects noninteger/out-of-range path counts (1–10,000), months (1–240), and unsafe integer seeds rather than clamping or looping indefinitely. Narrative event enqueue validates buildings, option ids/effects, source and expiry; Type A shocks remain engine-only. Type B `none` choices are recorded for timeline and replay. Provider exception text is never forwarded to the browser.

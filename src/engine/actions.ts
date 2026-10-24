@@ -5,12 +5,14 @@
 import type { ActionErrorCode, ActionResult, GameAction, GameState, TimelineEntry } from '@/types/domain';
 import { makeId, netWorthOf, post, round2 } from './accounting';
 import { applyEffect, describeEffect } from './events';
-import { isFiniteNonNeg, validateAllocation, validatePlanId } from './validation';
+import { isFiniteNonNeg, validateAllocation, validatePlanId, validateNarrativeEvent } from './validation';
 import { BOUNDS } from '@/config/defaults';
 
 const reject = (state: GameState, code: ActionErrorCode, message: string): ActionResult => ({ ok: false, code, message, state });
 
 function logPolicy(s: GameState, action: GameAction, type: TimelineEntry['type'], description: string, extra?: Partial<TimelineEntry>, resolvedEffect?: Parameters<typeof applyEffect>[1]) {
+  action = structuredClone(action);
+  resolvedEffect = resolvedEffect ? structuredClone(resolvedEffect) : undefined;
   s.policyLog.push(resolvedEffect ? { monthIndex: s.monthIndex, action, resolvedEffect } : { monthIndex: s.monthIndex, action });
   s.timeline.push({ id: makeId('T', s, s.timeline.length), monthIndex: s.monthIndex, type, description, action, netWorthAfter: netWorthOf(s), ...extra });
 }
@@ -109,12 +111,14 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
     }
     case 'enqueue_event': {
       const ev = action.event;
+      const eventValidation = validateNarrativeEvent(s.assumptions, ev, s.monthIndex);
+      if (!eventValidation.ok) return reject(input, 'invalid_effect', eventValidation.message);
       if (s.activeEvents.some((e) => e.id === ev.id)) return reject(input, 'duplicate_event', `Event ${ev.id} already active`);
       for (const o of ev.options) {
         const err = applyEffect(structuredClone(s), o.effect, true); // dry-run validation
         if (err) return reject(input, 'invalid_effect', `Option ${o.id}: ${err}`);
       }
-      s.activeEvents.push(ev);
+      s.activeEvents.push(structuredClone(ev));
       s.notifications.push({ id: makeId('N', s, s.notifications.length), monthIndex: s.monthIndex, kind: 'decision', summary: ev.title, details: ev.body, relatedBuilding: ev.buildingTarget, read: false });
       return { ok: true, state: s };
     }
@@ -134,7 +138,7 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
       const err = applyEffect(s, opt.effect);
       if (err) return reject(input, 'invalid_effect', err);
       s.activeEvents = s.activeEvents.filter((e) => e.id !== action.eventId);
-      if (opt.effect.template !== 'none') {
+      if (ev.type === 'B' || opt.effect.template !== 'none') {
         logPolicy(s, action, ev.source === 'engine' ? 'choice' : 'ai_event', `${ev.title}: ${opt.label} — ${describeEffect(opt.effect)}`, { eventId: ev.id }, opt.effect);
       }
       return { ok: true, state: s };

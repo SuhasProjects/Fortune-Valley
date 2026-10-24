@@ -7,6 +7,29 @@ import { ASSET_CLASSES } from '@/types/domain';
 
 export const round2 = (n: number): number => Math.round(n * 100) / 100;
 
+/** Allocate a rounded amount in whole cents using largest remainders.
+ * Normalize accepted tolerance-level weights; ties follow stock/bond/ETF order.
+ * Used for both purchases and proportional sales so transfers conserve cents.
+ */
+export function allocateAmount(amount: number, weights: Allocation): Allocation {
+  const cents = Math.round(amount * 100);
+  const totalWeight = ASSET_CLASSES.reduce((sum, key) => sum + weights[key], 0);
+  if (!Number.isSafeInteger(cents) || cents < 0 || !Number.isFinite(totalWeight) || totalWeight <= 0 || ASSET_CLASSES.some(key => !Number.isFinite(weights[key]) || weights[key] < 0)) {
+    throw new Error('Invalid amount or allocation');
+  }
+  const rows = ASSET_CLASSES.map(key => {
+    const exact = cents * weights[key] / totalWeight;
+    return { key, cents: Math.floor(exact), remainder: exact - Math.floor(exact) };
+  });
+  let remaining = cents - rows.reduce((sum, row) => sum + row.cents, 0);
+  for (const row of [...rows].sort((a, b) => b.remainder - a.remainder)) {
+    if (remaining <= 0) break;
+    row.cents++;
+    remaining--;
+  }
+  return Object.fromEntries(rows.map(row => [row.key, row.cents / 100])) as Allocation;
+}
+
 export function netWorthOf(s: Pick<GameState, 'cash' | 'savings' | 'investments' | 'debts'>): number {
   const inv = s.investments.stock + s.investments.bond + s.investments.etf;
   const debt = s.debts.reduce((a, d) => a + d.balance, 0);
@@ -94,10 +117,11 @@ export function coverShortfall(s: GameState, reason: string, lean = false): { so
       const total = investmentsTotal(s.investments);
       if (total <= 0) continue;
       const take = Math.min(need, total);
-      // Pro-rata liquidation across classes.
+      // Whole-cent pro-rata liquidation; never sell more than the cash needed.
+      const shares = allocateAmount(take, s.investments);
       let moved = 0;
       for (const c of ASSET_CLASSES) {
-        const share = round2((s.investments[c] / total) * take);
+        const share = shares[c];
         if (share > 0) {
           post(s, c, 'emergency_funding', -share, `Sold ${c} to cover ${reason}`, lean);
           moved = round2(moved + share);
