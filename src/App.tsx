@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { scenarios } from './data/scenarios'
-import { GameClock, NotificationStack, monthLabel, usd } from './components/flow'
+import { EventCard, GameClock, NotificationStack, monthLabel, usd } from './components/flow'
 import { selectDebtTotal, selectNetWorth, useGameStore, type FinishPayload } from './stores/useGameStore'
 import { TownScene } from './components/town/TownScene'
 import { PanelHost } from './components/town/PanelHost'
@@ -60,7 +60,7 @@ function Town({ panels = {}, renderReveal }: AppProps) {
     {store.lastActionError && <p className="action-error pixel-panel" role="alert">{store.lastActionError}</p>}
     <TownScene onBuildingClick={store.openBuilding} eventBuildings={game.activeEvents.map(event => event.buildingTarget)}/>
     <div className="town-toolbar"><p><span aria-hidden="true">✦</span> Explore your town. Your choices carry forward.</p><GameClock status={game.status} onAdvance={store.advanceOneMonth} onPause={store.setPaused} onFinish={store.finishGame}/></div>
-    {panel && !store.finishPayload && <PanelHost building={panel} onClose={store.closeBuilding}>{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
+    {panel && !store.finishPayload && <PanelHost building={panel} onClose={store.closeBuilding}>{game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')).map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
     {store.timelineOpen && !store.finishPayload && <PanelHost title="Your timeline" onClose={store.closeTimeline}>{game.timeline.length ? <ol className="story-list">{game.timeline.map(e=><li key={e.id}><span className="eyebrow">MONTH {e.monthIndex} · {e.type.replaceAll('_',' ')}</span><p>{e.description}</p></li>)}</ol> : <p>Your story starts here. Advance a month or make a decision to add to your timeline.</p>}</PanelHost>}
     {store.historyOpen && !store.finishPayload && <PanelHost title="Town activity" onClose={()=>store.setHistoryOpen(false)}><ol className="story-list">{game.notifications.map(n=><li key={n.id}><span className="eyebrow">MONTH {n.monthIndex} · {n.kind}</span><h3>{n.summary}</h3>{n.details && <p>{n.details}</p>}{n.amountSigned !== undefined && <strong>{usd(n.amountSigned,true)}</strong>}{n.relatedBuilding && <button className="pixel-button" onClick={()=>{ store.setHistoryOpen(false); store.openBuilding(n.relatedBuilding!) }}>Open building →</button>}</li>)}</ol></PanelHost>}
     {store.finishPayload && <PanelHost title="Your next chapter" onClose={store.resetGame}>{renderReveal ? renderReveal(store.finishPayload) : <RevealChart payload={store.finishPayload} onReset={store.resetGame}/>}</PanelHost>}
