@@ -17,7 +17,7 @@
 .fv-forest { position:absolute; top:62%; width:100%; height:calc(32 * var(--px)); background:url('/art/title/pine.png') repeat-x center bottom; background-size:calc(20 * var(--px)) calc(32 * var(--px)); }
 .fv-meadow { position:absolute; inset:calc(62% + 25 * var(--px)) 0 0; background:var(--c-grass) url('/art/title/meadow.png') repeat; background-size:calc(16 * var(--px)) calc(16 * var(--px)); }
 .fv-valley-path { position:absolute; bottom:0; left:calc(50% - 24 * var(--px)); width:calc(48 * var(--px)); height:calc(48 * var(--px)); background:url('/art/title/path.png') no-repeat center bottom; background-size:100% 100%; }
-.fv-cottage { position:absolute; width:calc(24 * var(--px)); height:calc(20 * var(--px)); image-rendering:pixelated; } .fv-cottage--one { top:72%; left:12%; } .fv-cottage--two { top:73%; right:13%; } .fv-cottage--three { top:66%; left:67%; }
+.fv-cottage { position:absolute; width:calc(24 * var(--px)); height:calc(20 * var(--px)); image-rendering:pixelated; } .fv-cottage--one { top:72%; left:12%; } .fv-cottage--two { top:73%; right:13%; } .fv-cottage--three { top:81%; left:26%; }
 .fv-flowers { position:absolute; left:0; right:0; bottom:calc(5 * var(--px)); height:calc(12 * var(--px)); background:url('/art/title/flowers.png') repeat-x; background-size:calc(64 * var(--px)) calc(12 * var(--px)); }
 .fv-valley--dusk { background:var(--c-mountain-far); } .fv-valley--dusk::after { content:''; position:absolute; inset:0; background:var(--c-ink); opacity:.4; }
 .fv-owned img,.fv-sign,.fv-forest,.fv-meadow,.fv-valley-path,.fv-flowers,.fv-portrait,.fv-vine { image-rendering:pixelated; }
@@ -38,17 +38,18 @@
 .fv-title-menu { position:absolute; top:70%; left:50%; transform:translateX(-50%); display:flex; gap:calc(6 * var(--px)); width:max-content; max-width:94%; }
 .fv-title-menu > .fv-button { position:relative; height:auto; min-height:calc(17 * var(--px)); min-width:calc(64 * var(--px)); padding:calc(2 * var(--px)) calc(4 * var(--px)); white-space:normal; }
 .fv-title-menu > .fv-button .fv-button__content > span { display:flex; flex-direction:column; align-items:center; gap:var(--px); }
+.fv-title-menu > .fv-button:disabled { background:var(--c-parchment); }
 .fv-title-menu small { font:calc(3.5 * var(--px))/1 var(--font-body); max-width:calc(80 * var(--px)); white-space:nowrap; }
 .fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { content:''; position:absolute; top:calc(50% - 3 * var(--px)); left:calc(-9 * var(--px)); width:calc(6 * var(--px)); height:calc(6 * var(--px)); background:url('/art/title/pointer.png') center / 100% 100%; image-rendering:pixelated; }
 .fv-title-corners { position:absolute; bottom:calc(4 * var(--px)); left:calc(4 * var(--px)); right:calc(4 * var(--px)); display:flex; justify-content:space-between; align-items:end; gap:calc(3 * var(--px)); }
 .fv-title-corners small { color:var(--c-paper); background:var(--c-leaf-dark); padding:var(--px) calc(2 * var(--px)); font-size:calc(3.5 * var(--px)); }
 
 /* Sub-screens: the sign switches to its small sprite; content scrolls inside the stage. */
-.fv-title--subscreen .fv-sign-wrap { top:calc(4 * var(--px)); width:calc(120 * var(--px)); }
+.fv-title--subscreen .fv-sign-wrap { top:calc(11 * var(--px)); width:calc(120 * var(--px)); }
 .fv-sign--small { height:calc(24 * var(--px)); background-image:url('/art/title/sign-small.png'); background-size:calc(120 * var(--px)) calc(24 * var(--px)); }
 .fv-sign--small h1 { font-size:calc(8 * var(--px)); }
 .fv-title--subscreen .fv-vine--left,.fv-title--subscreen .fv-vine--right { height:calc(30 * var(--px)); }
-.fv-title-content { position:absolute; inset:calc(34 * var(--px)) calc(9 * var(--px)) calc(18 * var(--px)); overflow:auto; overscroll-behavior:contain; padding:calc(2 * var(--px)); }
+.fv-title-content { position:absolute; inset:calc(40 * var(--px)) calc(9 * var(--px)) calc(18 * var(--px)); overflow:auto; overscroll-behavior:contain; padding:calc(2 * var(--px)); }
 .fv-title-content .fv-back { position:absolute; top:calc(2 * var(--px)); left:calc(2 * var(--px)); z-index:1; }
 
 /* Story picker: four signboard cards. */
@@ -63,7 +64,6 @@
 .fv-story-description { flex:1; }
 .fv-story-facts { align-self:stretch; display:flex; flex-direction:column; gap:var(--px); border-top:var(--px) dashed var(--c-wood-dark); padding-top:calc(2 * var(--px)); }
 .fv-story-facts > span { display:flex; justify-content:space-between; gap:calc(2 * var(--px)); } .fv-story-facts b { white-space:nowrap; color:var(--c-ink); }
-.fv-story-start { font:700 calc(4 * var(--px))/1 var(--font-heading); color:var(--c-paper); background:var(--c-wood-dark); padding:var(--px) calc(2 * var(--px)); }
 .fv-portrait { width:calc(32 * var(--px)); height:calc(32 * var(--px)); flex:none; background-size:calc(64 * var(--px)) calc(32 * var(--px)); animation:fv-blink 4s steps(1,end) infinite; }
 .fv-portrait--0 { background-image:url('/art/title/student.png'); } .fv-portrait--1 { background-image:url('/art/title/worker.png'); } .fv-portrait--2 { background-image:url('/art/title/professional.png'); } .fv-portrait--3 { background-image:url('/art/title/parent.png'); }
 
@@ -81,12 +81,17 @@
 .fv-letter [role=alert] { color:var(--c-money-down); }
 .fv-quill { display:inline-block; vertical-align:middle; width:calc(12 * var(--px)); height:calc(12 * var(--px)); background:url('/art/title/quill.png') 0 0 / calc(36 * var(--px)) calc(12 * var(--px)); animation:fv-write .9s steps(3,end) infinite; }
 
+/* Kit window plaques: Agent 1's world.css positions `.fv-plaque` (building name plates) absolutely; restore the kit look inside our windows. */
+.fv-owned .fv-window__header .fv-plaque,.fv-reveal-heading .fv-plaque { position:static; display:inline-block; left:auto; right:auto; top:auto; pointer-events:auto; }
+.fv-letter .fv-field > label,.fv-reveal-explanation .fv-field > label { margin-bottom:calc(2 * var(--px)); }
+
 /* Guide and Options windows (kit Modal). */
 .fv-guide h3 { font-size:calc(5 * var(--px)); margin:0 0 calc(2 * var(--px)); }
 .fv-guide-page { padding:calc(2 * var(--px)) 0; }
 .fv-guide-page p { margin:calc(2 * var(--px)) 0 calc(4 * var(--px)); }
 .fv-guide-steps { margin:0; padding-left:calc(6 * var(--px)); } .fv-guide-steps li::marker { font:700 calc(5 * var(--px))/1 var(--font-heading); color:var(--c-wood-dark); }
-.fv-guide-building { display:grid; grid-template-columns:auto 1fr; gap:calc(3 * var(--px)); align-items:center; margin-bottom:calc(3 * var(--px)); }
+.fv-guide-building { display:grid; grid-template-columns:auto 1fr; gap:calc(4 * var(--px)); align-items:center; margin-bottom:calc(3 * var(--px)); }
+.fv-guide-portrait { --px:2px; display:flex; align-items:center; justify-content:center; width:calc(64 * var(--px)); }
 .fv-guide-page details { padding:calc(2 * var(--px)) 0; border-bottom:var(--px) dashed var(--c-parchment-shadow); } .fv-guide-page summary { cursor:pointer; font-family:var(--font-heading); font-weight:700; }
 .fv-shortcuts > div { display:grid; grid-template-columns:calc(20 * var(--px)) 1fr; gap:calc(3 * var(--px)); margin:calc(3 * var(--px)) 0; } .fv-shortcuts dd { margin:0; }
 .fv-shortcuts kbd { font:calc(4.5 * var(--px))/1 var(--font-body); background:var(--c-paper); padding:var(--px) calc(2 * var(--px)); box-shadow:0 0 0 var(--px) var(--c-outline); }

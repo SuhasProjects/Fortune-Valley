@@ -11,12 +11,14 @@ export function changeSentence(median: number, spread: number): string {
 }
 
 export function ChangeStrip({ result }: { result: WhatIfResult }) {
-  const { delta } = result
+  // Display rounding only: whole dollars decide the sign so "-$0" never shows as a loss.
+  const round = (value: number) => Math.round(value) || 0
+  const delta = { median: round(result.delta.median), yourEvents: round(result.delta.yourEvents), spread: round(result.delta.spread) }
   return <section className="fv-change-strip" aria-label="Changes with this decision">
     <div className="fv-change-tiles">
       <Inset title="Typical outcome"><strong className="fv-change-value" data-direction={Math.sign(delta.median)}>{usd(delta.median, true)}</strong></Inset>
       <Inset title="Your exact events"><strong className="fv-change-value" data-direction={Math.sign(delta.yourEvents)}>{usd(delta.yourEvents, true)}</strong>{!result.yourEventsComparable && <small>estimated from a replay of your game</small>}</Inset>
-      <Inset title="Spread (lucky vs unlucky)"><strong className="fv-change-value" data-direction={-Math.sign(delta.spread)}>{delta.spread === 0 ? 'Unchanged' : `${delta.spread < 0 ? 'Narrower' : 'Wider'} by ${usd(Math.abs(delta.spread))}`}</strong></Inset>
+      <Inset title="Spread (lucky vs unlucky)"><strong className="fv-change-value" data-direction={-Math.sign(delta.spread) || 0}>{delta.spread === 0 ? 'Unchanged' : `${delta.spread < 0 ? 'Narrower' : 'Wider'} by ${usd(Math.abs(delta.spread))}`}</strong></Inset>
     </div>
     <p className="fv-change-sentence">{changeSentence(delta.median, delta.spread)}</p>
     {result.replayFallbacks > 0 && <small>{result.replayFallbacks} later decisions couldn’t apply in some futures.</small>}

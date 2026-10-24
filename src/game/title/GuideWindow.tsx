@@ -40,7 +40,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
       <Tabs tabs={tabs} value={tab} onChange={setTab}>
         <div className="fv-guide-page">
           {tab === 'play' && <ol className="fv-guide-steps">{steps.map(([title, text]) => <li key={title}><h3>{title}</h3><p>{text}</p></li>)}</ol>}
-          {tab === 'town' && buildings.map(([building, title, text]) => <article className="fv-guide-building" key={building}><BuildingPortrait building={building}/><div><h3>{title}</h3><p>{text}</p></div></article>)}
+          {tab === 'town' && buildings.map(([building, title, text]) => <article className="fv-guide-building" key={building}><div className="fv-guide-portrait"><BuildingPortrait building={building}/></div><div><h3>{title}</h3><p>{text}</p></div></article>)}
           {tab === 'controls' && <dl className="fv-shortcuts">{shortcuts.map(([key, label]) => <div key={key}><dt><kbd>{key}</kbd></dt><dd>{label}</dd></div>)}</dl>}
           {tab === 'faq' && questions.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}
           {tab === 'about' && <><h3>Fortune Valley</h3><p>A little town. A bigger perspective.</p><p>Fictional educational simulation. Assumptions are illustrative. For learning, not personal financial advice.</p><p>All returns, event probabilities, and financial assumptions are illustrative. These are learning scenarios, not forecasts.</p></>}

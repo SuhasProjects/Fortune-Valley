@@ -18,7 +18,7 @@ export function StoryPicker() {
         <span className={`fv-portrait fv-portrait--${index}`} aria-hidden="true"/>
         <strong>{config.title}</strong><span className="fv-story-description">{description}</span>
         <span className="fv-story-facts"><span>Yearly salary <b>{usd(salary)}</b></span><span>Starting cash <b>{usd(cash)}</b></span><span>Total debt <b>{usd(debt)}</b></span></span>
-        <span className="fv-story-start">Begin this story</span>
+        
       </Button>)}</div>
   </section>
 }

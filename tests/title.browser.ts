@@ -49,6 +49,32 @@ test('title has no page scroll at laptop sizes or narrow phones', async ({ page 
   }
 })
 
+test('story picker cards never overlap and each starts its story with a plain click', async ({ page }) => {
+  for (const viewport of [{width:1440,height:900},{width:1280,height:720}]) {
+    await page.setViewportSize(viewport)
+    await openTitle(page)
+    await page.getByRole('button', {name:'New Story',exact:true}).click()
+    const cards = page.locator('.fv-story-card')
+    await expect(cards).toHaveCount(4)
+    const boxes = await cards.evaluateAll(elements => elements.map(element => {
+      // Include every descendant (portraits, text) so nothing drawn by one card can sit over another.
+      const rects = [element, ...element.querySelectorAll('*')].map(node => node.getBoundingClientRect())
+      return {left:Math.min(...rects.map(r => r.left)),right:Math.max(...rects.map(r => r.right)),top:Math.min(...rects.map(r => r.top)),bottom:Math.max(...rects.map(r => r.bottom))}
+    }))
+    for (let a = 0; a < boxes.length; a++) for (let b = a + 1; b < boxes.length; b++) {
+      const overlap = boxes[a]!.left < boxes[b]!.right && boxes[b]!.left < boxes[a]!.right && boxes[a]!.top < boxes[b]!.bottom && boxes[b]!.top < boxes[a]!.bottom
+      expect(overlap, `card ${a} overlaps card ${b} at ${viewport.width}×${viewport.height}`).toBe(false)
+    }
+  }
+  for (const life of ['College Student','Entry-Level Worker','Established Professional','Young Family']) {
+    await openTitle(page)
+    await page.getByRole('button', {name:'New Story',exact:true}).click()
+    await page.getByRole('button', {name:new RegExp(life)}).click({timeout:5_000})
+    await expect(page.getByRole('button', {name:/Open Pine Bank:/})).toBeVisible()
+    await expect(page.getByText(new RegExp(life)).first()).toBeVisible()
+  }
+})
+
 test('offline custom story accepts numbers, shows a preview, and starts', async ({ page }) => {
   let request: Record<string,unknown> | null = null
   await page.route('**/api/ai', route => { request = route.request().postDataJSON(); return route.fulfill({status:503,contentType:'application/json',body:'{"code":"disabled"}'}) })
