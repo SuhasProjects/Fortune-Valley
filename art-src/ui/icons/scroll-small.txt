@@ -1,0 +1,8 @@
+size 6x6
+--- 0
+kkkkk.
+kQQQQk
+.kQkk.
+.kQQk.
+kPPPPk
+.kkkk.

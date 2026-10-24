@@ -1,6 +1,9 @@
 {
-  "width": 14,
-  "height": 7,
-  "frames": 2,
-  "slice": 0
+  "src": "/art/ui/controls/toggle.png",
+  "w": 14,
+  "h": 7,
+  "frames": [
+    "0",
+    "1"
+  ]
 }

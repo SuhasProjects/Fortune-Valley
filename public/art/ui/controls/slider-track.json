@@ -1,6 +1,9 @@
 {
-  "width": 6,
-  "height": 4,
-  "frames": 1,
+  "src": "/art/ui/controls/slider-track.png",
+  "w": 6,
+  "h": 4,
+  "frames": [
+    "0"
+  ],
   "slice": 2
 }

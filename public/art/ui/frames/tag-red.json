@@ -1,6 +1,9 @@
 {
-  "width": 6,
-  "height": 6,
-  "frames": 1,
+  "src": "/art/ui/frames/tag-red.png",
+  "w": 6,
+  "h": 6,
+  "frames": [
+    "0"
+  ],
   "slice": 2
 }

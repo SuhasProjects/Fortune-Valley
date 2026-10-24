@@ -1,7 +1,7 @@
 .fv-hud { position: absolute; top: calc(2 * var(--px)); left: calc(2 * var(--px)); right: calc(2 * var(--px)); z-index: var(--z-hud); height: calc(15 * var(--px)); display: flex; gap: var(--px); align-items: center; padding: 0 var(--px); white-space: nowrap; }
 .fv-hud__brand { flex: 0 0 calc(61 * var(--px)); display: flex; align-items: center; min-width: 0; gap: calc(2 * var(--px)); }
 .fv-hud__brand-icon { background: var(--c-wood); border: var(--px) solid var(--c-outline); display: flex; padding: var(--px); }
-.fv-hud__brand-icon .fv-icon { width: calc(7 * var(--px)); height: calc(7 * var(--px)); }
+.fv-hud__brand-icon .fv-icon { width: calc(6 * var(--px)); height: calc(6 * var(--px)); }
 .fv-hud__brand > div { min-width: 0; }
 .fv-hud__brand strong { display: block; overflow: hidden; text-overflow: ellipsis; font: 700 var(--fs-body)/1 var(--font-heading); }
 .fv-hud__brand span:not(.fv-hud__brand-icon), .fv-hud__date span { display: block; font-size: var(--fs-label); overflow: hidden; text-overflow: ellipsis; }

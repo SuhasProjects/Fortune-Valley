@@ -1,4 +1,4 @@
-@import './palette-fallback.css';
+@import '../styles/palette.css';
 :root {
   --px: 4px;
   --font-body: 'VT323', ui-monospace, monospace;
@@ -13,3 +13,4 @@
   --space-lg: calc(6 * var(--px));
   --z-world: 0; --z-ui: 10; --z-hud: 20; --z-toast: 30; --z-overlay: 50;
 }
+.fv-stage { cursor: url('/art/ui/cursor/pointer.png') 2 2, auto; }

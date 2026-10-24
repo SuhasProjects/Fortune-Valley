@@ -1,0 +1,8 @@
+size 6x6
+--- 0
+..kk..
+..nn..
+.kkkk.
+knOnnk
+knOnnk
+.kkkk.

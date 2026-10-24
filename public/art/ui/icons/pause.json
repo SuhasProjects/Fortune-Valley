@@ -1,6 +1,8 @@
 {
-  "width": 10,
-  "height": 10,
-  "frames": 1,
-  "slice": 0
+  "src": "/art/ui/icons/pause.png",
+  "w": 10,
+  "h": 10,
+  "frames": [
+    "0"
+  ]
 }
