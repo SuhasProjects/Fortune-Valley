@@ -9,10 +9,34 @@ const sprites = {
       "0"
     ]
   },
+  "title/cottage-blue": {
+    "src": "/art/title/cottage-blue.png",
+    "w": 24,
+    "h": 20,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/cottage": {
+    "src": "/art/title/cottage.png",
+    "w": 24,
+    "h": 20,
+    "frames": [
+      "0"
+    ]
+  },
   "title/favicon": {
     "src": "/art/title/favicon.png",
     "w": 16,
     "h": 16,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/flowers": {
+    "src": "/art/title/flowers.png",
+    "w": 64,
+    "h": 12,
     "frames": [
       "0"
     ]
@@ -25,6 +49,38 @@ const sprites = {
       "0"
     ]
   },
+  "title/meadow": {
+    "src": "/art/title/meadow.png",
+    "w": 16,
+    "h": 16,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/mountain-far": {
+    "src": "/art/title/mountain-far.png",
+    "w": 128,
+    "h": 64,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/mountain-mid": {
+    "src": "/art/title/mountain-mid.png",
+    "w": 128,
+    "h": 48,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/mountain-near": {
+    "src": "/art/title/mountain-near.png",
+    "w": 128,
+    "h": 40,
+    "frames": [
+      "0"
+    ]
+  },
   "title/parent": {
     "src": "/art/title/parent.png",
     "w": 32,
@@ -32,6 +88,22 @@ const sprites = {
     "frames": [
       "0",
       "1"
+    ]
+  },
+  "title/path": {
+    "src": "/art/title/path.png",
+    "w": 48,
+    "h": 48,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/pine": {
+    "src": "/art/title/pine.png",
+    "w": 20,
+    "h": 32,
+    "frames": [
+      "0"
     ]
   },
   "title/pointer": {
@@ -61,38 +133,6 @@ const sprites = {
       "2"
     ]
   },
-  "title/scene/hills": {
-    "src": "/art/title/scene/hills.png",
-    "w": 480,
-    "h": 44,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/scene/mountains-far": {
-    "src": "/art/title/scene/mountains-far.png",
-    "w": 480,
-    "h": 70,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/scene/mountains-mid": {
-    "src": "/art/title/scene/mountains-mid.png",
-    "w": 480,
-    "h": 60,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/scene/sky": {
-    "src": "/art/title/scene/sky.png",
-    "w": 480,
-    "h": 146,
-    "frames": [
-      "0"
-    ]
-  },
   "title/sign-small": {
     "src": "/art/title/sign-small.png",
     "w": 120,
@@ -105,6 +145,14 @@ const sprites = {
     "src": "/art/title/sign.png",
     "w": 200,
     "h": 56,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/sky-dither": {
+    "src": "/art/title/sky-dither.png",
+    "w": 4,
+    "h": 4,
     "frames": [
       "0"
     ]
@@ -1028,56 +1076,6 @@ const sprites = {
       "0"
     ]
   },
-  "windows/keepers/bank": {
-    "src": "/art/windows/keepers/bank.png",
-    "w": 24,
-    "h": 24,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "speed": 900
-  },
-  "windows/keepers/home": {
-    "src": "/art/windows/keepers/home.png",
-    "w": 24,
-    "h": 24,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "speed": 900
-  },
-  "windows/keepers/hospital": {
-    "src": "/art/windows/keepers/hospital.png",
-    "w": 24,
-    "h": 24,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "speed": 900
-  },
-  "windows/keepers/market": {
-    "src": "/art/windows/keepers/market.png",
-    "w": 24,
-    "h": 24,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "speed": 900
-  },
-  "windows/keepers/office": {
-    "src": "/art/windows/keepers/office.png",
-    "w": 24,
-    "h": 24,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "speed": 900
-  },
   "world/buildings/bank": {
     "src": "/art/world/buildings/bank.png",
     "w": 64,
@@ -1151,166 +1149,6 @@ const sprites = {
     "anchor": [
       34,
       41
-    ]
-  },
-  "world/extra/clock-hand": {
-    "src": "/art/world/extra/clock-hand.png",
-    "w": 7,
-    "h": 7,
-    "frames": [
-      "0",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "11"
-    ],
-    "speed": 900
-  },
-  "world/extra/fence-h": {
-    "src": "/art/world/extra/fence-h.png",
-    "w": 16,
-    "h": 8,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      8,
-      7
-    ]
-  },
-  "world/extra/fence-post": {
-    "src": "/art/world/extra/fence-post.png",
-    "w": 7,
-    "h": 12,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      3,
-      11
-    ]
-  },
-  "world/extra/hay-bale": {
-    "src": "/art/world/extra/hay-bale.png",
-    "w": 12,
-    "h": 9,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      6,
-      8
-    ]
-  },
-  "world/extra/hourglass": {
-    "src": "/art/world/extra/hourglass.png",
-    "w": 9,
-    "h": 12,
-    "frames": [
-      "0",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5"
-    ],
-    "speed": 180
-  },
-  "world/extra/mailbox": {
-    "src": "/art/world/extra/mailbox.png",
-    "w": 6,
-    "h": 10,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      3,
-      9
-    ]
-  },
-  "world/extra/pine-tree": {
-    "src": "/art/world/extra/pine-tree.png",
-    "w": 18,
-    "h": 28,
-    "frames": [
-      "0",
-      "1"
-    ],
-    "anchor": [
-      9,
-      27
-    ],
-    "speed": 900
-  },
-  "world/extra/rock": {
-    "src": "/art/world/extra/rock.png",
-    "w": 10,
-    "h": 7,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      5,
-      6
-    ]
-  },
-  "world/extra/signpost": {
-    "src": "/art/world/extra/signpost.png",
-    "w": 10,
-    "h": 16,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      5,
-      15
-    ]
-  },
-  "world/extra/stump": {
-    "src": "/art/world/extra/stump.png",
-    "w": 9,
-    "h": 8,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      4,
-      7
-    ]
-  },
-  "world/extra/villager-walk": {
-    "src": "/art/world/extra/villager-walk.png",
-    "w": 12,
-    "h": 16,
-    "frames": [
-      "0",
-      "1",
-      "2",
-      "3"
-    ],
-    "anchor": [
-      6,
-      15
-    ],
-    "speed": 160
-  },
-  "world/extra/well": {
-    "src": "/art/world/extra/well.png",
-    "w": 16,
-    "h": 18,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      8,
-      17
     ]
   },
   "world/fx/badge": {
@@ -1465,62 +1303,6 @@ const sprites = {
     ],
     "speed": 900
   },
-  "world/ring/crate": {
-    "src": "/art/world/ring/crate.png",
-    "w": 8,
-    "h": 8,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      4,
-      6
-    ]
-  },
-  "world/ring/scarecrow": {
-    "src": "/art/world/ring/scarecrow.png",
-    "w": 10,
-    "h": 18,
-    "frames": [
-      "0"
-    ],
-    "anchor": [
-      5,
-      16
-    ]
-  },
-  "world/ring/villager-a": {
-    "src": "/art/world/ring/villager-a.png",
-    "w": 12,
-    "h": 16,
-    "frames": [
-      "0",
-      "1",
-      "2",
-      "3"
-    ],
-    "anchor": [
-      6,
-      14
-    ],
-    "speed": 120
-  },
-  "world/ring/villager-b": {
-    "src": "/art/world/ring/villager-b.png",
-    "w": 12,
-    "h": 16,
-    "frames": [
-      "0",
-      "1",
-      "2",
-      "3"
-    ],
-    "anchor": [
-      6,
-      14
-    ],
-    "speed": 120
-  },
   "world/ground": {
     "src": "/art/world/ground.png",
     "w": 480,
@@ -1531,25 +1313,6 @@ const sprites = {
   },
   "world/water": {
     "src": "/art/world/water.png",
-    "w": 480,
-    "h": 288,
-    "frames": [
-      "0",
-      "1",
-      "2"
-    ],
-    "speed": 400
-  },
-  "title/ground": {
-    "src": "/art/title/ground.png",
-    "w": 480,
-    "h": 288,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/water": {
-    "src": "/art/title/water.png",
     "w": 480,
     "h": 288,
     "frames": [

@@ -1,42 +1,34 @@
 # Agent 5 handoff
 
-Branch `agent5-finish` (base `agent5-integrate`). The title and ending are routed directly by `App.tsx`; the landing
-and fan-chart shims are gone.
+Implemented on `agent5-title-reveal`, rebased onto the shared stage, real ending engine, and game-flow work now on `main`.
 
 ## Public components
 
-- `TitleScreen()` (`src/game/title/TitleScreen.tsx`): menu, story picker, custom-story letter, Guide, Options.
-- `GuideWindow({ onClose })`: kit `Modal` named `Guide` with kit `Tabs` (How to play, The town, Controls, FAQ, About).
-- `RevealScreen({ payload, onPlayAgain })` (`src/game/reveal/RevealScreen.tsx`): ledger `Board` over `TownWorld timeOfDay="dusk"`.
-- `OutcomeChart({ lines, yDomain, title, highlightLabel? })`: hand-drawn SVG, straight lines from engine endpoints only.
-- `WhatIfSection`: `listDecisions` + `runWhatIfAsync`; decisions whose id starts with `hyp:` are grouped under
-  "What if, from the start" (an `<optgroup>` select mirroring the kit's `Select` markup, since `Select` has no groups).
-  The empty card only shows when `listDecisions` returns nothing.
+- `TitleScreen()` starts fixed-seed premade games, generates custom stories with optional numbers, previews the result, restores saved games, and opens Guide/Options.
+- `GuideWindow({ onClose })` provides five keyboard-accessible chapters.
+- `RevealScreen({ payload, onPlayAgain })` shows a full-screen ledger, four straight outcome lines, a comparison section, explanation questions, assumptions, and play again.
+- `OutcomeChart({ lines, yDomain, title, highlightLabel? })` renders exact engine endpoints, shared display domains, direct labels, keyboard highlighting, and accessible tables.
 
-## Materials
+The title and ending use Agent 1's `GameStage`, `TownWorld`, palette, generated art manifest, and real `outcomeLines`, `listDecisions`, and `runWhatIfAsync` functions. They use Agent 4's shared `OptionsWindow` and sound effects.
 
-Everything comes from `src/ui` (`Button`, `Board`, `Modal`, `Tabs`, `Field`, `Select`, `Inset`, `Plaque`, `Tag`, `Icon`).
-`src/game/title/contracts.tsx` only holds the stage wrapper, scale hook, click sound, reduced-motion flag and the Options
-modal. No `.pixel-*` classes remain in these folders.
+`Landing` and `RevealChart` remain compatibility exports because Agent 4's current `App` still imports those names. `App` can route `TitleScreen` and `RevealScreen` directly in a follow-up, then the compatibility exports and the legacy-dialog geometry rules at the bottom of `src/game/reveal/reveal.css` can be removed.
 
-Known cross-ownership issue: `src/game/world/world.css` defines `.fv-plaque { position:absolute … }` for building name
-plates, which collides with the kit's `.fv-plaque` (window titles). `title.css` restores the kit look inside our windows;
-Agents 1 and 2 should rename one of them.
+## Remaining integration
 
-## Scene
+**Agent 2:** `src/ui` materials have not landed yet. The title and reveal temporarily use the existing `.pixel-button`, `.pixel-panel`, and `PanelHost`, while Agent 2's kit is detected automatically. Native fields can move to `Field`, `NumberField`, and `Select`, and guide tabs to `Tabs`, when that kit becomes available.
 
-Agent 1 is rebuilding `TitleScene.tsx` and the scene-layer grids in `art-src/title/` (sky, mountains, forest, meadow,
-path, flowers, cottages). Agent 5 keeps the sign, vines, ropes (`sign.txt`, `sign-small.txt`, `vine-*.txt`, `.fv-sign*`,
-`.fv-vine*`, `.fv-ropes`), portraits, favicon, menus and the ending. The scene CSS still in `title.css`
-(`.fv-valley`, `.fv-sky-band`, `.fv-mountains*`, `.fv-haze*`, `.fv-forest`, `.fv-meadow`, `.fv-valley-path`,
-`.fv-cottage*`, `.fv-flowers`) can be moved or replaced by Agent 1.
+**Agent 4:** the router still mounts the compatibility exports. On mobile, the building world is partly behind the HUD, so some town hotspots cannot be tapped; the keyboard shortcuts work and the browser flow test uses them at that breakpoint.
 
-## Tests
+## Art
 
-- `tests/helpers.ts`: `openTitle`, `expectOnTitle`, `startStory` (clicks **New Story**, then the life card),
-  `expectReveal` (`main` named `Simulation results` containing `Same strategy, 1,000 futures`), `leaveReveal`.
-- `tests/title.browser.ts` includes a card-overlap assertion and a plain (non-forced) click on each of the four cards.
-- `tests/reveal.browser.ts` "finishing without decisions explains how to unlock comparisons" expects the empty card;
-  once the engine returns `hyp:` decisions for an empty log, change it to expect the grouped select instead.
-- Screenshots: `node scripts/dev/shots.mjs <outDir>` (needs a dev server on `FV_PORT`, default 5181;
-  `FV_VIEWPORT=1280x720` for the laptop size).
+Palette-limited text grids are in `art-src/title/`, compiled PNGs/metadata in `public/art/title/`. All art is separate layers and sprites, not a full-screen raster. Sign lettering remains HTML. Portraits have blink frames. Vines/haze/sign/quill/chart animations are stepped and respect OS or saved reduced motion.
+
+Run `npm run art` after changing a title grid. The shared compiler writes the PNGs, metadata, palette CSS, and generated sprite manifest.
+
+## Ownership and cleanup
+
+The user's pre-existing edits in `.env.example`, `README.md`, `TownIllustration.tsx`, and `welcome.css` are preserved outside the Agent 5 commit. The illustration is unused. `welcome.css` remains because its import belongs to Agent 2's `src/styles/index.css`. Remove the import and retire both legacy files with their owners during final cleanup. The old fan/histogram renderer is replaced; its compatibility export remains only for the current router.
+
+`AppShell.test.tsx` now follows the title screen before choosing a life. No test was deleted or weakened to mask the title integration.
+
+Browser helpers use the title menu, finish confirmation, and `Simulation results` landmark. Browser comparison tests stub the ending module so they test selection, shared axes, aborting, and stale-response handling independently of simulation accuracy.
