@@ -76,9 +76,10 @@ export function OptionsWindow(props: { onClose: () => void; onDeleteSave?: () =>
 // src/game/audio/sfx.ts
 export function sfx(name: 'click'|'open'|'close'|'coin'|'month'|'alert'|'reveal'): void   // no-op when sound is off
 
-// Building windows (differs from the plan). There is no src/components/panels/BuildingWindow.tsx. GameScreen renders
-//   <PanelHost building onClose> (src/components/town/PanelHost.tsx, a Modal titled with the building name and a hint
-//   plaque) containing that building's <EventCard>s and <ConnectedBuildingPanel building/> (src/components/panels/).
+// Building windows (src/components/panels/BuildingWindow.tsx): Modal named after the building, portrait, roof band,
+//   keeper greeting, that building's <EventCard>s and its engine-backed panel. GameScreen still mounts the older
+//   <PanelHost building onClose> + <ConnectedBuildingPanel/> pair until the flow switches to BuildingWindow.
+export function BuildingWindow(props: { building: BuildingId; onClose: () => void }): JSX.Element
 export function PanelHost(props: { building?: BuildingId; title?: string; onClose: () => void; children: ReactNode }): JSX.Element
 export function ConnectedBuildingPanel(props: { building: BuildingId }): JSX.Element   // reads the store, dispatches actions
 // Canonical panel API (src/components/panels/index.ts): BuildingPanel { building, state, dispatch }, panelRegistry
@@ -100,7 +101,7 @@ Known deviations from `docs/agents/README.md` §9, in one place:
 
 | Plan | Code |
 |---|---|
-| `BuildingWindow({ building, onClose })` in `src/components/panels/BuildingWindow.tsx` | Not present. `PanelHost` + `ConnectedBuildingPanel` + `EventCard` (see above). |
+| `GameScreen` mounts `BuildingWindow` | `BuildingWindow` exists; `GameScreen` still mounts `PanelHost` + `ConnectedBuildingPanel` + `EventCard`. |
 | `App` routes `TitleScreen` / `RevealScreen` directly | `App` still imports `Landing` and `RevealChart`, which are one-line aliases to them; the reveal is mounted inside a `PanelHost`. |
 | `GuideWindow` also opened from the pause menu | The pause menu's Guide is a plain `PanelHost` with one line of shortcuts; `GuideWindow` is used on the title only. |
 | `Sprite.frame?: number` | `number \| string` (variant names), plus a `style` prop. |
