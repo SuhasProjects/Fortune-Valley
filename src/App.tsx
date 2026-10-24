@@ -1,5 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { scenarios } from './data/scenarios'
+import { useEffect, type ReactNode } from 'react'
 import { EventCard, GameClock, NotificationStack, monthLabel, usd } from './components/flow'
 import { selectDebtTotal, selectNetWorth, useGameStore, type FinishPayload } from './stores/useGameStore'
 import { TownScene } from './components/town/TownScene'
@@ -7,9 +6,10 @@ import { PanelHost } from './components/town/PanelHost'
 import { GameShell } from './components/layout/GameShell'
 import type { BuildingId } from './types/domain'
 import { ConnectedBuildingPanel } from './components/panels/ConnectedBuildingPanel'
-import { PixelIcon, PixelPortrait, WorldBackdrop } from './components/layout/PixelArt'
+import { PixelIcon } from './components/layout/PixelArt'
 import EngineHarness from './dev/EngineHarness'
 import { RevealChart } from './components/reveal'
+import { Landing } from './components/landing/Landing'
 
 // Agent 3 supplies controlled panels. Agent 5 mounts its computed reveal here.
 export interface AppProps {
@@ -20,39 +20,12 @@ export default function App(props: AppProps) {
   if (new URLSearchParams(window.location.search).get('dev') === 'engine') return <EngineHarness />
   return <Town {...props}/>
 }
-const startingLifeHints = [
-  'Practice everyday spending, student debt, and saving a little.',
-  'Get comfortable with paychecks, rent, and building savings.',
-  'Explore investing and protecting the savings you have built.',
-  'Plan household costs and save for everyday surprises.',
-]
 function Town({ panels = {}, renderReveal }: AppProps) {
-  const [prompt, setPrompt] = useState('')
-  const [formError, setFormError] = useState('')
   const store = useGameStore()
   const netWorth = useGameStore(selectNetWorth)
   const debt = useGameStore(selectDebtTotal)
   useEffect(() => { store.refreshSavedGame() }, [])
-  if (!store.game || !store.config) return <main className="town-landing">
-    <WorldBackdrop/>
-    <header className="landing-nav"><a className="wordmark" href="#"><PixelIcon/> FINANCIAL TOWN</a><span className="offline-tag">PLAYABLE OFFLINE</span></header>
-    <section className="landing-hero">
-      <div className="hero-kicker"><PixelIcon kind="leaf"/><span>A LITTLE LIFE. A WORLD OF POSSIBILITIES.</span></div>
-      <div className="title-sign"><span className="sign-nail nail-left"/><span className="sign-nail nail-right"/><h1>Your money.<br/>Your little world.</h1></div>
-      <p>Put down roots. Make your choices.<br/>See what grows, one month at a time.</p>
-      <a className="pixel-button pixel-button--gold hero-play" href="#starting-lives"><PixelIcon kind="leaf"/> Begin your story <span aria-hidden="true">&rarr;</span></a>
-      <div className="hero-details"><span>Learn at your own pace. There is no perfect score.</span></div>
-    </section>
-    {store.savedGame && <section className="personalization pixel-panel" aria-label="Saved game"><div><span className="eyebrow">SAVED GAME</span><h2>Continue {store.savedGame.title}</h2><p>Month {store.savedGame.monthIndex}, saved on this device.</p></div><div><button className="pixel-button pixel-button--gold" onClick={() => store.loadSavedGame()}>Continue →</button> <button className="pixel-button" onClick={store.clearSavedGame}>Delete save</button></div></section>}
-    <section id="starting-lives" className="starting-lives quest-board">
-      <div className="board-pin pin-left"/><div className="board-pin pin-right"/>
-      <div className="section-heading"><PixelIcon kind="book"/><div><span className="eyebrow">NEW SAVE FILE</span><h2>Choose your starting life</h2></div><span>Who will you be?</span></div>
-      <div className="life-grid">{scenarios.map((scenario,index) => <button className="life-card pixel-panel" key={scenario.scenarioId} onClick={()=>store.startGame(scenario)}><div className="save-slot"><span>FILE 0{index+1}</span><span aria-hidden="true">&#10022;</span></div><PixelPortrait variant={index}/><h3>{scenario.title}</h3><p>{startingLifeHints[index]}</p><span className="life-start">Start this story <span aria-hidden="true">&rarr;</span></span></button>)}</div>
-      <p className="board-caption">Pick a life that feels interesting. You can always start again.</p>
-    </section>
-    <section className="personalization pixel-panel"><div className="journal-intro"><PixelIcon kind="book"/><span className="eyebrow">A PAGE FROM YOUR OWN LIFE</span><h2>Got a question<br/>of your own?</h2><p>Explore a situation you care about. We'll turn it into a starting point using the town's financial mechanics.</p><small>Leave out sensitive details. The AI gateway can prepare a scenario; a local fallback is available offline.</small></div><form onSubmit={async event=>{event.preventDefault();setFormError('');try {const result=await store.generatePersonalized(prompt);store.startGame(result.config)} catch(error){setFormError(error instanceof Error ? error.message : 'Could not prepare your scenario.')}}}><label htmlFor="situation">Dear future me...</label><textarea id="situation" value={prompt} onChange={event=>setPrompt(event.target.value)} placeholder="How can I pay down debt while saving for a rainy day?" required maxLength={1000}/><button className="pixel-button pixel-button--gold" disabled={store.personalizationLoading}>{store.personalizationLoading ? 'Preparing your story...' : 'Explore my situation'} <span aria-hidden="true">&rarr;</span></button>{(formError||store.personalizationError)&&<p role="alert">{formError||store.personalizationError}</p>}</form></section>
-    <footer className="simulation-footer">Fictional educational simulation &middot; Illustrative assumptions &middot; Not financial advice</footer>
-  </main>
+  if (!store.game || !store.config) return <Landing/>
   const { game, config } = store
   const panel = store.openBuildingId
   return <GameShell topBar={<header className="town-hud"><div className="hud-brand"><span className="brand-mark"><PixelIcon/></span><div className="wordmark">FINANCIAL TOWN<small>{config.title}</small></div></div><dl className="hud-stats"><div className="hud-date"><dt><PixelIcon kind="calendar"/>{monthLabel(config.startMonth,game.monthIndex)}</dt><dd>Month {game.monthIndex} / {config.durationMonths}</dd></div><div><dt><PixelIcon kind="coin"/>Cash</dt><dd>{usd(game.cash)}</dd></div><div><dt><PixelIcon kind="leaf"/>Savings</dt><dd>{usd(game.savings)}</dd></div><div><dt><PixelIcon kind="book"/>Debt</dt><dd>{usd(debt)}</dd></div><div className="hud-net"><dt><PixelIcon kind="coin"/>Net worth</dt><dd>{usd(netWorth)}</dd></div></dl><button className="pixel-button" onClick={store.openTimeline}>Timeline ↗</button></header>} toasts={<div className="activity-area"><NotificationStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={()=>store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/></div>}>
