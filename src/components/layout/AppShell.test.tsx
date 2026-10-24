@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import App from '../../App'
+import { scenarios } from '../../data/scenarios'
 import { useGameStore } from '../../stores/useGameStore'
 
 beforeEach(() => {
@@ -35,4 +36,17 @@ describe('integrated app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))
     expect(screen.getByText('Reveal month 1')).toBeTruthy()
   })
+  it('keeps review reachable after natural completion and restores landing scroll after reveal reset', () => {
+    render(<App/>)
+    act(() => useGameStore.getState().startGame({ ...scenarios[1]!, durationMonths: 6 }))
+    for (let month = 0; month < 6; month++) fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
+    expect(useGameStore.getState().game?.status).toBe('finished')
+    fireEvent.click(screen.getByRole('button', { name: /Review your story/ }))
+    expect(screen.getByRole('dialog', { name: 'Your next chapter' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Choose a new story/ }))
+    expect(screen.getByRole('heading', { name: /Your money\.\s*Your little world\./ })).toBeTruthy()
+    expect(document.body.classList.contains('fullscreen-game-active')).toBe(false)
+    expect(document.body.style.overflow).not.toBe('hidden')
+  })
+
 })
