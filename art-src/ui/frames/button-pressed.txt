@@ -1,0 +1,15 @@
+size 12x12
+slice 4
+--- 0
+.kkkkkkkkkk.
+knnnnnnnnnnk
+knnnnnnnnnbk
+knnnnnnnnnbk
+knnnnnnnnnbk
+knnnnnnnnnbk
+knnnnnnnnnbk
+knnnnnnnnnbk
+knnnnnnnnnbk
+kbbbbbbbbbbk
+kbbbbbbbbbbk
+.kkkkkkkkkk.

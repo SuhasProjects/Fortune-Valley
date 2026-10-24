@@ -1,0 +1,11 @@
+size 4x8
+slice 2
+--- 0
+kkkk
+knQk
+knnk
+knnk
+knnk
+knnk
+kbbk
+kkkk

@@ -1,0 +1,12 @@
+size 10x10
+--- 0
+...kkkk...
+..kW..Wk..
+..kW..Wk..
+.kkkkkkkk.
+knnnnnnnnk
+.kWnWnWnk.
+.knWnWnWk.
+..kWnWnk..
+..kbbbbk..
+...kkkk...

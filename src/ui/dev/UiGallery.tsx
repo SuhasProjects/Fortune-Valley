@@ -1,0 +1,22 @@
+import { useState, type CSSProperties } from 'react'
+import { Board, WoodFrame, Window, Modal, Button, IconButton, Plaque, Tag, Inset, Field, NumberField, Select, Slider, Toggle, Tabs, Tooltip, Icon, Money, Divider, ScrollArea, iconNames } from '../index'
+import { Hud, ControlBar, StatusTag, HudFooter } from '../../game/hud'
+import { useGameStore } from '../../stores/useGameStore'
+import { freshScenario } from '../../data/scenarios'
+import './gallery.css'
+
+export function UiGallery() {
+  const initialScale = Number(new URLSearchParams(location.search).get('scale'))
+  const [scale, setScale] = useState([3,4,6].includes(initialScale) ? initialScale : 4)
+  const [modal, setModal] = useState(false), [number, setNumber] = useState(100), [checked, setChecked] = useState(false), [tab, setTab] = useState('first'), [choice, setChoice] = useState('wood')
+  const game = useGameStore(state => state.game)
+  return <main className="fv-gallery" style={{ '--px': `${scale}px` } as CSSProperties}><h1>Fortune Valley · UI workshop</h1><Select label="Pixel scale" value={String(scale)} onChange={value => setScale(Number(value))} options={[3,4,6].map(value => ({ value: String(value), label: `${value}×` }))}/><section className="fv-gallery__stage"><Hud onOpenTimeline={() => setModal(true)}/><StatusTag/>{!game && <Button onClick={() => useGameStore.getState().startGame(freshScenario('college_student'))}>Load HUD example</Button>}<ControlBar status={game?.status ?? 'playing'} onAdvance={() => useGameStore.getState().advanceOneMonth()} onPause={paused => useGameStore.getState().setPaused(paused)} onFinish={() => setModal(true)} secondsRemaining={58} autoAdvanceEnabled={checked} onToggleAuto={() => setChecked(!checked)}/><HudFooter/></section>
+    <Board><h2>Wood buttons</h2><div className="fv-gallery__row">{(['wood','primary','ghost','text'] as const).map(variant => <Button key={variant} variant={variant} icon="coin" onClick={() => setModal(true)}>{variant}</Button>)}<Button disabled>Disabled</Button><Button size="sm">Small</Button><Button size="lg">Large</Button><IconButton icon="gear" label="Options"/></div></Board>
+    <Board><h2>Materials</h2><div className="fv-gallery__row"><Plaque>Pine Bank</Plaque><Plaque tone="wood">Wood plaque</Plaque>{(['dark','gold','red','green'] as const).map(tone => <Tag key={tone} tone={tone}>{tone}</Tag>)}</div><Divider/><Inset title="An inset">A quiet place for a decision.</Inset><WoodFrame><Board padding="lg">A wood frame around a parchment board.</Board></WoodFrame><ScrollArea maxHeight="calc(18 * var(--px))">{Array.from({ length: 8 }, (_, index) => <p key={index}>Ledger line {index + 1}</p>)}</ScrollArea></Board>
+    <Board><h2>Fields & controls</h2><div className="fv-gallery__fields"><Field label="Your story" placeholder="A new beginning" hint="A short name"/><Field label="Story notes" multiline/><Field label="Invalid field" error="Please enter a value"/><Field label="Disabled field" disabled value="Read only"/><NumberField label="Monthly savings contribution (USD)" prefix="$" value={number} onChange={setNumber} min={0}/><Select label="Material" value={choice} onChange={setChoice} options={[{value:'wood',label:'Wood'},{value:'paper',label:'Paper'}]}/><Slider label="Contribution" value={number} onChange={setNumber} min={0} max={1000} step={10}/><Toggle label="Reduce motion example" checked={checked} onChange={setChecked}/></div><Tabs tabs={[{id:'first',label:'First',icon:'book'},{id:'second',label:'Second',icon:'coin'}]} value={tab} onChange={setTab}>{tab === 'first' ? 'First ledger page' : 'Second ledger page'}</Tabs></Board>
+    <Board><h2>Icons & numbers</h2><div className="fv-gallery__icons">{iconNames.map(name => <Tooltip key={name} content={name}><IconButton icon={name} label={name}/><Icon name={name} size={16} label={`${name} menu size`}/></Tooltip>)}</div><div className="fv-gallery__row"><Money value={100}/><Money value={100} signed/><Money value={-100}/><Money value={-100} tone="neutral"/></div></Board>
+    <Window title="Parchment window" width="sm" headerExtra={<Tooltip content="A helpful hint"><IconButton icon="question" label="Help"/></Tooltip>}><p>Real text inside a wood frame.</p><Button onClick={() => setModal(true)}>Open modal</Button></Window>
+    {modal && <Modal title="Your ledger" onClose={() => setModal(false)}><Field label="A decision"/><Button onClick={() => setModal(false)}>Done</Button></Modal>}
+  </main>
+}
+

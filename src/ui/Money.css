@@ -1,0 +1,2 @@
+.fv-money { font-family: var(--font-body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fv-money--neutral { color: var(--c-outline); } .fv-money--negative { color: var(--c-money-down); } .fv-money--positive { color: var(--c-money-up); }

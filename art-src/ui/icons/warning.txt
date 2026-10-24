@@ -1,0 +1,12 @@
+size 10x10
+--- 0
+....kk....
+...kOOk...
+...kOOk...
+..kOkkOk..
+..kOkkOk..
+.kOOkkOOk.
+.kOOOOOOk.
+kOOOkkOOOk
+kOOOOOOOOk
+.kkkkkkkk.

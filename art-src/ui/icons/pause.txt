@@ -1,0 +1,12 @@
+size 10x10
+--- 0
+..........
+.kkk..kkk.
+.kQk..kQk.
+.kQk..kQk.
+.kQk..kQk.
+.kQk..kQk.
+.kQk..kQk.
+.kPk..kPk.
+.kkk..kkk.
+..........

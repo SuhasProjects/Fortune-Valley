@@ -1,0 +1,6 @@
+.fv-tabs [role='tablist'] { display: flex; gap: var(--px); flex-wrap: wrap; }
+.fv-tab { display: inline-flex; align-items: center; gap: var(--px); font: 700 var(--fs-body)/1 var(--font-heading); color: var(--c-ink); border: calc(4 * var(--px)) solid transparent; border-image: url('/art/ui/frames/tab.png') 4 fill / calc(4 * var(--px)) / 0 stretch; padding: 0 var(--px); background: transparent; cursor: pointer; image-rendering: pixelated; }
+.fv-tab .fv-icon { width: calc(5 * var(--px)); height: calc(5 * var(--px)); }
+.fv-tab[aria-selected='true'] { border-image-source: url('/art/ui/frames/tab-active.png'); }
+.fv-tabs [role='tabpanel'] { padding: calc(3 * var(--px)); background: var(--c-parchment); font: var(--fs-body)/1.1 var(--font-body); color: var(--c-outline); }
+.fv-tabs [role='tabpanel']:focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); }

@@ -1,0 +1,15 @@
+@import './palette-fallback.css';
+:root {
+  --px: 4px;
+  --font-body: 'VT323', ui-monospace, monospace;
+  --font-heading: 'Pixelify Sans', ui-monospace, monospace;
+  --fs-label: calc(3.5 * var(--px));
+  --fs-body: calc(4.5 * var(--px));
+  --fs-value: calc(5 * var(--px));
+  --fs-heading: calc(6 * var(--px));
+  --fs-title: calc(12 * var(--px));
+  --space-sm: calc(2 * var(--px));
+  --space-md: calc(4 * var(--px));
+  --space-lg: calc(6 * var(--px));
+  --z-world: 0; --z-ui: 10; --z-hud: 20; --z-toast: 30; --z-overlay: 50;
+}

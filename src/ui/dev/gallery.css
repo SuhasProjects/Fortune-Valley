@@ -1,0 +1,7 @@
+.fv-gallery { min-height: 100dvh; padding: calc(4 * var(--px)); display: flex; flex-direction: column; gap: calc(4 * var(--px)); box-sizing: border-box; background: var(--c-grass); font: var(--fs-body)/1.1 var(--font-body); color: var(--c-outline); cursor: url('/art/ui/cursor/pointer.png') 2 2, auto; }
+.fv-gallery *, .fv-gallery *::before, .fv-gallery *::after { box-sizing: border-box; }
+.fv-gallery h1, .fv-gallery h2 { font-family: var(--font-heading); font-weight: 700; margin: 0 0 calc(2 * var(--px)); } .fv-gallery h1 { font-size: var(--fs-heading); } .fv-gallery h2 { font-size: var(--fs-value); }
+.fv-gallery__row, .fv-gallery__icons { display: flex; flex-wrap: wrap; align-items: center; gap: calc(3 * var(--px)); }
+.fv-gallery__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(50 * var(--px))), 1fr)); gap: calc(3 * var(--px)); margin-bottom: calc(4 * var(--px)); }
+.fv-gallery__stage { position: relative; min-height: calc(80 * var(--px)); background: var(--c-grass-shade); margin: 0 calc(-4 * var(--px)); }
+.fv-gallery__stage > .fv-button { position: absolute; top: calc(35 * var(--px)); left: calc(4 * var(--px)); }

@@ -1,0 +1,11 @@
+size 8x8
+slice 3
+--- 0
+kkkkkkkk
+kPQQQQQk
+kQQQQQQk
+kQQQQQQk
+kQQQQQQk
+kQQQQQQk
+kQQQQQQk
+kkkkkkkk
