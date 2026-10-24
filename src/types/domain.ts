@@ -229,6 +229,8 @@ export interface GameNotification {
   summary: string;
   details?: string;
   relatedBuilding?: BuildingId;
+  /** Optional headline amount for the toast (display only; ledger is the source of truth). */
+  amountSigned?: number;
   read: boolean;
 }
 

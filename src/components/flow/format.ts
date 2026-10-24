@@ -1,0 +1,7 @@
+export const usd = (value: number, signed = false) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0, signDisplay: signed ? 'always' : 'auto' }).format(value);
+
+export const monthLabel = (startMonth: string, monthIndex: number) => {
+  const [year = 2026, month = 1] = startMonth.split('-').map(Number);
+  return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(year, month - 1 + monthIndex, 1));
+};
