@@ -42,7 +42,7 @@ describe('what-if API edge cases', () => {
     for (let m = 0; m < 8; m++) s = advanceMonth(s);
     const input = finishInput(config, s);
     const decisions = assertAllPairsReplay(input);
-    expect(decisions.filter((d) => d.monthIndex === 0)).toHaveLength(2);
+    expect(decisions.filter((d) => d.monthIndex === 0 && !d.id.startsWith('hyp:'))).toHaveLength(2);
     const undo = runWhatIf({ ...input, decisionId: '0', alternativeId: 'undo' });
     expect(undo.yourEventsComparable).toBe(true);
     expect(undo.decisionLabel).toContain('Month 0');
@@ -119,12 +119,12 @@ describe('what-if API edge cases', () => {
     }
   });
 
-  it('what-if with an empty log lists nothing and "all/defaults" is a no-op', () => {
+  it('what-if with an empty log lists only hypotheticals and "all/defaults" is a no-op', () => {
     const config = archetypeConfig('college_student', 2, { durationMonths: 6 });
     let s = createGame(config);
     for (let m = 0; m < 6; m++) s = advanceMonth(s);
     const input = finishInput(config, s);
-    expect(listDecisions(config, [])).toEqual([]);
+    expect(listDecisions(config, []).every((d) => d.id.startsWith('hyp:'))).toBe(true);
     const r = runWhatIf(input);
     expect(r.delta).toEqual({ p10: 0, median: 0, p90: 0, yourEvents: 0, spread: 0 });
     expect(r.yourEventsComparable).toBe(true);

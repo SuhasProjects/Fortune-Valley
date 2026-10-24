@@ -27,7 +27,7 @@ describe('integrated app shell', () => {
     expect(useGameStore.getState().game?.status).toBe('paused')
   })
   it('opens full notification history and passes the actual finish payload to reveal', async () => {
-    render(<App renderReveal={payload => <p>Reveal month {payload.finalState.monthIndex}</p>}/>)
+    render(<App/>)
     fireEvent.click(screen.getByRole('button', { name: 'New Story' }))
     fireEvent.click(screen.getByRole('button', { name: /Entry-Level Worker/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
@@ -36,6 +36,6 @@ describe('integrated app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }))
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Finish now' }))
-    await waitFor(() => expect(screen.getByText('Reveal month 1')).toBeTruthy(), { timeout: 2_000 })
+    await waitFor(() => expect(screen.getByRole('heading', { name: /You finished month 1 with/ })).toBeTruthy(), { timeout: 2_000 })
   })
 })

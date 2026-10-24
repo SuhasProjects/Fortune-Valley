@@ -77,7 +77,7 @@ write('art-src/title/scene/hills.txt', mountains({ seed: 37, h: 44, base: 22, am
     for (let x = Math.round(cx - half); x <= Math.round(cx + half); x++) if (x >= 0 && x < W) rows[y][x] = 'a';
   }
   const ellipse = (ex, ey, rx, ry, key) => { for (let y = ey - ry - 1; y <= ey + ry + 1; y++) for (let x = ex - rx - 1; x <= ex + rx + 1; x++) { if (((x - ex) / rx) ** 2 + ((y - ey) / ry) ** 2 <= 1 && y >= 0 && x >= 0 && y < MAP_H && x < W) rows[y][x] = key; } };
-  ellipse(96, 236, 30, 12, 'w'); ellipse(96, 236, 27, 9, 'u');
+  ellipse(120, 224, 30, 12, 'w'); ellipse(120, 224, 27, 9, 'u');
   for (let y = 150; y < 170; y++) for (let x = 300; x < 362; x++) rows[y][x] = (y - 150) % 4 < 3 ? 'j' : 'h';
   write('art-src/title/ground-mask.txt', rows, { kind: 'mask' });
 }
