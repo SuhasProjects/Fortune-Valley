@@ -1240,12 +1240,14 @@ const sprites = {
     "w": 18,
     "h": 28,
     "frames": [
-      "0"
+      "0",
+      "1"
     ],
     "anchor": [
       9,
       27
-    ]
+    ],
+    "speed": 900
   },
   "world/extra/rock": {
     "src": "/art/world/extra/rock.png",
@@ -1291,8 +1293,7 @@ const sprites = {
       "0",
       "1",
       "2",
-      "3",
-      "lit"
+      "3"
     ],
     "anchor": [
       6,
@@ -1463,6 +1464,62 @@ const sprites = {
       23
     ],
     "speed": 900
+  },
+  "world/ring/crate": {
+    "src": "/art/world/ring/crate.png",
+    "w": 8,
+    "h": 8,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      4,
+      6
+    ]
+  },
+  "world/ring/scarecrow": {
+    "src": "/art/world/ring/scarecrow.png",
+    "w": 10,
+    "h": 18,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      16
+    ]
+  },
+  "world/ring/villager-a": {
+    "src": "/art/world/ring/villager-a.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "anchor": [
+      6,
+      14
+    ],
+    "speed": 120
+  },
+  "world/ring/villager-b": {
+    "src": "/art/world/ring/villager-b.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "anchor": [
+      6,
+      14
+    ],
+    "speed": 120
   },
   "world/ground": {
     "src": "/art/world/ground.png",

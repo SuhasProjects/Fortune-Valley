@@ -1,0 +1,12 @@
+# Wooden crate.
+size 8x8
+anchor 4,6
+--- 0
+........
+.kkkkkk.
+.knnnbk.
+.knbWbk.
+.kbWbWk.
+.kbbbWk.
+.kkkkkk.
+........
