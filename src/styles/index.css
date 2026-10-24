@@ -5,3 +5,5 @@
 @import './illustrated-town.css';
 
 .pixel-sprite, .town-backdrop, .town-hotspot svg { image-rendering: pixelated; }
+
+@import './welcome.css';

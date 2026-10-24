@@ -1,13 +1,13 @@
-import { useState, type ReactNode } from 'react'
-import { scenarios } from './data/scenarios'
+import { type ReactNode } from 'react'
 import { GameClock, NotificationStack, monthLabel, usd } from './components/flow'
 import { selectDebtTotal, selectNetWorth, useGameStore, type FinishPayload } from './stores/useGameStore'
-import { TownScene, BuildingSprite, TOWN_ART } from './components/town/TownScene'
+import { TownScene } from './components/town/TownScene'
 import { PanelHost } from './components/town/PanelHost'
 import { GameShell } from './components/layout/GameShell'
 import type { BuildingId } from './types/domain'
 import { ConnectedBuildingPanel } from './components/panels/ConnectedBuildingPanel'
 import EngineHarness from './dev/EngineHarness'
+import { Landing } from './components/landing/Landing'
 
 // Agent 3 supplies controlled panels. Agent 5 mounts its computed reveal here.
 export interface AppProps {
@@ -19,18 +19,10 @@ export default function App(props: AppProps) {
   return <Town {...props}/>
 }
 function Town({ panels = {}, renderReveal }: AppProps) {
-  const [prompt, setPrompt] = useState('')
-  const [formError, setFormError] = useState('')
   const store = useGameStore()
   const netWorth = useGameStore(selectNetWorth)
   const debt = useGameStore(selectDebtTotal)
-  if (!store.game || !store.config) return <main className="town-landing">
-    <header className="landing-nav"><a className="wordmark" href="#">FT<span>FINANCIAL TOWN</span></a><span className="offline-tag">OFFLINE READY</span></header>
-    <section className="landing-hero"><span className="eyebrow">A SMALL TOWN OF BIG POSSIBILITIES</span><h1>Your money.<br/>Your little world.</h1><p>Build a life, make a few choices, and discover how they add up. One month at a time.</p><a className="pixel-button pixel-button--gold" href="#starting-lives">Choose your starting life ↓</a><div className="hero-village illustrated-hero" aria-hidden="true"><img src={TOWN_ART} alt="" width="1536" height="1024"/></div></section>
-    <section id="starting-lives" className="starting-lives"><div className="section-heading"><div><span className="eyebrow">CHAPTER ONE</span><h2>Every story starts somewhere.</h2></div><span>Four lives. Plenty of possibilities.</span></div><div className="life-grid">{scenarios.map((s,i) => <button className="life-card pixel-panel" key={s.scenarioId} onClick={() => store.startGame(s)}><span className="life-number">0{i+1}</span><BuildingSprite building={(['home','office','market','home'] as BuildingId[])[i] ?? 'home'}/><h3>{s.title}</h3><p>{s.description}</p><span className="life-start">Start this story <span>→</span></span></button>)}</div></section>
-    <section className="personalization pixel-panel"><div><span className="eyebrow">OR, BRING YOUR OWN QUESTION</span><h2>Explore your situation.</h2><p>Describe a financial question. The scenario generator maps it to existing game mechanics, with an offline fallback.</p><small>Leave out account numbers and sensitive details. Your question is sent to the AI gateway when available; offline mode uses a local fallback.</small></div><form onSubmit={async e => { e.preventDefault(); setFormError(''); try { const result = await store.generatePersonalized(prompt); store.startGame(result.config) } catch (error) { setFormError(error instanceof Error ? error.message : 'Could not prepare your scenario.') } }}><label htmlFor="situation">What would you like to explore?</label><textarea id="situation" value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="How can I balance paying off debt and building savings?" required maxLength={1000}/><button className="pixel-button pixel-button--gold" disabled={store.personalizationLoading}>{store.personalizationLoading ? 'Preparing…' : 'Build my scenario →'}</button>{(formError || store.personalizationError) && <p role="alert">{formError || store.personalizationError}</p>}</form></section>
-    <footer className="simulation-footer">Fictional educational simulation · Illustrative assumptions · Not financial advice</footer>
-  </main>
+  if (!store.game || !store.config) return <Landing/>
   const { game, config } = store
   const panel = store.openBuildingId
   return <GameShell topBar={<header className="town-hud"><div className="hud-brand"><span className="brand-mark">FT</span><div className="wordmark">FINANCIAL TOWN<small>{config.title}</small></div></div><dl className="hud-stats"><div className="hud-date"><dt>{monthLabel(config.startMonth,game.monthIndex)}</dt><dd>Month {game.monthIndex} / {config.durationMonths}</dd></div><div><dt>Cash</dt><dd>{usd(game.cash)}</dd></div><div><dt>Savings</dt><dd>{usd(game.savings)}</dd></div><div><dt>Debt</dt><dd>{usd(debt)}</dd></div><div className="hud-net"><dt>Net worth</dt><dd>{usd(netWorth)}</dd></div></dl><button className="pixel-button" onClick={store.openTimeline}>Timeline ↗</button></header>} toasts={<div className="activity-area"><NotificationStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={()=>store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/></div>}>
