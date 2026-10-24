@@ -35,6 +35,15 @@
 .fv-badge { position: absolute; right: calc(2 * var(--px)); top: calc(-8 * var(--px)); animation: fv-bob 600ms steps(1) infinite alternate; }
 @keyframes fv-bob { from { transform: translateY(0); } to { transform: translateY(calc(-2 * var(--px))); } }
 
+/* Town Office clock: the hour hand overlay sits on the gable face, above the base and hover frames. */
+.fv-clock { position: absolute; pointer-events: none; }
+
+/* Villagers: the outer span steps along its waypoints (keyframes generated per villager in TownWorld),
+   the inner span mirrors the sprite while it heads left, and the sprite itself steps its walk frames. */
+.fv-villager { position: absolute; left: 0; top: 0; pointer-events: none; animation: var(--walk) var(--walk-dur) linear var(--walk-delay) infinite; }
+.fv-villager__flip { display: block; animation: var(--flip) var(--walk-dur) step-end var(--walk-delay) infinite; }
+@media (prefers-reduced-motion: reduce) { .fv-villager, .fv-villager__flip { animation: none; } }
+
 /* Dusk: a flat multiply wash, then lit windows, lamp glow and fireflies drawn above it. */
 .fv-dusk { position: absolute; inset: 0; z-index: 1000; background: #4b3f78; mix-blend-mode: multiply; opacity: 0.65; pointer-events: none; }
 .fv-glow { opacity: 0.45; mix-blend-mode: screen; }

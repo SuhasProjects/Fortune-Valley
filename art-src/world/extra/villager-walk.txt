@@ -2,7 +2,7 @@ size 12x16
 frames 4
 speed 160
 anchor 6,15
-variants lit
+
 --- 0
 ............
 ....kkkk....

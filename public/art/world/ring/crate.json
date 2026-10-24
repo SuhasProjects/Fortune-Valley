@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/ring/crate.png",
+  "w": 8,
+  "h": 8,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    4,
+    6
+  ]
+}
