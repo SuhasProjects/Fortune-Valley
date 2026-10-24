@@ -2,6 +2,7 @@
 @import './pixel-tokens.css';
 @import './town.css';
 @import './valley.css';
+@import './illustrated-town.css';
 
 html, body, #root { min-height: 100%; }
 .pixel-sprite, .building-icon { image-rendering: pixelated; }
