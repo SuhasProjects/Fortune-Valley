@@ -71,7 +71,7 @@ The store autosaves after every month (`saveGame()`), exposes `savedGame` metada
 
 ## Town shell (Agent 2)
 
-`App({ panels?, renderReveal? })`: Agent 3 passes `panels` as a partial `Record<BuildingId, ReactNode>`; Agent 5 passes `renderReveal(payload: FinishPayload)`. `TownScene` takes `eventBuildings: BuildingId[]`; `PanelHost` is the accessible dialog every panel renders inside. See `docs/TOWN_HANDOFF.md`.
+`App({ panels?, renderReveal? })`: Agent 3 passes `panels` as a partial `Record<BuildingId, ReactNode>`; Agent 5 passes `renderReveal(payload: FinishPayload)`. `TownScene` takes `eventBuildings: BuildingId[]`; `PanelHost` is the accessible dialog every panel renders inside. Being replaced this round; the new UI contracts are in `docs/agents/README.md` section 9.
 
 ## Theme tokens
 
