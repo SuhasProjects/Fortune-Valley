@@ -213,7 +213,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     const net = round2(grossPay - withheld - (h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly) - premiums - debtPaid);
     notes.unshift({
       kind: 'info',
-      summary: `${monthLabel(s.startMonth, m)}: pay $${grossPay.toLocaleString()} − withholding $${withheld.toLocaleString()} − bills/premiums/debt $${round2(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(net).toLocaleString()}; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(round2(totalReturn)).toLocaleString()}`,
+      summary: `${monthLabel(s.startMonth, m)}: pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − bills/premiums/debt $${Math.round(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()}; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
     });
     notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));

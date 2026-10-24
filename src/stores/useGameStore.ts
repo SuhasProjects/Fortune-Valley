@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand';
 import { advanceMonth, applyAction, createGame, runMonteCarlo, netWorthOf, shouldRequestOpportunity, summarizeForAi } from '@/engine';
-import { generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+import { explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 
 export interface FinishPayload {
@@ -12,6 +12,8 @@ export interface FinishPayload {
   finalState: GameState;
   policyLog: PolicyLogEntry[];
   monteCarlo: MonteCarloResult;
+  /** Explanation text for the reveal; `source` says whether it came from the AI or the offline template. */
+  explanation?: { text: string; source: 'ai' | 'fallback' };
 }
 export interface PersonalizationResult { config: GameConfig; fallback: boolean; warnings: string[] }
 
@@ -40,6 +42,8 @@ export interface GameStore {
   markNotificationRead(id: string): void;
   markAllNotificationsRead(): void;
   requestOpportunity(): Promise<void>;
+  /** Ask the AI (or offline template) to explain the finish payload; fills finishPayload.explanation. */
+  requestExplanation(question?: string): Promise<void>;
   finishGame(): void;
   resetGame(): void;
   generatePersonalized(prompt: string, numbers?: Omit<PersonalizedInput, 'freeText'>): Promise<PersonalizationResult>;
@@ -125,6 +129,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  requestExplanation: async (question = 'What do these results mean for my strategy?') => {
+    const { finishPayload, config, requestVersion } = get();
+    if (!finishPayload || !config) return;
+    const summary = summarizeForAi(finishPayload.finalState, config.narrativeFocus, config.archetype);
+    const result = await explainOutcome(summary, question, finishPayload.monteCarlo);
+    const current = get();
+    if (!current.finishPayload || current.requestVersion !== requestVersion) return;
+    set({ finishPayload: { ...current.finishPayload, explanation: { text: result.text, source: result.source } }, aiStatus: result.source === 'ai' ? 'online' : 'offline' });
+  },
+
   finishGame: () => {
     const { game, config } = get();
     if (!game || !config) return;
@@ -132,6 +146,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const finalState = r.ok ? r.state : game;
     const monteCarlo = runMonteCarlo(config, finalState.policyLog, finalState);
     set((s) => ({ game: finalState, finishPayload: { config: structuredClone(config), finalState, policyLog: finalState.policyLog, monteCarlo }, aiStatus: 'idle', requestVersion: s.requestVersion + 1 }));
+    void get().requestExplanation();
   },
 
   resetGame: () => set((s) => ({ game: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
