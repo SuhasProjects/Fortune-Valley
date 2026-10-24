@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:browser": "playwright test",
     "test:watch": "vitest",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "art:palette": "node scripts/art/palette.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

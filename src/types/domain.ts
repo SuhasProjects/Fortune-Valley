@@ -357,6 +357,61 @@ export interface PolicyLogEntry {
   resolvedEffect?: EventEffect;
   /** Situation when the decision was taken; Monte Carlo uses it to skip replays that no longer apply (e.g. a "return to work" offer in a path with no job loss). */
   context?: { employmentStatus: EmploymentStatus };
+  /** For apply_event_option: "Event title: option label", so the ending can name the decision. */
+  label?: string;
+  /** For apply_event_option: the options the player did not pick, so the ending can replay them instead. */
+  alternatives?: { optionId: string; label: string; effect: EventEffect }[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ending: straight-line outcome summary and one-decision what-if (owner: Agent 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Endpoints for the ending chart: straight lines from (0, start) to each ending after `months`. */
+export interface OutcomeLines {
+  months: number;
+  start: number;
+  p10: number;
+  median: number;
+  p90: number;
+  /** Ending of the player's exact game (original: observed; what-if: exact replay with the change). */
+  yourEvents: number;
+  /** p90 − p10. */
+  spread: number;
+}
+
+export interface DecisionAlternative { id: string; label: string }
+
+export interface DecisionChoice {
+  /** `${policyLogIndex}`, or 'all' for "every decision at once". */
+  id: string;
+  logIndex: number | null;
+  monthIndex: number | null;
+  label: string;
+  /** Never empty. */
+  alternatives: DecisionAlternative[];
+}
+
+export interface WhatIfInput {
+  config: GameConfig;
+  policyLog: PolicyLogEntry[];
+  finishMonteCarlo: MonteCarloResult;
+  startNetWorth: number;
+  observedNetWorth: number;
+  decisionId: string;
+  alternativeId: string;
+}
+
+export interface WhatIfResult {
+  decisionLabel: string;
+  alternativeLabel: string;
+  original: OutcomeLines;
+  changed: OutcomeLines;
+  /** changed − original. `yourEvents` is the pure effect of the change on the player's exact luck. */
+  delta: { p10: number; median: number; p90: number; yourEvents: number; spread: number };
+  /** False when replaying the unchanged log on the game's own seed does not reproduce the observed ending. */
+  yourEventsComparable: boolean;
+  replayFallbacks: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

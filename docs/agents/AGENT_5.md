@@ -58,7 +58,7 @@ side by side, so you can judge a choice by both its typical result and its sprea
 `src/game/title/TitleScreen.tsx` (renders today's `Landing` for now), `src/game/title/GuideWindow.tsx`
 (`{ onClose }`, a Modal named `Guide`, used by Agent 4's pause menu), `src/game/reveal/RevealScreen.tsx`
 (`{ payload, onPlayAgain }`, renders `RevealChart` inside a full-screen wrapper). Keep helpers passing.
-The ending itself depends on Agent 1's ending API (stub lands with their Phase 0), so start real work on the title side.
+Agent 1's ending API is already real on `main`, so you can build the ending whenever you like.
 
 ---
 
@@ -141,7 +141,7 @@ first-time player understands, in a few seconds, *where 1,000 versions of their 
 decision would have changed*. All numbers come from Agent 1's ending API (`@/engine`, AGENT_1 §9). The UI does **no
 math**: deltas, spreads and line endpoints are all engine values. Only axis scaling and pixel placement happen in the UI.
 
-**Engine API you call** (stubbed in Agent 1's Phase 0 with fake data, real soon after; build against the stub):
+**Engine API you call** (already real on `main`; ~0.2 s per what-if, run in a Web Worker; tests in `tests/engine/whatIf.test.ts`):
 `outcomeLines(mc, startNetWorth)` → `{ months, start, p10, median, p90, yourEvents, spread }`;
 `listDecisions(config, policyLog)` → `DecisionChoice[]` (`{ id, label, alternatives: {id,label}[] }`, first entry `all` when
 any decision exists); `runWhatIfAsync({ config, policyLog, finishMonteCarlo, startNetWorth, observedNetWorth, decisionId,
@@ -203,8 +203,8 @@ steps, with header plaque **Your Next Chapter**. Sections, top to bottom:
 Retire `src/components/reveal/RevealChart.tsx` (fan chart and histogram) once `RevealScreen` no longer imports it, and
 replace its test. Colours come from palette CSS variables (read with `getComputedStyle` once, pass to Recharts).
 
-**Build order for you:** title screen, picker, letter and guide first (no dependency). Build the results against Agent 1's
-stub as soon as it merges, and switch to the real numbers when the real API lands; your code shouldn't need to change.
+**Build order for you:** any order. The ending API is real; the town backdrop (`TownWorld timeOfDay="dusk"`) is still
+the old image until Agent 1's world lands, and your screen picks it up automatically.
 
 ---
 

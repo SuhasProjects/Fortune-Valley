@@ -1,0 +1,12 @@
+.fv-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--c-grass);
+  color: var(--c-outline);
+  isolation: isolate;
+}
+.fv-stage img, .fv-stage canvas, .fv-sprite { image-rendering: pixelated; }
+.fv-world { position: absolute; inset: 0; z-index: 0; }
+.fv-ui { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+.fv-ui > * { pointer-events: auto; }

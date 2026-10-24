@@ -46,9 +46,9 @@ export function quantile(sorted: number[], q: number): number {
   return a + (b - a) * (pos - lo);
 }
 
-interface PathOutcome { ending: number; shortfall: boolean; history: number[]; fallbacks: number }
+export interface PathOutcome { ending: number; shortfall: boolean; history: number[]; fallbacks: number }
 
-function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: number, months: number): PathOutcome {
+export function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: number, months: number): PathOutcome {
   let s: GameState = createGame({ ...config, seed });
   s.durationMonths = Math.max(months, 1);
   let fallbacks = 0;
@@ -60,28 +60,31 @@ function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: numbe
   }
   for (let m = 0; m < months; m++) {
     for (const entry of byMonth.get(m) ?? []) {
-      const a = entry.action;
-      if (a.type === 'apply_event_option' || a.type === 'dismiss_event' || a.type === 'enqueue_event') {
-        if (entry.resolvedEffect) {
-          // Guardrail: a job decision taken while unemployed (or employed) only makes sense in
-          // paths with the same employment status at that month; otherwise skip it (documented fallback).
-          if (entry.resolvedEffect.template === 'offer_job' && entry.context && entry.context.employmentStatus !== s.employment.status) { fallbacks += 1; continue; }
-          const err = applyEffect(s, entry.resolvedEffect, true);
-          if (err) fallbacks += 1;
-        }
-        continue;
-      }
-      if (a.type === 'advance_month' || a.type === 'pause' || a.type === 'resume' || a.type === 'finish' || a.type === 'mark_notifications_read') continue;
-      const r = applyAction(s, a);
-      if (r.ok) s = r.state;
-      else fallbacks += 1;
+      const r = replayEntry(s, entry);
+      s = r.state;
+      if (r.fallback) fallbacks += 1;
     }
     s = advanceMonth(s, { lean: true, inPlace: true });
   }
   return { ending: netWorthOf(s), shortfall: s.shortfallMonths.length > 0, history: s.netWorthHistory, fallbacks };
 }
 
-function summarize(outcomes: PathOutcome[], months: number): MonteCarloSummary {
+/** Apply one logged decision during a replay. `fallback` = it could not apply as recorded (documented skip). */
+export function replayEntry(s: GameState, entry: PolicyLogEntry): { state: GameState; fallback: boolean } {
+  const a = entry.action;
+  if (a.type === 'apply_event_option' || a.type === 'dismiss_event' || a.type === 'enqueue_event') {
+    if (!entry.resolvedEffect) return { state: s, fallback: false };
+    // Guardrail: a job decision taken while unemployed (or employed) only makes sense in
+    // paths with the same employment status at that month; otherwise skip it (documented fallback).
+    if (entry.resolvedEffect.template === 'offer_job' && entry.context && entry.context.employmentStatus !== s.employment.status) return { state: s, fallback: true };
+    return { state: s, fallback: applyEffect(s, entry.resolvedEffect, true) !== null };
+  }
+  if (a.type === 'advance_month' || a.type === 'pause' || a.type === 'resume' || a.type === 'finish' || a.type === 'mark_notifications_read') return { state: s, fallback: false };
+  const r = applyAction(s, a);
+  return r.ok ? { state: r.state, fallback: false } : { state: s, fallback: true };
+}
+
+export function summarize(outcomes: PathOutcome[], months: number): MonteCarloSummary {
   const endings = outcomes.map((o) => o.ending).sort((a, b) => a - b);
   const n = endings.length;
   const bands: MonteCarloSummary['bands'] = [];
@@ -101,7 +104,7 @@ function summarize(outcomes: PathOutcome[], months: number): MonteCarloSummary {
   };
 }
 
-function runPaths(config: GameConfig, policyLog: PolicyLogEntry[], baseSeed: number, paths: number, months: number): PathOutcome[] {
+export function runPaths(config: GameConfig, policyLog: PolicyLogEntry[], baseSeed: number, paths: number, months: number): PathOutcome[] {
   const out: PathOutcome[] = [];
   for (let i = 0; i < paths; i++) out.push(replayPath(config, policyLog, pathSeed(baseSeed, i), months));
   return out;

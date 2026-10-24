@@ -1,0 +1,300 @@
+{
+  "_comment": "Master palette (owner: Agent 1). Keys and names never change; hex may be refined. Generates src/styles/palette.css via `npm run art:palette`.",
+  "colors": [
+    {
+      "key": ".",
+      "name": "transparent",
+      "hex": null
+    },
+    {
+      "key": "K",
+      "name": "ink",
+      "hex": "#2a1a12"
+    },
+    {
+      "key": "k",
+      "name": "outline",
+      "hex": "#4a311c"
+    },
+    {
+      "key": "W",
+      "name": "wood-dark",
+      "hex": "#5c3a1e"
+    },
+    {
+      "key": "w",
+      "name": "wood",
+      "hex": "#865227"
+    },
+    {
+      "key": "b",
+      "name": "wood-light",
+      "hex": "#b45f25"
+    },
+    {
+      "key": "n",
+      "name": "wood-shine",
+      "hex": "#c58b44"
+    },
+    {
+      "key": "P",
+      "name": "parchment-shadow",
+      "hex": "#bea87d"
+    },
+    {
+      "key": "p",
+      "name": "parchment",
+      "hex": "#d8cfa1"
+    },
+    {
+      "key": "q",
+      "name": "parchment-light",
+      "hex": "#e5daba"
+    },
+    {
+      "key": "Q",
+      "name": "paper",
+      "hex": "#f3e8c6"
+    },
+    {
+      "key": "G",
+      "name": "grass-deep",
+      "hex": "#3f7f3a"
+    },
+    {
+      "key": "g",
+      "name": "grass-shade",
+      "hex": "#79ac49"
+    },
+    {
+      "key": "h",
+      "name": "grass",
+      "hex": "#96c551"
+    },
+    {
+      "key": "H",
+      "name": "grass-light",
+      "hex": "#b0c349"
+    },
+    {
+      "key": "j",
+      "name": "tuft",
+      "hex": "#5aa852"
+    },
+    {
+      "key": "T",
+      "name": "leaf-dark",
+      "hex": "#226b35"
+    },
+    {
+      "key": "t",
+      "name": "leaf",
+      "hex": "#33963b"
+    },
+    {
+      "key": "Y",
+      "name": "leaf-light",
+      "hex": "#8fce5a"
+    },
+    {
+      "key": "D",
+      "name": "path-edge-dark",
+      "hex": "#b8862f"
+    },
+    {
+      "key": "d",
+      "name": "path-edge",
+      "hex": "#d6b26c"
+    },
+    {
+      "key": "a",
+      "name": "path",
+      "hex": "#e6be52"
+    },
+    {
+      "key": "A",
+      "name": "path-light",
+      "hex": "#f0d27a"
+    },
+    {
+      "key": "V",
+      "name": "water-deep",
+      "hex": "#0f5f8f"
+    },
+    {
+      "key": "v",
+      "name": "water-dark",
+      "hex": "#1482a3"
+    },
+    {
+      "key": "u",
+      "name": "water",
+      "hex": "#1a8ad8"
+    },
+    {
+      "key": "U",
+      "name": "water-light",
+      "hex": "#46b3e6"
+    },
+    {
+      "key": "F",
+      "name": "foam",
+      "hex": "#e8f6fb"
+    },
+    {
+      "key": "S",
+      "name": "stone-dark",
+      "hex": "#4c555d"
+    },
+    {
+      "key": "s",
+      "name": "stone",
+      "hex": "#9a9488"
+    },
+    {
+      "key": "z",
+      "name": "stone-light",
+      "hex": "#c9c4b5"
+    },
+    {
+      "key": "R",
+      "name": "roof-red-dark",
+      "hex": "#8d241b"
+    },
+    {
+      "key": "r",
+      "name": "roof-red",
+      "hex": "#d9322e"
+    },
+    {
+      "key": "o",
+      "name": "roof-red-light",
+      "hex": "#ef6a4f"
+    },
+    {
+      "key": "B",
+      "name": "roof-blue-dark",
+      "hex": "#173b80"
+    },
+    {
+      "key": "e",
+      "name": "roof-blue",
+      "hex": "#1e4fa3"
+    },
+    {
+      "key": "E",
+      "name": "roof-blue-light",
+      "hex": "#3d74c9"
+    },
+    {
+      "key": "C",
+      "name": "roof-teal-dark",
+      "hex": "#0d5b57"
+    },
+    {
+      "key": "l",
+      "name": "roof-teal",
+      "hex": "#17808b"
+    },
+    {
+      "key": "L",
+      "name": "roof-teal-light",
+      "hex": "#2aa7a8"
+    },
+    {
+      "key": "N",
+      "name": "roof-green-dark",
+      "hex": "#0f4a3a"
+    },
+    {
+      "key": "x",
+      "name": "roof-green",
+      "hex": "#1b6e54"
+    },
+    {
+      "key": "X",
+      "name": "roof-green-light",
+      "hex": "#328e6c"
+    },
+    {
+      "key": "O",
+      "name": "gold",
+      "hex": "#f2c23c"
+    },
+    {
+      "key": "i",
+      "name": "glow",
+      "hex": "#fff0a0"
+    },
+    {
+      "key": "I",
+      "name": "alert",
+      "hex": "#c8372b"
+    },
+    {
+      "key": "M",
+      "name": "money-up",
+      "hex": "#2f7a3a"
+    },
+    {
+      "key": "Z",
+      "name": "money-down",
+      "hex": "#b5362a"
+    },
+    {
+      "key": "J",
+      "name": "tag-dark",
+      "hex": "#1d3b2c"
+    },
+    {
+      "key": "9",
+      "name": "glass",
+      "hex": "#3a8be0"
+    },
+    {
+      "key": "8",
+      "name": "glass-light",
+      "hex": "#a8d8ff"
+    },
+    {
+      "key": "7",
+      "name": "window-lit",
+      "hex": "#ffd36b"
+    },
+    {
+      "key": "f",
+      "name": "white",
+      "hex": "#ffffff"
+    },
+    {
+      "key": "5",
+      "name": "flower-pink",
+      "hex": "#f29bb0"
+    },
+    {
+      "key": "6",
+      "name": "flower-violet",
+      "hex": "#9b7bd4"
+    },
+    {
+      "key": "1",
+      "name": "sky-high",
+      "hex": "#7fb6e8"
+    },
+    {
+      "key": "2",
+      "name": "sky-low",
+      "hex": "#cfe6f2"
+    },
+    {
+      "key": "3",
+      "name": "mountain-far",
+      "hex": "#8a9cc4"
+    },
+    {
+      "key": "4",
+      "name": "mountain-snow",
+      "hex": "#eef3fa"
+    }
+  ]
+}

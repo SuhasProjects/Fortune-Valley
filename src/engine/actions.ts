@@ -141,6 +141,9 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
       s.activeEvents = s.activeEvents.filter((e) => e.id !== action.eventId);
       if (ev.type === 'B' || opt.effect.template !== 'none') {
         logPolicy(s, action, ev.source === 'engine' ? 'choice' : 'ai_event', `${ev.title}: ${opt.label} — ${describeEffect(opt.effect)}`, { eventId: ev.id }, opt.effect, statusBefore);
+        const logged = s.policyLog[s.policyLog.length - 1]!;
+        logged.label = `${ev.title}: ${opt.label}`;
+        logged.alternatives = ev.options.filter((o) => o.id !== opt.id).map((o) => ({ optionId: o.id, label: o.label, effect: structuredClone(o.effect) }));
       }
       return { ok: true, state: s };
     }
