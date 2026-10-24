@@ -5,8 +5,8 @@
  */
 import { useState } from 'react';
 import { scenarios } from './data/scenarios';
-import { EventCard, GameClock, NotificationStack, TimelineDrawer, monthLabel, usd } from './components/flow';
-import { selectDebtTotal, selectNetWorth, selectPendingEvent, useGameStore } from './stores/useGameStore';
+import { EventCard, GameClock, NotificationHistory, NotificationStack, TimelineDrawer, monthLabel, usd } from './components/flow';
+import { selectDebtTotal, selectNetWorth, useGameStore } from './stores/useGameStore';
 import type { BuildingId } from './types/domain';
 import EngineHarness from './dev/EngineHarness';
 
@@ -28,7 +28,6 @@ function Town() {
   const store = useGameStore();
   const netWorth = useGameStore(selectNetWorth);
   const debt = useGameStore(selectDebtTotal);
-  const pending = useGameStore(selectPendingEvent);
 
   if (!store.game || !store.config) {
     return (
@@ -90,6 +89,7 @@ function Town() {
       </section>
       <div className="bottom-controls"><GameClock status={game.status} onAdvance={store.advanceOneMonth} onPause={store.setPaused} onFinish={store.finishGame} /></div>
       <NotificationStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead} />
+      <NotificationHistory open={store.historyOpen} notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={store.openBuilding} />
       <TimelineDrawer open={store.timelineOpen} entries={game.timeline} onClose={store.closeTimeline} />
       {store.lastActionError && <p role="alert" className="disclaimer">{store.lastActionError}</p>}
       {store.openBuildingId && (
@@ -102,7 +102,7 @@ function Town() {
             {game.activeEvents.filter((e) => e.buildingTarget === store.openBuildingId).map((ev) => (
               <EventCard key={ev.id} event={ev} onChoose={(optionId) => store.dispatchAction({ type: 'apply_event_option', eventId: ev.id, optionId })} />
             ))}
-            {!pending && <p className="empty-copy">No decision is waiting here. Detailed financial controls (Agent 3 panels) plug into this panel through the shared store.</p>}
+            {!game.activeEvents.some((event) => event.buildingTarget === store.openBuildingId) && <p className="empty-copy">No decision is waiting here. Detailed financial controls (Agent 3 panels) plug into this panel through the shared store.</p>}
           </section>
         </div>
       )}
