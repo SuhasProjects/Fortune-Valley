@@ -1,0 +1,69 @@
+/* Agent 4: game-flow layer over the town. Every element here is a direct child of `.fv-ui`, so only the
+   pieces themselves take pointer events and the town stays clickable in between. All sizes use `--px`. */
+.fv-flow-tools { position: absolute; z-index: var(--z-hud); top: calc(19 * var(--px)); left: calc(3 * var(--px)); display: flex; align-items: center; gap: var(--px); }
+.fv-flow-tools .fv-status-tag { position: static; }
+
+/* Toasts: right edge under the HUD, stacked downward. */
+.fv-toasts { position: absolute; z-index: var(--z-toast); top: calc(19 * var(--px)); right: calc(3 * var(--px)); width: calc(84 * var(--px)); max-width: calc(100% - 6 * var(--px)); display: flex; flex-direction: column; align-items: stretch; gap: calc(2 * var(--px)); pointer-events: none; }
+.fv-toasts > * { pointer-events: auto; }
+.fv-toast { display: grid; gap: var(--px); }
+.fv-toast__head { display: flex; align-items: center; gap: var(--px); font-size: var(--fs-label); text-transform: uppercase; }
+.fv-toast__head > span { flex: 1; }
+.fv-toast strong { font: 700 var(--fs-body)/1.15 var(--font-heading); }
+.fv-toast p { margin: 0; font-size: var(--fs-label); }
+.fv-toast .fv-button { justify-self: start; }
+.fv-toast--decision { outline: var(--px) solid var(--c-gold); outline-offset: calc(-1 * var(--px)); }
+.fv-toast--negative .fv-toast__head { color: var(--c-money-down); }
+.fv-toast--positive .fv-toast__head { color: var(--c-money-up); }
+.fv-toasts .fv-view-all { align-self: flex-end; }
+
+/* Month ribbon and action errors drop in under the HUD. */
+.fv-month-banner, .fv-action-error { position: absolute; z-index: var(--z-toast); top: calc(19 * var(--px)); left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
+.fv-month-banner { font: 700 var(--fs-heading)/1 var(--font-heading); padding: var(--px) calc(3 * var(--px)); animation: fv-banner-drop 240ms steps(3, end); }
+.fv-action-error { color: var(--c-money-down); white-space: normal; max-width: min(calc(140 * var(--px)), calc(100% - 8 * var(--px))); }
+@keyframes fv-banner-drop { from { transform: translate(-50%, calc(-4 * var(--px))); opacity: 0; } }
+
+/* First-game coach marks. */
+.fv-coach-tip { position: absolute; z-index: var(--z-toast); width: min(calc(72 * var(--px)), calc(100vw - 6 * var(--px))); display: grid; gap: var(--px); }
+.fv-coach-tip strong { font: 700 var(--fs-body)/1.1 var(--font-heading); }
+.fv-coach-tip p { margin: 0; }
+.fv-coach-tip .fv-button { justify-self: end; }
+.fv-coach-tip--0 { left: 18%; top: 42%; }
+.fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
+.fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(19 * var(--px)); }
+
+/* Finish sequence and natural end. */
+.fv-finish-overlay { position: absolute; inset: 0; z-index: var(--z-overlay); display: grid; place-items: center; background: color-mix(in srgb, var(--c-ink) 55%, transparent); }
+.fv-finish-card, .fv-completion-banner { text-align: center; display: grid; gap: calc(2 * var(--px)); justify-items: center; }
+.fv-finish-card h2, .fv-completion-banner p { margin: 0; font: 700 var(--fs-heading)/1.1 var(--font-heading); }
+.fv-counter { display: flex; gap: var(--px); }
+.fv-counter i { width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); animation: fv-count 1200ms steps(1) infinite; }
+.fv-counter i:nth-child(2) { animation-delay: 240ms; } .fv-counter i:nth-child(3) { animation-delay: 480ms; } .fv-counter i:nth-child(4) { animation-delay: 720ms; } .fv-counter i:nth-child(5) { animation-delay: 960ms; }
+@keyframes fv-count { 0%, 20% { background: var(--c-gold); } 21%, 100% { background: var(--c-parchment-shadow); } }
+.fv-completion-banner { position: absolute; z-index: var(--z-toast); left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 8 * var(--px)); }
+
+/* Menus, confirms and journals inside kit windows. */
+.fv-menu-list { display: grid; gap: calc(2 * var(--px)); }
+.fv-menu-list .fv-button { width: 100%; }
+.fv-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: calc(2 * var(--px)); margin-top: calc(3 * var(--px)); }
+.fv-dialog-body { margin: 0 0 var(--px); }
+.fv-journal { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(2 * var(--px)); }
+.fv-journal li { display: grid; gap: var(--px); padding: var(--px) 0 var(--px) calc(3 * var(--px)); border-left: var(--px) solid var(--c-parchment-shadow); }
+.fv-journal li.is-unread { border-left-color: var(--c-gold); }
+.fv-journal li.is-read { opacity: .8; }
+.fv-journal__meta { display: flex; align-items: center; gap: var(--px); font-size: var(--fs-label); text-transform: uppercase; color: color-mix(in srgb, var(--c-outline) 75%, transparent); }
+.fv-journal h3 { margin: 0; font: 700 var(--fs-body)/1.15 var(--font-heading); }
+.fv-journal p { margin: 0; }
+.fv-journal__row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: calc(2 * var(--px)); }
+.fv-journal-empty { margin: 0; font-style: italic; }
+.fv-options { display: grid; gap: calc(3 * var(--px)); }
+.fv-options__row { display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--px)); }
+
+@media (max-width: 700px) {
+  .fv-toasts { width: calc(70 * var(--px)); top: calc(36 * var(--px)); }
+  .fv-toast p { display: none; }
+  .fv-month-banner, .fv-action-error { top: calc(36 * var(--px)); }
+  .fv-coach-tip--2 { top: calc(36 * var(--px)); }
+}
+[data-reduce-motion='true'] .fv-month-banner, [data-reduce-motion='true'] .fv-counter i { animation: none; }
+@media (prefers-reduced-motion: reduce) { .fv-month-banner, .fv-counter i { animation: none; } }
