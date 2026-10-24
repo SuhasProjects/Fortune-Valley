@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FinishPayload } from '@/stores/useGameStore'
 import { hasPolicyDecisions } from '@/engine'
+import { Inset, Select } from '@/ui'
 import { endingApi, type ChartLines, type WhatIfResult } from './ending-contract'
 import { OutcomeChart, sharedYDomain } from './OutcomeChart'
 import { ChangeStrip } from './ChangeStrip'
@@ -32,18 +33,21 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
     return () => { current = false; controller.abort() }
   }, [ready, key, selection.decision, selection.alternative, payload.config, payload.policyLog, payload.monteCarlo, original.start])
 
-  const domain = result ? sharedYDomain(result.original,result.changed) : sharedYDomain(original)
+  const domain = result ? sharedYDomain(result.original, result.changed) : sharedYDomain(original)
+  const noDecisions = !hasPolicyDecisions(payload.policyLog) || decisions.length === 0
   return <section className="fv-what-if" aria-labelledby="fv-what-if-title">
     <h2 id="fv-what-if-title">What if you’d chosen differently?</h2>
-    {!hasPolicyDecisions(payload.policyLog) ? <p>You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p>
-      : decisions.length === 0 ? <p>You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p>
+    {noDecisions ? <Inset><p className="fv-what-if-empty">You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p></Inset>
       : <>
-        <div className="fv-what-if-fields"><label>Pick a decision<select className="pixel-panel" value={selection.decision} onChange={event => {
-          const next = decisions.find(decision => decision.id === event.target.value)!
-          setResponse(null)
-          setSelection({ decision: next.id, alternative: next.alternatives[0]?.id ?? '' })
-        }}>{decisions.map(decision => <option key={decision.id} value={decision.id}>{decision.label}</option>)}</select></label>
-        <label>Instead…<select className="pixel-panel" value={selection.alternative} onChange={event => { setResponse(null); setSelection(previous => ({ ...previous, alternative: event.target.value })) }}>{selected?.alternatives.map(alternative => <option key={alternative.id} value={alternative.id}>{alternative.label}</option>)}</select></label></div>
+        <p className="fv-what-if-lead">Change one past decision. The same 1,000 futures run again with the same luck.</p>
+        <div className="fv-what-if-fields">
+          <Select label="Pick a decision" value={selection.decision} options={decisions.map(decision => ({ value: decision.id, label: decision.label }))} onChange={value => {
+            const next = decisions.find(decision => decision.id === value)!
+            setResponse(null)
+            setSelection({ decision: next.id, alternative: next.alternatives[0]?.id ?? '' })
+          }}/>
+          <Select label="Instead…" value={selection.alternative} options={(selected?.alternatives ?? []).map(alternative => ({ value: alternative.id, label: alternative.label }))} onChange={value => { setResponse(null); setSelection(previous => ({ ...previous, alternative: value })) }}/>
+        </div>
         <div className="fv-comparison-charts"><OutcomeChart lines={result?.original ?? original} yDomain={domain} title="What you did"/>
           <div aria-busy={pending} className="fv-changed-chart">{result ? <OutcomeChart lines={result.changed} yDomain={domain} title={`If you had: ${result.alternativeLabel}`} highlightLabel="Your exact events, with this change"/> : error ? <p role="alert">{error}</p> : <p role="status"><img className="fv-computing-coin" src="/art/title/favicon.png" alt=""/>Re-running 1,000 futures…</p>}</div></div>
         {result && <ChangeStrip result={result}/>}

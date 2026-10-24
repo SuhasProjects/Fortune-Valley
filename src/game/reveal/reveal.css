@@ -1,12 +1,50 @@
+/* The ending: a parchment ledger (kit Board) over the dusk town. Charts are hand-drawn SVG with engine values only. */
 .fv-reveal-ui { position:absolute; inset:0; display:flex; justify-content:center; padding:calc(6 * var(--px)); overflow:hidden; }
-.fv-reveal-ledger { width:min(calc(280 * var(--px)),100%); padding:calc(6 * var(--px)); overflow:auto; overscroll-behavior:contain; animation:fv-ledger-enter .3s steps(3,end); }
-.fv-reveal-heading { text-align:center; }.fv-reveal-heading > span { font-family:'Pixelify Sans',monospace; font-size:calc(7 * var(--px)); }.fv-reveal-heading h1 { font:calc(6 * var(--px)) 'VT323',monospace; margin:calc(4 * var(--px)) 0; }.fv-reveal-heading strong { white-space:nowrap; }.fv-reveal-heading h1 strong { display:block; font-family:'Pixelify Sans',monospace; font-size:calc(10 * var(--px)); margin:calc(2 * var(--px)); }.fv-reveal-heading p { margin:calc(3 * var(--px)) 0; }.fv-reveal-heading small { font-size:calc(4 * var(--px)); }
-.fv-reveal-ledger h2 { font-size:calc(6 * var(--px)); margin:calc(6 * var(--px)) 0 calc(3 * var(--px)); }.fv-outcome-chart { margin:calc(3 * var(--px)) 0; min-width:0; }.fv-outcome-chart > figcaption { font-family:'Pixelify Sans',monospace; font-size:calc(5 * var(--px)); margin-bottom:calc(2 * var(--px)); }.fv-chart-scroll { overflow-x:auto; }.fv-outcome-chart svg { display:block; width:100%; min-width:550px; height:auto; }.fv-outcome-chart svg text { font:18px 'VT323',monospace; fill:var(--c-outline); }.fv-chart-your-label { font-weight:bold !important; }.fv-chart-grid { stroke:var(--c-parchment-shadow); stroke-dasharray:2 6; }.fv-chart-zero { stroke:var(--c-outline); stroke-dasharray:6 6; }.fv-chart-note { font-size:calc(3.5 * var(--px)); margin:calc(2 * var(--px)) 0; }.fv-line-muted { opacity:.4; }.fv-line-draw { stroke-dasharray:1; animation:fv-line-extend .4s steps(4,end) both; animation-delay:calc(var(--line-order) * .15s); }.fv-chart-table { font-size:calc(4 * var(--px)); }.fv-chart-table table { width:100%; text-align:left; }.fv-chart-table caption { text-align:left; padding:calc(2 * var(--px)) 0; }
-.fv-what-if-fields { display:grid; grid-template-columns:1fr 1fr; gap:calc(4 * var(--px)); }.fv-what-if-fields select { display:block; width:100%; max-width:100%; min-width:0; font-size:calc(4.5 * var(--px)); }.fv-comparison-charts { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:calc(4 * var(--px)); margin-top:calc(4 * var(--px)); }.fv-comparison-charts svg { min-width:480px; }.fv-changed-chart { min-width:0; }.fv-changed-chart > [role=status] { min-height:calc(55 * var(--px)); display:flex; align-items:center; justify-content:center; gap:calc(3 * var(--px)); }.fv-computing-coin { width:calc(8 * var(--px)); height:calc(8 * var(--px)); animation:fv-bob .6s steps(2,end) infinite alternate; }
-.fv-change-strip dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(3 * var(--px)); margin:calc(3 * var(--px)) 0; }.fv-change-strip dl > div { background:var(--c-parchment-light); padding:calc(3 * var(--px)); }.fv-change-strip dd { margin:calc(2 * var(--px)) 0 0; font-size:calc(6 * var(--px)); }.fv-change-strip dd[data-direction='1'] { color:var(--c-money-up); }.fv-change-strip dd[data-direction='-1'] { color:var(--c-money-down); }.fv-change-strip small { font-size:calc(3.5 * var(--px)); }.fv-reveal-explanation p { white-space:pre-line; }.fv-ask-row { display:flex; gap:calc(2 * var(--px)); }.fv-ask-row input { flex:1; min-width:0; width:100%; }.fv-reveal-details { margin:calc(5 * var(--px)) 0; }.fv-play-again { margin:calc(3 * var(--px)) 0; font-size:calc(5 * var(--px)); }
+.fv-reveal-ledger { width:min(calc(280 * var(--px)),100%); overflow:auto; overscroll-behavior:contain; animation:fv-ledger-enter .3s steps(3,end); scrollbar-color:var(--c-wood-shine) var(--c-parchment-shadow); scrollbar-width:thin; }
+.fv-reveal-heading { text-align:center; }
+.fv-reveal-heading h1 { font:calc(6 * var(--px))/1.2 var(--font-body); margin:calc(4 * var(--px)) 0 calc(2 * var(--px)); }
+.fv-reveal-heading h1 strong { font:700 calc(9 * var(--px))/1 var(--font-heading); white-space:nowrap; color:var(--c-ink); }
+.fv-reveal-heading p { margin:calc(2 * var(--px)) 0; font-size:calc(5 * var(--px)); } .fv-reveal-heading p strong { white-space:nowrap; }
+.fv-reveal-heading small { font-size:calc(4 * var(--px)); color:var(--c-wood-dark); }
+.fv-reveal-ledger h2 { font-size:calc(6 * var(--px)); margin:calc(6 * var(--px)) 0 calc(3 * var(--px)); padding-top:calc(3 * var(--px)); border-top:var(--px) dashed var(--c-parchment-shadow); }
+
+/* Outcome chart */
+.fv-outcome-chart { margin:calc(3 * var(--px)) 0; min-width:0; }
+.fv-outcome-chart > figcaption { font:700 calc(5 * var(--px))/1 var(--font-heading); margin-bottom:calc(2 * var(--px)); }
+.fv-chart-scroll { overflow-x:auto; }
+.fv-outcome-chart svg { display:block; width:100%; min-width:550px; height:auto; }
+.fv-outcome-chart svg text { font:18px var(--font-body); fill:var(--c-outline); }
+.fv-chart-your-label { font-weight:bold !important; }
+.fv-chart-grid { stroke:var(--c-parchment-shadow); stroke-dasharray:2 6; }
+.fv-chart-zero { stroke:var(--c-outline); stroke-dasharray:6 6; }
+.fv-chart-note { font-size:calc(3.5 * var(--px)); margin:calc(2 * var(--px)) 0; color:var(--c-wood-dark); }
+.fv-line-muted { opacity:.4; }
+.fv-line-draw { stroke-dasharray:1; animation:fv-line-extend .4s steps(4,end) both; animation-delay:calc(var(--line-order) * .15s); }
+.fv-chart-table { font-size:calc(4 * var(--px)); } .fv-chart-table table { width:100%; text-align:left; } .fv-chart-table caption { text-align:left; padding:calc(2 * var(--px)) 0; }
+.fv-reveal-futures .fv-chart-scroll { max-width:calc(190 * var(--px)); margin-inline:auto; }
+
+/* What if */
+.fv-what-if-lead { margin:0 0 calc(3 * var(--px)); }
+.fv-what-if-empty { margin:0; font-size:calc(5 * var(--px)); }
+.fv-what-if-fields { display:grid; grid-template-columns:1fr 1fr; gap:calc(4 * var(--px)); }
+.fv-comparison-charts { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:calc(4 * var(--px)); margin-top:calc(4 * var(--px)); }
+.fv-comparison-charts svg { min-width:480px; }
+.fv-changed-chart { min-width:0; }
+.fv-changed-chart > [role=status] { min-height:calc(55 * var(--px)); display:flex; align-items:center; justify-content:center; gap:calc(3 * var(--px)); }
+.fv-computing-coin { width:calc(8 * var(--px)); height:calc(8 * var(--px)); animation:fv-bob .6s steps(2,end) infinite alternate; }
+.fv-change-tiles { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(3 * var(--px)); margin:calc(4 * var(--px)) 0 calc(3 * var(--px)); }
+.fv-change-value { display:block; font-size:calc(7 * var(--px)); line-height:1; }
+.fv-change-value[data-direction='1'] { color:var(--c-money-up); } .fv-change-value[data-direction='-1'] { color:var(--c-money-down); }
+.fv-change-strip small { font-size:calc(3.5 * var(--px)); color:var(--c-wood-dark); }
+.fv-change-sentence { font-size:calc(5 * var(--px)); margin:0 0 calc(2 * var(--px)); }
+
+/* Why, details, play again */
+.fv-reveal-answer p { white-space:pre-line; margin:calc(2 * var(--px)) 0 calc(3 * var(--px)); }
+.fv-ask-row { display:flex; align-items:flex-end; gap:calc(2 * var(--px)); } .fv-ask-row .fv-field { flex:1; }
+.fv-reveal-details { margin:calc(5 * var(--px)) 0; } .fv-reveal-details summary { cursor:pointer; font-family:var(--font-heading); font-weight:700; }
+.fv-play-again { display:flex; justify-content:center; margin:calc(4 * var(--px)) 0 calc(2 * var(--px)); }
+
 @keyframes fv-line-extend { from { stroke-dashoffset:1; } to { stroke-dashoffset:0; } } @keyframes fv-ledger-enter { from { translate:0 calc(-6 * var(--px)); } to { translate:0 0; } }
 .fv-reveal-ui[data-reduce-motion=true] * { animation:none !important; }
 @media (max-width:1099px) { .fv-comparison-charts { grid-template-columns:minmax(0,1fr); } }
-@media (max-width:639px) { .fv-reveal-ui { padding:calc(3 * var(--px)); }.fv-reveal-ledger { padding:calc(4 * var(--px)); }.fv-what-if-fields,.fv-change-strip dl { grid-template-columns:1fr; }.fv-reveal-heading h1 strong { font-size:calc(8 * var(--px)); } }
-.fv-reveal-heading h1 strong { display:inline; font-size:calc(8 * var(--px)); }
-.fv-reveal-ledger > section:first-of-type .fv-chart-scroll { max-width:calc(190 * var(--px)); margin-inline:auto; }
+@media (max-width:639px) { .fv-reveal-ui { padding:calc(3 * var(--px)); } .fv-what-if-fields,.fv-change-tiles { grid-template-columns:1fr; } .fv-reveal-heading h1 strong { font-size:calc(8 * var(--px)); } .fv-ask-row { flex-wrap:wrap; } }
