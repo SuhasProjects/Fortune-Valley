@@ -12,7 +12,10 @@
     "test:browser": "playwright test",
     "test:watch": "vitest",
     "lint": "tsc -p tsconfig.json --noEmit",
-    "art:palette": "node scripts/art/palette.mjs"
+    "art:palette": "node scripts/art/palette.mjs",
+    "art": "node scripts/art/compile.mjs",
+    "art:extract": "node scripts/art/extract.mjs",
+    "art:preview": "node scripts/art/preview.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
@@ -35,6 +38,7 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "jsdom": "^27.0.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.9.0",
     "vite": "^7.1.0",
