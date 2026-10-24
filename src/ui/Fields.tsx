@@ -20,7 +20,7 @@ export function NumberField({ label, value, onChange, prefix, error, ...rest }: 
 export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> { label: string; options: { value: string; label: string }[]; onChange: (value: string) => void }
 export function Select({ label, options, onChange, id: passedId, ...rest }: SelectProps) {
   const generated = useId(), id = passedId ?? generated
-  return <div className="fv-field"><label htmlFor={id}>{label}</label><div className="fv-select-wrap"><select {...rest} id={id} className="fv-field-control" onChange={event => onChange(event.target.value)}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select><Icon name="arrow-right"/></div></div>
+  return <div className="fv-field"><label htmlFor={id}>{label}</label><div className="fv-select-wrap"><select {...rest} id={id} className="fv-field-control" onChange={event => onChange(event.target.value)}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select><Icon name="arrow-right" compact/></div></div>
 }
 export interface SliderProps { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step: number; format?: (value: number) => string }
 export function Slider({ label, value, onChange, min, max, step, format = String }: SliderProps) {

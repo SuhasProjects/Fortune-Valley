@@ -1,6 +1,9 @@
 {
-  "width": 12,
-  "height": 12,
-  "frames": 1,
+  "src": "/art/ui/frames/button.png",
+  "w": 12,
+  "h": 12,
+  "frames": [
+    "0"
+  ],
   "slice": 4
 }

@@ -1,6 +1,9 @@
 {
-  "width": 8,
-  "height": 8,
-  "frames": 1,
+  "src": "/art/ui/frames/field-focus.png",
+  "w": 8,
+  "h": 8,
+  "frames": [
+    "0"
+  ],
   "slice": 3
 }

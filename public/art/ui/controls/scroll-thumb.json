@@ -1,6 +1,9 @@
 {
-  "width": 4,
-  "height": 8,
-  "frames": 1,
+  "src": "/art/ui/controls/scroll-thumb.png",
+  "w": 4,
+  "h": 8,
+  "frames": [
+    "0"
+  ],
   "slice": 2
 }

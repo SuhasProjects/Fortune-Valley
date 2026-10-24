@@ -1,7 +1,7 @@
-import { useEffect, useSyncExternalStore } from 'react'
+import { useSyncExternalStore } from 'react'
+import { useSettings } from '../game/settings/useSettings'
 
-// Until Agent 4's useSettings lands, accept its persisted setting through this
-// small bridge. The host can also set data-reduce-motion on the stage for CSS.
+// The host override also lets isolated previews request less motion.
 let reduceMotion = false
 const listeners = new Set<() => void>()
 export function setUiReducedMotion(value: boolean) {
@@ -15,9 +15,7 @@ function subscribe(listener: () => void) {
   return () => { listeners.delete(listener); media?.removeEventListener('change', listener) }
 }
 export function useReducedMotion() {
-  return useSyncExternalStore(subscribe, () => reduceMotion || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, () => true)
-}
-export function useMotionAttribute(ref: React.RefObject<HTMLElement | null>) {
-  const reduced = useReducedMotion()
-  useEffect(() => { ref.current?.toggleAttribute('data-reduce-motion', reduced) }, [ref, reduced])
+  const settings = useSettings()
+  const reduced = useSyncExternalStore(subscribe, () => reduceMotion || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches, () => true)
+  return settings.reduceMotion || reduced
 }

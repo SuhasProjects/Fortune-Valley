@@ -1,6 +1,8 @@
 {
-  "width": 24,
-  "height": 24,
-  "frames": 1,
-  "slice": 0
+  "src": "/art/ui/cursor/pointer.png",
+  "w": 24,
+  "h": 24,
+  "frames": [
+    "0"
+  ]
 }

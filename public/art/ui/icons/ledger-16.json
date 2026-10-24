@@ -1,6 +1,8 @@
 {
-  "width": 16,
-  "height": 16,
-  "frames": 1,
-  "slice": 0
+  "src": "/art/ui/icons/ledger-16.png",
+  "w": 16,
+  "h": 16,
+  "frames": [
+    "0"
+  ]
 }

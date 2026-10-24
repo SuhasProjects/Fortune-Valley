@@ -12,6 +12,6 @@ export function Tabs({ tabs, value, onChange, children }: TabsProps) {
     else if (event.key === 'End') next = tabs.length - 1
     else return
     event.preventDefault(); onChange(tabs[next]!.id); ref.current?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next]?.focus()
-  }}>{tab.icon && <Icon name={tab.icon}/ >}{tab.label}</button>)}</div><div role="tabpanel" tabIndex={0} id={`${id}-panel`} aria-labelledby={`${id}-${value}`}>{children}</div></div>
+  }}>{tab.icon && <Icon name={tab.icon} compact/>}{tab.label}</button>)}</div><div role="tabpanel" tabIndex={0} id={`${id}-panel`} aria-labelledby={`${id}-${value}`}>{children}</div></div>
 }
 

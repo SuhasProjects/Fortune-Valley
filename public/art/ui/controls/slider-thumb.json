@@ -1,6 +1,8 @@
 {
-  "width": 5,
-  "height": 7,
-  "frames": 1,
-  "slice": 0
+  "src": "/art/ui/controls/slider-thumb.png",
+  "w": 5,
+  "h": 7,
+  "frames": [
+    "0"
+  ]
 }
