@@ -45,6 +45,7 @@ export interface GameStore {
   setHistoryOpen(open: boolean): void;
   markNotificationRead(id: string): void;
   markAllNotificationsRead(): void;
+  clearActionError(): void;
   requestOpportunity(): Promise<void>;
   /** Ask the AI (or offline template) to explain the finish payload; fills finishPayload.explanation. */
   requestExplanation(question?: string): Promise<void>;
@@ -135,6 +136,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setHistoryOpen: (historyOpen) => set({ historyOpen }),
   markNotificationRead: (id) => set((s) => (s.game ? { game: { ...s.game, notifications: s.game.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) } } : s)),
   markAllNotificationsRead: () => { get().dispatchAction({ type: 'mark_notifications_read' }); },
+  clearActionError: () => set({ lastActionError: null }),
 
   requestOpportunity: async () => {
     const { game, config, requestVersion, aiStatus } = get();

@@ -66,6 +66,8 @@ describe('game store', () => {
     expect(r?.ok).toBe(false);
     expect(useGameStore.getState().game).toBe(before);
     expect(useGameStore.getState().lastActionError).toMatch(/sum to 1/);
+    useGameStore.getState().clearActionError();
+    expect(useGameStore.getState().lastActionError).toBeNull();
   });
   it('produces a finish payload with a computed Monte Carlo result', () => {
     useGameStore.getState().startGame(scenarios[2]!);

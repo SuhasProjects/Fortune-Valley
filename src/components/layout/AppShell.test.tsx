@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import App from '../../App'
 import { useGameStore } from '../../stores/useGameStore'
 
@@ -25,7 +25,7 @@ describe('integrated app shell', () => {
     expect((screen.getByRole('button', { name: /Next month/ }) as HTMLButtonElement).disabled).toBe(true)
     expect(useGameStore.getState().game?.status).toBe('paused')
   })
-  it('opens full notification history and passes the actual finish payload to reveal', () => {
+  it('opens full notification history and passes the actual finish payload to reveal', async () => {
     render(<App renderReveal={payload => <p>Reveal month {payload.finalState.monthIndex}</p>}/>)
     fireEvent.click(screen.getByRole('button', { name: /Entry-Level Worker/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
@@ -33,6 +33,7 @@ describe('integrated app shell', () => {
     expect(screen.getByRole('dialog', { name: 'Town activity' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }))
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))
-    expect(screen.getByText('Reveal month 1')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Finish now' }))
+    await waitFor(() => expect(screen.getByText('Reveal month 1')).toBeTruthy(), { timeout: 2_000 })
   })
 })

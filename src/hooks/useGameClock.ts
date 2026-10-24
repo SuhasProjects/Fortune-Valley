@@ -31,6 +31,7 @@ export function useGameClock({ enabled = true, intervalMs = 60_000, blocked = fa
   }, [advance, resetCountdown, status])
 
   useEffect(resetCountdown, [monthIndex, resetCountdown])
+  useEffect(() => setAutoAdvanceEnabled(enabled), [enabled])
   useEffect(() => {
     if (!autoAdvanceEnabled || blocked || status !== 'playing') return
     const timer = window.setInterval(() => {

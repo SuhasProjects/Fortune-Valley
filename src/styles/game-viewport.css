@@ -10,7 +10,9 @@
 .financial-town--fullscreen > .world-backdrop { position: fixed; }
 .financial-town--fullscreen #town-main { width: 100%; height: 100%; }
 .financial-town--fullscreen > .simulation-footer { position: fixed; z-index: 7; left: 14px; right: 14px; bottom: 5px; max-width: none; padding: 0; pointer-events: none; font-size: 16px; }
-.fullscreen-game-view { position: relative; width: 100%; height: 100%; isolation: isolate; overflow: hidden; background: #91af56; }
+.fullscreen-game-view { position: relative; width: 100%; height: 100%; isolation: isolate; overflow: hidden; background: transparent; }
+.fv-ui > .fullscreen-game-view { pointer-events: none; }
+.fullscreen-game-view > * { pointer-events: auto; }
 .fullscreen-town-layer { position: absolute; inset: 0; z-index: 0; }
 .fullscreen-town-layer .town-scene { width: 100%; height: 100%; aspect-ratio: auto; border: 0; box-shadow: none; }
 .fullscreen-town-layer .town-illustration { width: 100%; height: 100%; object-fit: fill; }
@@ -19,17 +21,24 @@
 .fullscreen-hud-layer .town-hud { background: #f5e5bae8; backdrop-filter: blur(2px); }
 .fullscreen-status-layer { position: absolute; z-index: 4; top: 112px; left: 18px; pointer-events: none; }
 .fullscreen-status-layer .offline-tag { display: inline-flex; box-shadow: 3px 3px #233e3260; }
+.fullscreen-status-layer button { pointer-events: auto; margin-left: 6px; }
+.month-banner { position: absolute; z-index: 7; top: 116px; left: 50%; transform: translateX(-50%); padding: 8px 18px; animation: month-drop .2s steps(3, end); }
+.finish-overlay { position: fixed; z-index: 40; inset: 0; display: grid; place-items: center; background: rgb(20 26 24 / 72%); }
+.finish-overlay .pixel-panel { padding: 28px; text-align: center; }
+@keyframes month-drop { from { transform: translate(-50%, -14px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .month-banner { animation: none; } }
 .fullscreen-controls-layer { position: absolute; z-index: 5; left: 50%; bottom: 34px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 28px); }
 .fullscreen-controls-layer .clock-controls { padding: 9px; border: 4px solid #725033; background: #eddbabe8; box-shadow: inset 3px 3px #fff2c9, 4px 4px #253f3260; backdrop-filter: blur(2px); }
 .month-countdown { min-width: 116px; padding: 3px 9px; border-right: 2px dashed #b89961; color: #765736; line-height: 1; }
 .month-countdown span { display: block; font-size: 17px; white-space: nowrap; }
 .month-countdown strong { display: block; margin-top: 3px; font: 700 27px 'Pixelify Sans', monospace; color: #5b3d28; }
 .auto-time-toggle { border: 2px solid #a98958; padding: 7px 9px; white-space: nowrap; }
-.financial-town--fullscreen > .activity-area { position: fixed; z-index: 6; right: 14px; bottom: 116px; width: min(390px, calc(100vw - 28px)); margin: 0; pointer-events: none; }
-.financial-town--fullscreen > .activity-area button { pointer-events: auto; }
-.financial-town--fullscreen .notification-stack { display: flex; flex-direction: column; gap: 9px; }
-.financial-town--fullscreen .notice { background: #f5e5baee; backdrop-filter: blur(2px); }
-.financial-town--fullscreen .history-button { align-self: flex-end; }
+.fv-stage .activity-area { position: fixed; z-index: 6; right: 14px; bottom: 116px; width: min(390px, calc(100vw - 28px)); margin: 0; pointer-events: none; }
+.fv-stage .activity-area button { pointer-events: auto; }
+.fv-stage .notification-stack { display: flex; flex-direction: column; gap: 9px; }
+.fv-stage .notice { background: #f5e5baee; backdrop-filter: blur(2px); }
+.fv-stage .history-button { align-self: flex-end; }
+.fv-stage > .fv-ui > .simulation-footer { position: fixed; z-index: 7; left: 14px; bottom: 5px; pointer-events: none; font-size: 16px; }
 .fullscreen-game-view > .action-error { position: absolute; z-index: 6; top: 112px; left: 50%; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px)); margin: 0; }
 
 @media(max-width:850px) {
@@ -38,7 +47,7 @@
   .fullscreen-status-layer { top: 180px; left: 10px; }
   .fullscreen-controls-layer { bottom: 28px; }
   .fullscreen-controls-layer .clock-controls { justify-content: center; flex-wrap: wrap; }
-  .financial-town--fullscreen > .activity-area { right: 8px; bottom: 150px; }
+  .fv-stage .activity-area { right: 8px; bottom: 150px; }
 }
 @media(max-width:540px) {
   .financial-town--fullscreen { min-height: 720px; }
@@ -49,8 +58,8 @@
   .month-countdown { min-width: 96px; }
   .month-countdown span { font-size: 15px; }
   .month-countdown strong { font-size: 23px; }
-  .financial-town--fullscreen > .activity-area { bottom: 148px; width: min(260px, calc(100% - 16px)); }
-  .financial-town--fullscreen .notification-stack .notice:nth-of-type(n + 2) { display: none; }
-  .financial-town--fullscreen .notice p { display: none; }
-  .financial-town--fullscreen > .simulation-footer { font-size: 13px; }
+  .fv-stage .activity-area { bottom: 148px; width: min(260px, calc(100% - 16px)); }
+  .fv-stage .notification-stack .notice:nth-of-type(n + 2) { display: none; }
+  .fv-stage .notice p { display: none; }
+  .fv-stage .simulation-footer { font-size: 13px; }
 }
