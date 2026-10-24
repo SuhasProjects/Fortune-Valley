@@ -1,4 +1,4 @@
-import type { BuildingTarget } from '../../types/domain'
+import type { BuildingId } from '../../types/domain'
 import { buildingIds, buildings } from './buildings'
 
 function Tree({ x, y, size = 1 }: { x: number; y: number; size?: number }) {
@@ -23,7 +23,7 @@ function FlowerBed({ x, y }: { x: number; y: number }) {
 function Fence({ x, y, length = 80 }: { x: number; y: number; length?: number }) {
   return <g transform={`translate(${x} ${y})`}><path fill="#8d663e" d={`M0 1h${length}v5H0zM0 12h${length}v5H0z`}/>{Array.from({length:Math.floor(length/16)+1},(_,i)=><g key={i}><path fill="#805536" d={`M${i*16} -6h6v29h-6z`}/><path fill="#d8b778" d={`M${i*16} -6h4v26h-4z`}/></g>)}</g>
 }
-export function BuildingSprite({ building }: { building: BuildingTarget }) {
+export function BuildingSprite({ building }: { building: BuildingId }) {
   return <svg viewBox="0 0 120 100" aria-hidden="true" shapeRendering="crispEdges">
     <path fill="#244433" opacity=".3" d="M8 88h108v9H8z"/><path fill="#514538" d="M15 38h90v50H15z"/><path fill={buildings[building].color} d="M19 38h82v46H19z"/>
     <path fill={building === 'home' ? '#a65345' : building === 'market' ? '#568368' : '#526c77'} d="M7 37v-8h10v-9h13v-9h60v9h13v9h10v8z"/>
@@ -41,8 +41,8 @@ export function BuildingSprite({ building }: { building: BuildingTarget }) {
     {building === 'home' && <path fill="#765945" d="M81 6h10v20H81z"/>}
   </svg>
 }
-export interface TownSceneProps { onBuildingClick: (building: BuildingTarget) => void; eventBuilding?: BuildingTarget | null }
-export function TownScene({ onBuildingClick, eventBuilding }: TownSceneProps) {
+export interface TownSceneProps { onBuildingClick: (building: BuildingId) => void; eventBuilding?: BuildingId | null; eventBuildings?: BuildingId[] }
+export function TownScene({ onBuildingClick, eventBuilding, eventBuildings = [] }: TownSceneProps) {
   return <section className="town-scene" aria-label="Financial Town. Choose a building to explore your finances.">
     <svg className="town-backdrop" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true" shapeRendering="crispEdges">
       <defs><pattern id="grass" width="46" height="38" patternUnits="userSpaceOnUse"><path fill="#95b957" d="M0 0h46v38H0z"/><path stroke="#b0cc6b" strokeWidth="2" d="M8 8h5m16 17h5M3 32h4M39 4h3"/><path stroke="#80a447" strokeWidth="2" d="M22 9v4m17 22v3M12 23v3M6 22v3"/><path fill="#a6c561" d="M18 28h5v2h-5zM33 12h4v2h-4z"/></pattern><pattern id="water" width="60" height="35" patternUnits="userSpaceOnUse"><path fill="#65aebb" d="M0 0h60v35H0z"/><path fill="#88c8cc" d="M4 6h18v3H4zM33 23h20v2H33z"/><path fill="#5598ae" d="M24 12h12v2H24zM5 31h14v2H5z"/></pattern></defs>
@@ -52,16 +52,16 @@ export function TownScene({ onBuildingClick, eventBuilding }: TownSceneProps) {
       <path fill="#c3a16d" d="M104 470h67v12h-67zM104 489h67v12h-67zM104 508h67v12h-67z"/><path fill="#b6a77b" d="M460 280h80v52h-80z"/><path fill="#497e79" d="M473 284h54v40h-54z"/><path fill="#92c7bd" d="M479 289h42v28h-42z"/><path fill="#e3d6a7" d="M495 264h10v39h-10zM487 260h26v8h-26z"/>
       {[35,85,135,235,290,345,640,700,755,870,930,980].map((x,i) => <Tree key={`top-${x}`} x={x} y={65 + i%2*12} size={1.2}/>)}
       {[35,220,385,440,555,610,790,855,925,980].map((x,i) => <Tree key={`bottom-${x}`} x={x} y={548 + i%2*10} size={1.2}/>)}
-      {[[65,190],[930,190],[65,390],[910,410],[400,155],[600,155],[390,450],[830,490]].map(([x,y]) => <Tree key={`${x}-${y}`} x={x} y={y}/>)}
+      {([[65,190],[930,190],[65,390],[910,410],[400,155],[600,155],[390,450],[830,490]] as const).map(([x,y]) => <Tree key={`${x}-${y}`} x={x} y={y}/>)}
       <Fence x={95} y={225} length={70}/><Fence x={220} y={225} length={70}/><Fence x={720} y={225} length={50}/><Fence x={840} y={225} length={70}/><Fence x={205} y={500} length={55}/><Fence x={320} y={500} length={55}/>
       <FlowerBed x={110} y={235}/><FlowerBed x={230} y={235}/><FlowerBed x={725} y={237}/><FlowerBed x={845} y={237}/><FlowerBed x={600} y={493}/><FlowerBed x={738} y={493}/>
       <g fill="#8a9b73"><path d="M46 438h18v5h7v10H41v-10h5zM953 358h17v5h7v10h-31v-10h7z"/><path fill="#bbc09a" d="M47 438h14v5H47zM954 358h13v5h-13z"/></g>
       <g fill="#a67b48"><path d="M369 352h34v6h-34zM371 359h30v4h-30zM373 363h4v10h-4zM395 363h4v10h-4zM579 352h34v6h-34zM581 359h30v4h-30zM583 363h4v10h-4zM605 363h4v10h-4z"/></g>
       {[115,365,615,865].map(x => <g key={x}><path fill="#5b5540" d={`M${x} 258h5v28h-5z`}/><path fill="#f8dc8c" d={`M${x-4} 250h13v11h-13z`}/><path fill="#4c5541" d={`M${x-5} 247h15v4h-15z`}/></g>)}
-      {[[95,110],[350,370],[600,220],[850,385],[210,515],[780,140]].map(([x,y]) => <g key={`${x}-${y}`} fill="#e6ce79"><path d={`M${x} ${y}h4v4h-4zM${x+10} ${y+8}h4v4h-4z`}/></g>)}
+      {([[95,110],[350,370],[600,220],[850,385],[210,515],[780,140]] as const).map(([x,y]) => <g key={`${x}-${y}`} fill="#e6ce79"><path d={`M${x} ${y}h4v4h-4zM${x+10} ${y+8}h4v4h-4z`}/></g>)}
     </svg>
     <div className="map-location" aria-hidden="true">PINE VALLEY <span>•</span> EST. 2026</div>
-    {buildingIds.map(id => <button key={id} className={`town-hotspot hotspot-${id}`} style={{ left: `${buildings[id].x}%`, top: `${buildings[id].y}%` }} onClick={() => onBuildingClick(id)} aria-label={`Open ${buildings[id].title}: ${buildings[id].hint}${eventBuilding === id ? '. Decision waiting' : ''}`}><BuildingSprite building={id}/><span className="building-sign">{buildings[id].title}</span><span className="building-tooltip">{buildings[id].hint} <span aria-hidden="true">↗</span></span>{eventBuilding === id && <span className="event-badge" aria-label="Decision waiting">!</span>}</button>)}
+    {buildingIds.map(id => <button key={id} className={`town-hotspot hotspot-${id}`} style={{ left: `${buildings[id].x}%`, top: `${buildings[id].y}%` }} onClick={() => onBuildingClick(id)} aria-label={`Open ${buildings[id].title}: ${buildings[id].hint}${eventBuilding === id || eventBuildings.includes(id) ? '. Decision waiting' : ''}`}><BuildingSprite building={id}/><span className="building-sign">{buildings[id].title}</span><span className="building-tooltip">{buildings[id].hint} <span aria-hidden="true">↗</span></span>{(eventBuilding === id || eventBuildings.includes(id)) && <span className="event-badge" aria-label="Decision waiting">!</span>}</button>)}
     <div className="map-guide"><span aria-hidden="true">✦</span> Select a building. Shape your story.</div>
   </section>
 }

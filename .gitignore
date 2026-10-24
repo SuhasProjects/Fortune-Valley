@@ -7,3 +7,11 @@ dist/
 test-results/
 playwright-report/
 debug.log
+node_modules
+dist
+.env
+.env.local
+.env.*.local
+.vercel
+*.log
+.DS_Store

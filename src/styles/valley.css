@@ -97,6 +97,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .life-start { color: #76502d; border-color: #c8a974; }
 .personalization textarea { color: #543c2d; background: #fff1ca; border-color: #a67a49; box-shadow: inset 2px 2px 0 #ddc18e; }
 .personalization textarea::placeholder { color: #8b6e4d; }
+.computed-reveal dl > div { padding: 12px 0; border-bottom: 2px solid #c8a974; }
+.computed-reveal dt { font-size: 11px; color: #765735; }
+.computed-reveal dd { margin: 4px 0 0; font-weight: bold; }
+.computed-reveal details { margin: 20px 0; }
+.action-error { padding: 12px; border-color: #a3402d; }
 @media(max-width:540px) {
   .financial-town, .town-landing { border-width: 2px; }
   .landing-hero { margin-left: -10px; margin-right: -10px; padding-left: 12px; padding-right: 12px; }

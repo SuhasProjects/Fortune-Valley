@@ -1,74 +1,141 @@
-import { create } from 'zustand'
-import { applyActionPure, attachEvent } from '../engine/runtime'
-import { fallbackOpportunities, scenarioById, scenarios } from '../data/scenarios'
-import type { BuildingTarget, FinishPayload, GameAction, GameConfig, GameEvent, GameState } from '../types/domain'
+/**
+ * Zustand game store (OWNER: Agent 4; ported onto the canonical engine by Agent 1
+ * during integration — no math lives here). Calls engine functions only.
+ */
+import { create } from 'zustand';
+import { advanceMonth, applyAction, createGame, runMonteCarlo, netWorthOf, shouldRequestOpportunity, summarizeForAi } from '@/engine';
+import { generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 
-type PersonalizationResult = { config: GameConfig; fallback: boolean }
-interface GameStore {
-  game: GameState | null; initialState: GameState | null; config: GameConfig | null
-  openBuildingId: BuildingTarget | null; timelineOpen: boolean; historyOpen: boolean
-  personalizationLoading: boolean; personalizationError: string | null; finishPayload: FinishPayload | null
-  requestVersion: number
-  startGame(config: GameConfig): void; advanceOneMonth(): void; dispatchAction(action: GameAction): void
-  openBuilding(target: BuildingTarget): void; closeBuilding(): void; setPaused(paused: boolean): void
-  openTimeline(): void; closeTimeline(): void; setHistoryOpen(open: boolean): void; markNotificationRead(id: string): void
-  finishGame(): void; resetGame(): void; generatePersonalized(prompt: string): Promise<PersonalizationResult>
+export interface FinishPayload {
+  config: GameConfig;
+  finalState: GameState;
+  policyLog: PolicyLogEntry[];
+  monteCarlo: MonteCarloResult;
 }
-const clone = <T,>(value: T): T => structuredClone(value)
-const fallbackConfig = (prompt: string): GameConfig => {
-  const normalized = prompt.toLowerCase()
-  const base = normalized.includes('student') ? scenarios[0] : normalized.includes('family') || normalized.includes('child') ? scenarios[3] : normalized.includes('invest') || normalized.includes('retire') ? scenarios[2] : scenarios[1]
-  return { ...clone(base), scenarioId: `personalized-${base.scenarioId}`, title: 'Personalized starting point', description: `Offline fallback based on the selected mechanics in “${prompt.slice(0, 72)}${prompt.length > 72 ? '…' : ''}”`, mode: 'personalized', seed: base.seed + 17, initialState: { ...clone(base.initialState), scenarioId: `personalized-${base.scenarioId}`, seed: base.seed + 17 } }
-}
-const buildOpportunity = (game: GameState): GameEvent => {
-  const fixture = fallbackOpportunities[(game.seed + game.monthIndex) % fallbackOpportunities.length]
-  const eventId = `fallback-${game.scenarioId}-${game.monthIndex}-${fixture.template}`
-  const newPay = Math.round(game.employment.grossAnnualPay * 1.08 / 1000) * 1000
-  return { id: eventId, type: 'B', title: fixture.title, body: fixture.body, buildingTarget: fixture.building, source: 'fallback', expiresAtMonth: game.monthIndex + 2, options: fixture.template === 'offer_job' ? [
-    { id: 'accept', label: `Accept $${newPay.toLocaleString()} gross/year`, action: { type: 'accept_job_offer', eventId, grossAnnualPay: newPay } },
-    { id: 'decline', label: 'Keep current role', action: { type: 'decline_event', eventId } }
-  ] : [{ id: 'review', label: 'Review this policy', action: { type: 'apply_event_option', eventId, optionId: 'review' } }, { id: 'skip', label: 'Not now', action: { type: 'decline_event', eventId } }] }
+export interface PersonalizationResult { config: GameConfig; fallback: boolean; warnings: string[] }
+
+export interface GameStore {
+  game: GameState | null;
+  config: GameConfig | null;
+  openBuildingId: BuildingId | null;
+  timelineOpen: boolean;
+  historyOpen: boolean;
+  personalizationLoading: boolean;
+  personalizationError: string | null;
+  lastActionError: string | null;
+  aiStatus: 'idle' | 'loading' | 'online' | 'offline';
+  finishPayload: FinishPayload | null;
+  requestVersion: number;
+
+  startGame(config: GameConfig): void;
+  advanceOneMonth(): void;
+  dispatchAction(action: GameAction): ActionResult | null;
+  openBuilding(target: BuildingId): void;
+  closeBuilding(): void;
+  setPaused(paused: boolean): void;
+  openTimeline(): void;
+  closeTimeline(): void;
+  setHistoryOpen(open: boolean): void;
+  markNotificationRead(id: string): void;
+  markAllNotificationsRead(): void;
+  requestOpportunity(): Promise<void>;
+  finishGame(): void;
+  resetGame(): void;
+  generatePersonalized(prompt: string, numbers?: Omit<PersonalizedInput, 'freeText'>): Promise<PersonalizationResult>;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: null, initialState: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false,
-  personalizationLoading: false, personalizationError: null, finishPayload: null, requestVersion: 0,
-  startGame: config => { const initial = { ...clone(config.initialState), status: 'playing' as const }; set({ config: clone(config), game: initial, initialState: clone(initial), finishPayload: null, openBuildingId: null, timelineOpen: false }) },
-  advanceOneMonth: () => set(store => {
-    if (!store.game || store.game.status !== 'playing') return store
-    let game = applyActionPure(store.game, { type: 'advance_month' })
-    if (game.monthIndex > 0 && game.monthIndex % 3 === 0 && !game.activeEvent) game = attachEvent(game, buildOpportunity(game))
-    if (store.config && game.monthIndex >= store.config.durationMonths) game = applyActionPure(game, { type: 'finish' })
-    return { game }
-  }),
-  dispatchAction: action => set(store => store.game ? { game: applyActionPure(store.game, action) } : store),
-  openBuilding: target => set({ openBuildingId: target }), closeBuilding: () => set({ openBuildingId: null }),
-  setPaused: paused => get().dispatchAction({ type: paused ? 'pause' : 'resume' }),
-  openTimeline: () => set({ timelineOpen: true }), closeTimeline: () => set({ timelineOpen: false }), setHistoryOpen: historyOpen => set({ historyOpen }),
-  markNotificationRead: id => set(store => store.game ? { game: { ...store.game, notifications: store.game.notifications.map(n => n.id === id ? { ...n, read: true } : n) } } : store),
-  finishGame: () => set(store => {
-    if (!store.game || !store.initialState || !store.config) return store
-    const finalState = applyActionPure(store.game, { type: 'finish' })
-    return { game: finalState, finishPayload: { initialState: clone(store.initialState), finalState: clone(finalState), policyActions: clone(finalState.replayLog), durationMonths: store.config.durationMonths, seed: store.config.seed } }
-  }),
-  resetGame: () => set(store => ({ game: null, initialState: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, requestVersion: store.requestVersion + 1 })),
-  generatePersonalized: async prompt => {
-    const clean = prompt.trim(); if (!clean) throw new Error('Describe the situation you want to explore.')
-    const requestVersion = get().requestVersion + 1; set({ personalizationLoading: true, personalizationError: null, requestVersion })
-    try {
-      // Agent 1's aiClient can replace this deliberate offline fallback without changing callers.
-      await Promise.resolve()
-      const config = fallbackConfig(clean)
-      if (get().requestVersion !== requestVersion) return { config, fallback: true }
-      set({ personalizationLoading: false })
-      return { config, fallback: true }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Personalization is unavailable.'
-      if (get().requestVersion === requestVersion) set({ personalizationLoading: false, personalizationError: message })
-      throw error
-    }
-  }
-}))
+  game: null,
+  config: null,
+  openBuildingId: null,
+  timelineOpen: false,
+  historyOpen: false,
+  personalizationLoading: false,
+  personalizationError: null,
+  lastActionError: null,
+  aiStatus: 'idle',
+  finishPayload: null,
+  requestVersion: 0,
 
-export const selectScenario = (id: string) => scenarioById(id)
-export const selectNetWorth = (state: GameStore) => state.game ? state.game.cash + state.game.savings + Object.values(state.game.investments).reduce((a, b) => a + b, 0) - state.game.debts.reduce((a, d) => a + d.balance, 0) : 0
+  startGame: (config) => {
+    const game = createGame(config);
+    const started = applyAction(game, { type: 'resume' });
+    set({ config: structuredClone(config), game: started.ok ? started.state : game, finishPayload: null, openBuildingId: null, timelineOpen: false, lastActionError: null });
+  },
+
+  advanceOneMonth: () => {
+    const { game, requestVersion } = get();
+    if (!game || game.status !== 'playing') return;
+    const next = advanceMonth(game);
+    set({ game: next });
+    if (shouldRequestOpportunity(game, next)) {
+      void get().requestOpportunity().then(() => { if (get().requestVersion !== requestVersion) return; });
+    }
+  },
+
+  dispatchAction: (action) => {
+    const { game } = get();
+    if (!game) return null;
+    if (action.type === 'advance_month') { get().advanceOneMonth(); return null; }
+    const r = applyAction(game, action);
+    set(r.ok ? { game: r.state, lastActionError: null } : { lastActionError: r.message });
+    return r;
+  },
+
+  openBuilding: (target) => set({ openBuildingId: target }),
+  closeBuilding: () => set({ openBuildingId: null }),
+  setPaused: (paused) => { get().dispatchAction({ type: paused ? 'pause' : 'resume' }); },
+  openTimeline: () => set({ timelineOpen: true }),
+  closeTimeline: () => set({ timelineOpen: false }),
+  setHistoryOpen: (historyOpen) => set({ historyOpen }),
+  markNotificationRead: (id) => set((s) => (s.game ? { game: { ...s.game, notifications: s.game.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) } } : s)),
+  markAllNotificationsRead: () => { get().dispatchAction({ type: 'mark_notifications_read' }); },
+
+  requestOpportunity: async () => {
+    const { game, config, requestVersion } = get();
+    if (!game || !config) return;
+    set({ aiStatus: 'loading' });
+    const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
+    const result = await proposeOpportunity(summary);
+    const current = get();
+    if (!current.game || current.requestVersion !== requestVersion || current.game.monthIndex !== game.monthIndex) { set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' }); return; }
+    set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' });
+    if (!result.proposal) return;
+    const event = proposalToEvent(result.proposal, current.game, result.source);
+    if (event) get().dispatchAction({ type: 'enqueue_event', event });
+  },
+
+  finishGame: () => {
+    const { game, config } = get();
+    if (!game || !config) return;
+    const r = game.status === 'finished' ? { ok: true as const, state: game } : applyAction(game, { type: 'finish' });
+    const finalState = r.ok ? r.state : game;
+    const monteCarlo = runMonteCarlo(config, finalState.policyLog, finalState);
+    set({ game: finalState, finishPayload: { config: structuredClone(config), finalState, policyLog: finalState.policyLog, monteCarlo } });
+  },
+
+  resetGame: () => set((s) => ({ game: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
+
+  generatePersonalized: async (prompt, numbers = {}) => {
+    const clean = prompt.trim();
+    if (!clean) throw new Error('Describe the situation you want to explore.');
+    const requestVersion = get().requestVersion + 1;
+    set({ personalizationLoading: true, personalizationError: null, requestVersion });
+    try {
+      const res = await generateScenario({ freeText: clean.slice(0, 2000), ...numbers });
+      const seed = (Date.now() ^ 0x5bd1e995) >>> 0;
+      const config = scenarioToConfig(res.proposal, seed, res.source);
+      if (get().requestVersion === requestVersion) set({ personalizationLoading: false, aiStatus: res.source === 'ai' ? 'online' : 'offline' });
+      return { config, fallback: res.source === 'fallback', warnings: res.warnings };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Personalization is unavailable.';
+      if (get().requestVersion === requestVersion) set({ personalizationLoading: false, personalizationError: message });
+      throw error;
+    }
+  },
+}));
+
+export const selectNetWorth = (s: GameStore): number => (s.game ? netWorthOf(s.game) : 0);
+export const selectDebtTotal = (s: GameStore): number => (s.game ? s.game.debts.reduce((a, d) => a + d.balance, 0) : 0);
+export const selectPendingEvent = (s: GameStore) => s.game?.activeEvents.find((e) => e.type === 'B') ?? s.game?.activeEvents[0] ?? null;
