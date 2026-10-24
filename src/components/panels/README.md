@@ -1,63 +1,51 @@
-# Financial Town panels — integrated handoff
+﻿# Agent 3 — reduced canonical panels
 
-The branch is now published directly in the shared team repository as `SuhasProjects/financegamething:agent3-panels`, in addition to the fork. Its latest sync includes e50a76f and illustrated town 9cd321c, with the connected panels preserved. Current integration checks: 69 tests, typecheck/build, and four root desktop/mobile browser checks pass.
+All changes in this pass are confined to src/components/panels/. No domain, engine, store, AI, root app, or root test source is changed.
 
-## Latest panel UX update
+## Public contract
 
-Pulled archetype budget tuning from upstream/main 7879fb3. Bank now exposes the existing canonical transfer, set_extra_debt_payment, and set_min_cash_buffer actions under collapsible sections. Transfers and extra debt payments are one-time; recurring extra debt and cash buffer settings persist. The contribution buffer only limits savings/investment contributions, not bills, debt service, or shocks. No financial engine/schema changes were made.
+```tsx
+import { BuildingPanel } from './components/panels';
+<BuildingPanel building={buildingTarget} state={gameState} dispatch={dispatchAction} />
+```
 
-The optional bankTools presentation prop preserves existing controlled-panel consumers. New PanelCommand kinds are transfer, save_extra_debt_payment, and save_cash_buffer; existing exports are unchanged. One-time controls start blank, validate after interaction, and clear on successful submission to prevent repeating the same amount accidentally. Low-cash controls show an explanation. Home no longer counts a canonical null plan as protection; Office labels its recorded withholding explicitly.
+BuildingPanelProps uses canonical BuildingId, GameState, GameAction, and ActionResult from src/types/domain.ts. The registry keys are bank, market, hospital, home, and office. Named panel exports remain available. ConnectedBuildingPanel subscribes to Agent 4's store and passes the canonical state and dispatch directly; there is no alternate PanelModel, PanelCommand, or financial calculation adapter.
 
-Validation: 68 unit/integration tests, typecheck, build, and two focused desktop/mobile Bank browser tests pass. Run the owned Bank browser suite with `npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts`. Screenshots are in `src/components/panels/screenshots/`. The four earlier town browser checks are retained separately in the root suite.
+PanelShell has exactly three zones: current status, decision control, projected consequence. History/details are collapsed. Changes only apply on explicit Save through engine actions. Engine errors are shown verbatim. No projection is calculated in the UI.
 
-The panel branch combines latest shared integration 8fbcb06 from upstream/main, including valley theme dd020ef, hardened Agent 4 flow, and the canonical engine/AI gateway. All five buildings mount real store-controlled panels through ConnectedBuildingPanel in App.tsx. Agent 2's native PanelHost owns focus containment, Escape/backdrop close, initial focus, and restoration.
+## Reduced features
 
-## Run from repository root
+- Bank: balances/net worth, debt balance/APR/minimum, monthly savings contribution, and a collapsible one-time extra debt payment. Payment input is bounded by both debt and available cash. Transfers, recurring extra debt payments, and cash-buffer editors from the previous scope are removed.
+- Market: three actual positions/returns, 100% allocation validation, monthly investment contribution, and labeled annual assumptions. Allocation and contribution are separate canonical actions and separate Save controls, preventing partially accepted combined changes.
+- Insurance: exactly two health choices, comparing low premium/high deductible with high premium/low deductible. Mini-table shows actual catalog premiums, deductibles, medical coverage, coinsurance and caps. No other editable insurance decisions.
+- Home: one budget slider using BOUNDS.monthlySpendMax; rent and essentials are read-only.
+- Office: read-only employment and gross/recorded pay details. Job offers use apply_event_option with canonical eventId and optionId for Accept/Decline. Missing net estimate is explicitly marked TODO instead of computed in UI.
+
+## Missing owner dependencies
+
+See MISSING.md. The shared React pixel kit does not exist on any published team branch checked. These panels deliberately add no styling or substitute pixel kit: semantic HTML is a clearly marked unskinned integration scaffold until the owner supplies PixelPanel/Button/Input/Slider/Bar/Toast. The old custom panel CSS is removed. Pixel-kit visual acceptance is not complete.
+
+previewPolicy(state, draftPolicy) and its canonical result type are missing. The 12-month preview says unavailable; it does not manufacture a runway/cash-buffer number. Office also awaits a complete engine monthly pay summary. Policy has no budget/one-time-action fields; those are not invented for preview purposes.
+
+## Stress route
+
+From the repository root:
 
 ```powershell
-npm.cmd ci
-npm.cmd run dev
+npm.cmd exec vite -- --config src/components/panels/vite.config.ts --host 127.0.0.1 --port 5174
+```
+
+Open http://127.0.0.1:5174/dev/stress-states. The folder-owned Vite config adds that exact dev route without modifying root files. The app owner may alternatively mount StressStatesPage from dev/StressStatesPage.tsx in the default app route.
+
+The page renders every panel for no cash, high debt, no insurance, unemployed, and all four starting profiles: 40 panels total. Fixtures use the canonical sample and engine createGame/applyAction; no financial engine is implemented in the harness. Accepted edits remain local to each fixture sandbox.
+
+## Checks
+
+```powershell
 npm.cmd run typecheck
 npm.cmd test
 npm.cmd run build
-npm.cmd exec playwright -- install chromium --only-shell
-npm.cmd run test:browser
+npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts
 ```
 
-The production app uses the root dependency installation. The isolated fixture workshop remains available with `npm.cmd exec vite -- src/components/panels --host 127.0.0.1 --port 5174`. That workshop is explicitly UI-only and rejects simulated transactions/events rather than faking an engine.
-
-## Exports and integration
-
-- index.ts: BuildingPanel, panelRegistry, BankPanel, MarketPanel, OfficePanel, HomePanel, InsurancePanel, and presentation types.
-- ConnectedBuildingPanel.tsx: ConnectedBuildingPanel, selectPanelModel, planPanelCommand, dispatchPanelCommand.
-- Canonical BuildingId uses hospital; the presentation adapter maps it to insurance.
-- Canonical GameState, GameAction, InsuranceLine, and LedgerCategory are imported from src/types/domain.ts. PanelModel is display-only, not an alternate game schema.
-- The registry imports scoped panels.css; import it explicitly when using individual named panels.
-- App preserves Agent 2's optional panels override and renderReveal hook for teammates. The default reveal reports the actual computed Monte Carlo payload; Agent 5 can replace it with charts.
-
-## Canonical action mapping
-
-| UI command | Engine action |
-| --- | --- |
-| save_savings | set_contributions, preserving investments |
-| save_investments | set_allocation plus set_contributions, preserving savings |
-| pay_debt | make_extra_payment, one-time cash debit |
-| save_budget | set_budget, discretionary monthly spending |
-| choose_insurance | set_insurance with health/auto/renters and plan ID or null |
-| choose_event | apply_event_option with event ID and option ID |
-
-Every action batch is preflighted through applyAction before any store dispatch; rejected batches leave policies untouched. Dispatch uses the current store state and handles its ActionResult. Saved values only change when the host supplies updated props. Async pure-panel callbacks show pending/rejection feedback.
-
-## Display and financial boundaries
-
-The engine owns all balance changes, affordability, claims, returns, taxes, bounds, and policy replay. Office uses annualWithholding and selectMonthlyTakeHome; the UI aggregates the two engine-provided annual tax components before passing them into the pay selector. Its displayed withholding is explicitly the latest posted paycheck amount, not a forward withholding estimate. Paycheck history can include unemployment benefits, separate from the salary estimate.
-
-Insurance reads the actual assumptions catalog. Null coverage caps mean no payout cap, not zero coverage. No-coverage options map to canonical null. Plan descriptions explain per-claim deductible, coinsurance, out-of-pocket maximum, and payout cap. A payout cap can leave additional costs to the player. Separate home insurance is not modeled by this schema; property shocks use renters coverage. Claims show actual realized gross cost, insurer payment, and signed out-of-pocket cost.
-
-Market displays all three positions and annual asset assumptions, and accepts only draft weights totaling 100%. Savings/investment settings are recurring policies; debt extra payments are explicitly one-time. History retains account names and signed amounts from the real ledger. Every active event for the selected building is displayed, with IDs passed to the canonical engine.
-
-No schema or financial engine implementation was changed during this integration. No AI key or credential was added. Personalized UI copy now accurately describes the existing optional AI gateway and fallback rather than falsely claiming all input stays local.
-
-## Validation
-
-See VERIFICATION.md. Typecheck/build, 61 unit/integration tests, and 4 desktop/mobile browser checks pass. Updated screenshots are in docs/screenshots/. Browser coverage includes real policy persistence, responsive overflow, keyboard navigation, focus, notifications, timeline/finish, and runtime errors. Other browser engines and live AI credentials were not tested.
+Typecheck/build, 59 tests, and both desktop/mobile stress-route browser projects pass. Current screenshots are screenshots/desktop-stress-bank.png and screenshots/mobile-stress-bank.png; they document the unskinned scaffold, not a completed pixel-kit design. The old root browser selectors require an owner update for the reduced forms, as recorded in MISSING.md.

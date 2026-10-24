@@ -44,6 +44,7 @@ export function MoneyInput({ label, raw, onChange, min = 0, max, step = .01, dis
   label: string; raw: string; onChange: (value: string) => void; min?: number; max: number; step?: number; disabled?: boolean;
 }) {
   const id = useId(); const [touched, setTouched] = useState(false);
+  useEffect(() => { if (!raw) setTouched(false); }, [raw]);
   const error = amountError(raw, min, max, step);
   return <div><label htmlFor={id}>{label} (USD)</label>
     <input id={id} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} aria-invalid={touched && !!error} aria-describedby={`${id}-help`} />

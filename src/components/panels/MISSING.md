@@ -22,6 +22,8 @@ Gross annual salary exists. selectMonthlyTakeHome requires an annual withholding
 
 The root App has no router or /dev/stress-states hook. Agent 3 cannot edit App.tsx, main.tsx, or root Vite config. The folder-owned Vite config serves the exact dev route without editing them; StressStatesPage is also exported for the app owner to mount in the standard dev server. See README.md for the command.
 
+The root town browser test still targets the previous combined investment form and old labels. Agent 2 must update those test selectors for the reduced forms; Agent 3 has not edited tests outside the owned folder. The owned stress-route browser suite verifies the new contract directly.
+
 ## Canonical naming
 
 The event action uses optionId (not choiceId): apply_event_option { eventId, optionId }. BuildingTarget is an alias of BuildingId and uses hospital (not insurance). InsuranceLine is health | auto | renters; separate home coverage does not exist. The reduced insurance decision is health only. The monthly investment contribution uses the existing set_contributions action separately from set_allocation; no combined action or pseudo-command is introduced.

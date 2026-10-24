@@ -1,7 +1,9 @@
-export { BuildingPanel, panelRegistry } from './panelRegistry';
-export { BankPanel } from './BankPanel';
-export { MarketPanel } from './MarketPanel';
-export { OfficePanel } from './OfficePanel';
-export { HomePanel } from './HomePanel';
-export { InsurancePanel } from './InsurancePanel';
-export type * from './contracts';
+﻿export { BuildingPanel, panelRegistry } from './panelRegistry';
+export { PanelShell } from './PanelShell';
+export { PolicyPreview } from './PolicyPreview';
+export { BankPanel } from './canonical/BankPanel';
+export { MarketPanel } from './canonical/MarketPanel';
+export { InsurancePanel } from './canonical/InsurancePanel';
+export { HomePanel } from './canonical/HomePanel';
+export { OfficePanel } from './canonical/OfficePanel';
+export type { BuildingPanelProps, PanelProps, PanelDispatch } from './panelTypes';
