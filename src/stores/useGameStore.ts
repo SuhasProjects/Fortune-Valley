@@ -48,6 +48,9 @@ export interface GameStore {
   requestOpportunity(): Promise<void>;
   /** Ask the AI (or offline template) to explain the finish payload; fills finishPayload.explanation. */
   requestExplanation(question?: string): Promise<void>;
+  /** Mid-game "explain this" for a salient event or player question; no Monte Carlo involved. */
+  requestInsight(question: string): Promise<{ text: string; source: 'ai' | 'fallback' } | null>;
+  lastInsight: { monthIndex: number; question: string; text: string; source: 'ai' | 'fallback' } | null;
   finishGame(): void;
   resetGame(): void;
   generatePersonalized(prompt: string, numbers?: Omit<PersonalizedInput, 'freeText'>): Promise<PersonalizationResult>;
@@ -84,6 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   requestVersion: 0,
   savedGame: null,
   storage: defaultStorage(),
+  lastInsight: null,
 
   startGame: (config) => {
     const game = createGame(config);
@@ -153,6 +157,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  requestInsight: async (question) => {
+    const { game, config, requestVersion } = get();
+    if (!game || !config) return null;
+    const q = question.trim().slice(0, 500);
+    if (!q) return null;
+    const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
+    const result = await explainOutcome(summary, q);
+    if (get().requestVersion !== requestVersion) return null;
+    const insight = { monthIndex: game.monthIndex, question: q, text: result.text, source: result.source };
+    set({ lastInsight: insight, aiStatus: result.source === 'ai' ? 'online' : 'offline' });
+    return { text: result.text, source: result.source };
+  },
+
   requestExplanation: async (question = 'What do these results mean for my strategy?') => {
     const { finishPayload, config, requestVersion } = get();
     if (!finishPayload || !config) return;
@@ -203,7 +220,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   refreshSavedGame: () => set((s) => ({ savedGame: readSaveMeta(s.storage) })),
 
-  resetGame: () => set((s) => ({ game: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
+  resetGame: () => set((s) => ({ game: null, config: null, lastInsight: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
 
   generatePersonalized: async (prompt, numbers = {}) => {
     const clean = prompt.trim();

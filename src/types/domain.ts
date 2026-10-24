@@ -355,6 +355,8 @@ export interface PolicyLogEntry {
    * decision as a direct policy change even though the event itself was path-specific.
    */
   resolvedEffect?: EventEffect;
+  /** Situation when the decision was taken; Monte Carlo uses it to skip replays that no longer apply (e.g. a "return to work" offer in a path with no job loss). */
+  context?: { employmentStatus: EmploymentStatus };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

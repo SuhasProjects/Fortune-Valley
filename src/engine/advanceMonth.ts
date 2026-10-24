@@ -60,10 +60,15 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
 
   // ── 1. Income ───────────────────────────────────────────────────────────────
   const emp = s.employment;
-  if (emp.status === 'employed' && m > 0 && m % 12 === 0 && s.assumptions.employment.annualRaiseRate > 0) {
-    emp.grossAnnualSalary = round2(emp.grossAnnualSalary * (1 + s.assumptions.employment.annualRaiseRate));
-    emp.priorGrossAnnualSalary = emp.grossAnnualSalary;
-    notes.push({ kind: 'positive', summary: `Annual raise: salary now $${emp.grossAnnualSalary.toLocaleString()}/yr`, building: 'office' });
+  if (m > 0 && m % 12 === 0 && s.assumptions.employment.annualRaiseRate > 0) {
+    if (emp.status === 'employed') {
+      emp.grossAnnualSalary = round2(emp.grossAnnualSalary * (1 + s.assumptions.employment.annualRaiseRate));
+      emp.priorGrossAnnualSalary = emp.grossAnnualSalary;
+      notes.push({ kind: 'positive', summary: `Annual raise: salary now $${emp.grossAnnualSalary.toLocaleString()}/yr`, building: 'office' });
+    } else if (emp.status === 'unemployed') {
+      // The role you return to keeps pace with the market; applied on re-employment.
+      emp.priorGrossAnnualSalary = round2(emp.priorGrossAnnualSalary * (1 + s.assumptions.employment.annualRaiseRate));
+    }
   }
   let grossPay = 0;
   let withheld = 0;

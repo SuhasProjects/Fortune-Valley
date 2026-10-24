@@ -115,6 +115,14 @@ describe('game store', () => {
     expect(mem.has('financial-town:save:v1')).toBe(false);
     useGameStore.setState({ storage: null });
   });
+  it('answers a mid-game question with a labeled explanation', async () => {
+    useGameStore.getState().startGame(scenarios[3]!);
+    useGameStore.getState().advanceOneMonth();
+    const r = await useGameStore.getState().requestInsight('Why is my cash going down?');
+    expect(r?.source).toBe('fallback');
+    expect(r?.text).toMatch(/illustrative/);
+    expect(useGameStore.getState().lastInsight?.monthIndex).toBe(1);
+  });
   it('does not retain personalized free text in game state', async () => {
     const privateText = 'my private details about a student loan';
     const result = await useGameStore.getState().generatePersonalized(privateText);
