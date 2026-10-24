@@ -206,6 +206,55 @@ const ALL_ID = 'all';
 const DEFAULTS_ID = 'defaults';
 const DEFAULTS_LABEL = 'Never change anything (default plan)';
 
+// ── Hypotheticals: "what if, from the start" choices, offered even when the player changed nothing ──
+
+/** Ids of hypothetical decisions start with this; the UI may group them separately. */
+export const HYPOTHETICAL_PREFIX = 'hyp:';
+
+interface Hypothetical { choice: DecisionChoice; entries: Map<string, PolicyLogEntry> }
+
+/** Month-0 policy changes a player could have made from day one, relative to the archetype's starting plan. */
+function hypotheticals(config: GameConfig): Hypothetical[] {
+  const s = createGame(config);
+  const p = s.policy;
+  const out: Hypothetical[] = [];
+  const at0 = (action: GameAction): PolicyLogEntry => ({ monthIndex: 0, action });
+  const add = (id: string, label: string, options: [string, string, PolicyLogEntry | null][]) => {
+    const entries = new Map<string, PolicyLogEntry>();
+    const alternatives: DecisionAlternative[] = [];
+    for (const [altId, altLabel, entry] of options) {
+      if (!entry) continue;
+      entries.set(altId, entry);
+      alternatives.push({ id: altId, label: altLabel });
+    }
+    if (alternatives.length) out.push({ choice: { id: `${HYPOTHETICAL_PREFIX}${id}`, logIndex: null, monthIndex: 0, label: `From the start · ${label}`, alternatives }, entries });
+  };
+
+  add('save', 'Save more each month', ([100, 250, 500] as const).map((more) => {
+    const v = clampMoney(p.savingsContributionPerMonth + more, BOUNDS.contributionMax);
+    return [`plus${more}`, `Save ${usd(more)}/month more (${usd(v)}/month)`, v === p.savingsContributionPerMonth ? null : at0({ type: 'set_contributions', savingsContributionPerMonth: v, investmentContributionPerMonth: p.investmentContributionPerMonth })];
+  }));
+  add('invest', 'Invest more each month', ([50, 150, 300] as const).map((more) => {
+    const v = clampMoney(p.investmentContributionPerMonth + more, BOUNDS.contributionMax);
+    return [`plus${more}`, `Invest ${usd(more)}/month more (${usd(v)}/month)`, v === p.investmentContributionPerMonth ? null : at0({ type: 'set_contributions', savingsContributionPerMonth: p.savingsContributionPerMonth, investmentContributionPerMonth: v })];
+  }));
+  const spend = s.household.discretionaryMonthly;
+  add('spend', 'Spend less on lifestyle', ([10, 25, 50] as const).map((cut) => {
+    const v = clampMoney(spend * (1 - cut / 100), BOUNDS.monthlySpendMax);
+    return [`cut${cut}`, `Spend ${cut}% less (${usd(v)}/month)`, v === spend ? null : at0({ type: 'set_budget', discretionaryMonthly: v })];
+  }));
+  const same = (a: Allocation) => (['stock', 'bond', 'etf'] as const).every((k) => Math.abs(a[k] - p.targetAllocation[k]) < 1e-9);
+  add('allocation', 'Invest differently', ([
+    ['all-etf', 'Put everything in the diversified ETF', { stock: 0, bond: 0, etf: 1 }],
+    ['60-40', 'Use a 60% ETF / 40% bonds mix', { stock: 0, bond: 0.4, etf: 0.6 }],
+    ['all-bonds', 'Put everything in bonds', { stock: 0, bond: 1, etf: 0 }],
+  ] as [string, string, Allocation][]).map(([id, label, allocation]) => [id, label, same(allocation) ? null : at0({ type: 'set_allocation', allocation })]));
+  const current = s.insurance.health ?? null;
+  add('insurance', 'Pick a different health plan', config.assumptions.insurancePlans.filter((plan) => plan.line === 'health' && plan.id !== current)
+    .map((plan) => [`plan:${plan.id}`, `Choose ${plan.name}`, at0({ type: 'set_insurance', line: 'health', planId: plan.id })]));
+  return out;
+}
+
 export function listDecisions(config: GameConfig, policyLog: PolicyLogEntry[]): DecisionChoice[] {
   const out: DecisionChoice[] = [];
   policyLog.forEach((entry, i) => {
@@ -215,14 +264,23 @@ export function listDecisions(config: GameConfig, policyLog: PolicyLogEntry[]): 
     out.push({ id: String(i), logIndex: i, monthIndex: entry.monthIndex, label: `Month ${entry.monthIndex} · ${entryLabel(config, before, entry)}`, alternatives });
   });
   if (out.length > 0) out.unshift({ id: ALL_ID, logIndex: null, monthIndex: null, label: 'All my decisions', alternatives: [{ id: DEFAULTS_ID, label: DEFAULTS_LABEL }] });
+  for (const h of hypotheticals(config)) out.push(h.choice);
   return out;
 }
 
-/** The policy log with one decision replaced (or every decision dropped for 'all'/'defaults'). */
+/** The policy log with one decision replaced (or every decision dropped for 'all'/'defaults', or a hypothetical added at month 0). */
 export function changedPolicyLog(config: GameConfig, policyLog: PolicyLogEntry[], decisionId: string, alternativeId: string): { log: PolicyLogEntry[]; decisionLabel: string; alternativeLabel: string } {
   if (decisionId === ALL_ID) {
     if (alternativeId !== DEFAULTS_ID) throw new Error(`Unknown alternative ${alternativeId}`);
     return { log: [], decisionLabel: 'All my decisions', alternativeLabel: DEFAULTS_LABEL };
+  }
+  if (decisionId.startsWith(HYPOTHETICAL_PREFIX)) {
+    const h = hypotheticals(config).find((x) => x.choice.id === decisionId);
+    const entry = h?.entries.get(alternativeId);
+    const alternative = h?.choice.alternatives.find((a) => a.id === alternativeId);
+    if (!h || !entry || !alternative) throw new Error(`Unknown hypothetical ${decisionId}/${alternativeId}`);
+    // The hypothetical applies from day one; the player's later decisions still happen after it.
+    return { log: [entry, ...policyLog], decisionLabel: h.choice.label, alternativeLabel: alternative.label };
   }
   const index = Number(decisionId);
   const entry = policyLog[index];

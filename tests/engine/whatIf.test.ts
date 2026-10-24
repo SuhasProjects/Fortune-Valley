@@ -97,9 +97,11 @@ describe('ending: decisions and alternatives', () => {
     expect(savings.alternatives[0]!.label).toMatch(/^Keep saving \$\d/);
   });
 
-  it('returns nothing when the player made no decisions', () => {
+  it('offers only "from the start" hypotheticals when the player made no decisions', () => {
     const config = archetypeConfig('professional', 3);
-    expect(listDecisions(config, [])).toEqual([]);
+    const decisions = listDecisions(config, []);
+    expect(decisions.some((d) => d.id === 'all')).toBe(false);
+    expect(decisions.every((d) => d.id.startsWith('hyp:'))).toBe(true);
   });
 
   it('records the options the player did not pick and offers them as alternatives', () => {
@@ -177,5 +179,50 @@ describe('ending: what-if runs', () => {
     const pending = runWhatIfAsync({ ...base, decisionId: id, alternativeId: 'undo' }, controller.signal);
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+  });
+});
+
+describe('ending: hypothetical "from the start" decisions', () => {
+  const config = archetypeConfig('college_student', 21);
+
+  it('offers hypotheticals even when the player changed nothing, and never "all"', () => {
+    const decisions = listDecisions(config, []);
+    expect(decisions.length).toBeGreaterThanOrEqual(3);
+    expect(decisions.every((d) => d.id.startsWith('hyp:'))).toBe(true);
+    expect(decisions.map((d) => d.label).join('\n')).toMatch(/From the start · Save more each month/);
+    for (const d of decisions) {
+      expect(d.alternatives.length).toBeGreaterThan(0);
+      expect(`${d.label} ${d.alternatives.map((a) => a.label).join(' ')}`).not.toMatch(/NaN|undefined/);
+    }
+  });
+
+  it('lists real decisions first, then hypotheticals', () => {
+    const s = play(config, script, 'first', false);
+    const decisions = listDecisions(config, s.policyLog);
+    const firstHyp = decisions.findIndex((d) => d.id.startsWith('hyp:'));
+    expect(decisions[0]!.id).toBe('all');
+    expect(firstHyp).toBeGreaterThan(1);
+    expect(decisions.slice(firstHyp).every((d) => d.id.startsWith('hyp:'))).toBe(true);
+  });
+
+  it('runs every hypothetical alternative with an unchanged original and a finite delta', () => {
+    const s = play(config, {}, 'first', false);
+    const input = finish(config, s);
+    for (const d of listDecisions(config, s.policyLog)) for (const a of d.alternatives) {
+      const r = runWhatIf({ ...input, decisionId: d.id, alternativeId: a.id });
+      expect(r.original).toEqual(outcomeLines(input.finishMonteCarlo, input.startNetWorth));
+      expect(r.decisionLabel).toBe(d.label);
+      expect(r.alternativeLabel).toBe(a.label);
+      for (const v of Object.values(r.delta)) expect(Number.isFinite(v)).toBe(true);
+      expect(r.yourEventsComparable).toBe(true);
+    }
+  });
+
+  it('saving more from the start raises the typical ending and keeps later decisions', () => {
+    const s = play(config, script, 'first', false);
+    const input = finish(config, s);
+    const r = runWhatIf({ ...input, decisionId: 'hyp:save', alternativeId: 'plus250' });
+    expect(r.delta.median).toBeGreaterThan(0);
+    expect(() => runWhatIf({ ...input, decisionId: 'hyp:save', alternativeId: 'nope' })).toThrow();
   });
 });

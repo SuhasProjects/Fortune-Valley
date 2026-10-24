@@ -10,4 +10,4 @@ export { validateAllocation, validateEffect, validateConfig, validatePlanId } fr
 export { makeRng, monthRng, hashSeed, pathSeed, type Rng } from './rng';
 export * from './selectors';
 export { serializeSave, parseSave, defaultStorage, SAVE_STORAGE_KEY, SAVE_SCHEMA_VERSION, type SaveFile, type ParsedSave, type KeyValueStorage } from './persistence';
-export { outcomeLines, listDecisions, changedPolicyLog, runWhatIf, runWhatIfAsync } from './whatIf';
+export { outcomeLines, listDecisions, changedPolicyLog, runWhatIf, runWhatIfAsync, HYPOTHETICAL_PREFIX } from './whatIf';
