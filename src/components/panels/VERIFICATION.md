@@ -1,5 +1,15 @@
 # Verification — October 24, 2026
 
+## Latest Bank UX verification
+
+- Pulled archetype tuning 7879fb3 from upstream/main.
+- Typecheck and production build pass; 68 tests across 8 files pass.
+- Two focused Bank browser tests pass at desktop 1366x768 and mobile 390x844: transfers, cleared one-time fields, saved recurring debt payment/cash buffer, next-month persistence, over-limit inputs, and runtime error checks.
+- Added seven UI regressions covering empty payment fields, engine-backed transfers without a net-worth change, insufficient funds, recurring debt/buffer actions, no-funds controls, no-coverage household copy, and accurate withholding labels.
+- Bank screenshots are captured in the sibling screenshots/ directory. These are separate from the earlier full-town screenshots below.
+
+The panel edits are confined to src/components/panels/. No engine, schema, store, AI, town, or root app source was modified in this UX pass.
+
 Integrated upstream/main 8fbcb06 (canonical engine/AI gateway, hardened Agent 4 flow, and Agent 2 valley theme dd020ef) into agent3-panels.
 
 ## Commands

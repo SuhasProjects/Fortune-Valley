@@ -13,12 +13,15 @@ function Preview() {
     if (fail) return { ok: false, error: 'Preview rejection: the engine declined this change. Your saved policy is unchanged.' };
     // UI persistence demonstration only. Do not simulate transactions or employment.
     if (command.kind === 'pay_debt') return { ok: false, error: 'This fixture has no financial engine. No money moved; wire this command to make_extra_payment.' };
+    if (command.kind === 'transfer') return { ok: false, error: 'This fixture has no financial engine. No money moved; use the integrated town to transfer balances.' };
     if (command.kind === 'choose_event') return { ok: false, error: 'Event choice captured. A live engine is required to validate and resolve this offer.' };
     setModel(previous => {
       const next = structuredClone(previous);
       if (command.kind === 'save_savings') next.savingsContribution.value = command.monthlyAmount;
       if (command.kind === 'save_investments') { next.investmentContribution.value = command.monthlyAmount; next.allocation = command.allocation; }
       if (command.kind === 'save_budget') next.discretionaryBudget.value = command.monthlyAmount;
+      if (command.kind === 'save_extra_debt_payment' && next.bankTools) next.bankTools.extraDebtPayment.value = command.monthlyAmount;
+      if (command.kind === 'save_cash_buffer' && next.bankTools) next.bankTools.minCashBuffer.value = command.amount;
       if (command.kind === 'choose_insurance') next.insurance.selected[command.coverage] = command.planId ?? undefined;
       return next;
     });

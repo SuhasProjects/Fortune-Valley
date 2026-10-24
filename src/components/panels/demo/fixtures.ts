@@ -4,6 +4,11 @@ const field = (value: number, max = 5000) => ({ value, min: 0, max, step: 1 });
 export const sampleModel: PanelModel = {
   editable: true, cash: 2400, savings: 4200, netWorth: 4600,
   savingsContribution: field(200), investmentContribution: field(150), discretionaryBudget: field(300, 2000),
+  bankTools: {
+    transferToSavings: { ...field(0, 2400), min: .01, step: .01 },
+    transferToCash: { ...field(0, 4200), min: .01, step: .01 },
+    extraDebtPayment: field(0), minCashBuffer: field(200)
+  },
   debts: [{ id: 'student-loan', name: 'Student loan', balance: 5000, apr: .055, minimumDue: 85, extraPayment: field(0, 2400) }],
   allocation: { stock: .2, bond: .3, etf: .5 }, positions: { stock: 600, bond: 900, etf: 1500 },
   marketAssumptions: [{ asset: 'stock', annualReturn: .07, annualVolatility: .3 }, { asset: 'bond', annualReturn: .03, annualVolatility: .06 }, { asset: 'etf', annualReturn: .06, annualVolatility: .18 }],
@@ -30,7 +35,7 @@ export function fixtureFor(index: number): PanelModel {
     model.cash = 120; model.savings = 0; model.netWorth = -11880; model.positions = { stock: 0, bond: 0, etf: 0 };
     model.employment = { status: 'Student / not employed', grossAnnual: 0, grossMonthly: 0, withholdingMonthly: 0, takeHomeMonthly: 0 };
     model.debts = [{ id: 'student', name: 'Student loan', balance: 12000, apr: .06, minimumDue: 100, extraPayment: field(0, 120) }];
-    model.insurance.selected = {}; model.insurance.claims = [];
+    model.insurance.selected = {}; model.insurance.claims = []; model.bankTools = undefined;
   }
   if (index === 2) {
     model.cash = 8000; model.savings = 22000; model.netWorth = 38000; model.positions = { stock: 3000, bond: 2000, etf: 8000 }; model.debts[0]!.extraPayment.max = 5000;

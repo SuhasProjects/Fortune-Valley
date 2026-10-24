@@ -2,7 +2,7 @@ import type { PanelProps } from './contracts';
 import { AmountControl, EventDecision, Frame, History, money, Stat } from './shared';
 export function HomePanel(props: PanelProps) {
   const { model, onCommand, onNavigate } = props;
-  const protections = model.insurance.plans.filter(plan => (plan.kind === 'home' || plan.kind === 'renters') && model.insurance.selected[plan.kind] === plan.id);
+  const protections = model.insurance.plans.filter(plan => (plan.kind === 'home' || plan.kind === 'renters') && plan.canonicalPlanId !== null && model.insurance.selected[plan.kind] === plan.id);
   return <Frame title="Home & household" subtitle="Give everyday spending a monthly limit that fits your life.">
     <p>{model.housing.description}</p><dl className="ft-stats"><Stat label="Housing / month" value={money(model.housing.rentMonthly)} /><Stat label="Essentials / month" value={money(model.housing.essentialsMonthly)} /><Stat label="Discretionary budget / month" value={money(model.discretionaryBudget.value)} /></dl>
     <AmountControl label="Monthly discretionary budget" field={model.discretionaryBudget} command={monthlyAmount => ({ kind: 'save_budget', monthlyAmount })} onCommand={onCommand} disabled={!model.editable} note="Recurring spending limit, separate from housing and essentials. The engine validates this policy against the scenario’s rules." />

@@ -1,5 +1,13 @@
 # Financial Town panels — integrated handoff
 
+## Latest panel UX update
+
+Pulled archetype budget tuning from upstream/main 7879fb3. Bank now exposes the existing canonical transfer, set_extra_debt_payment, and set_min_cash_buffer actions under collapsible sections. Transfers and extra debt payments are one-time; recurring extra debt and cash buffer settings persist. The contribution buffer only limits savings/investment contributions, not bills, debt service, or shocks. No financial engine/schema changes were made.
+
+The optional bankTools presentation prop preserves existing controlled-panel consumers. New PanelCommand kinds are transfer, save_extra_debt_payment, and save_cash_buffer; existing exports are unchanged. One-time controls start blank, validate after interaction, and clear on successful submission to prevent repeating the same amount accidentally. Low-cash controls show an explanation. Home no longer counts a canonical null plan as protection; Office labels its recorded withholding explicitly.
+
+Validation: 68 unit/integration tests, typecheck, build, and two focused desktop/mobile Bank browser tests pass. Run the owned Bank browser suite with `npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts`. Screenshots are in `src/components/panels/screenshots/`. The four earlier town browser checks are retained separately in the root suite.
+
 The panel branch combines latest shared integration 8fbcb06 from upstream/main, including valley theme dd020ef, hardened Agent 4 flow, and the canonical engine/AI gateway. All five buildings mount real store-controlled panels through ConnectedBuildingPanel in App.tsx. Agent 2's native PanelHost owns focus containment, Escape/backdrop close, initial focus, and restoration.
 
 ## Run from repository root

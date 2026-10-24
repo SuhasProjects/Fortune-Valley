@@ -14,13 +14,19 @@ export interface PanelModel {
   savings: number;
   netWorth: number;
   savingsContribution: MoneyField;
+  bankTools?: {
+    transferToSavings: MoneyField;
+    transferToCash: MoneyField;
+    extraDebtPayment: MoneyField;
+    minCashBuffer: MoneyField;
+  };
   investmentContribution: MoneyField;
   discretionaryBudget: MoneyField;
   debts: { id: string; name: string; balance: number; apr: number; minimumDue: number; extraPayment: MoneyField }[];
   allocation: Record<Asset, number>; // fractions, from the engine's last valid policy
   positions: Record<Asset, number>;
   marketAssumptions: { asset: Asset; annualReturn: number; annualVolatility: number }[];
-  employment: { status: string; grossAnnual: number; grossMonthly?: number; withholdingMonthly?: number; takeHomeMonthly?: number; monthlyContext?: string; lastPaycheck?: HistoryRow };
+  employment: { status: string; grossAnnual: number; grossMonthly?: number; withholdingMonthly?: number; withholdingLabel?: string; takeHomeMonthly?: number; monthlyContext?: string; lastPaycheck?: HistoryRow };
   housing: { description: string; rentMonthly: number; essentialsMonthly: number; recurring: { id: string; label: string; amount: number }[] };
   insurance: {
     selected: Partial<Record<Coverage, string>>;
@@ -36,6 +42,9 @@ export interface PanelModel {
 export type PanelCommand =
   | { kind: 'save_savings'; monthlyAmount: number }
   | { kind: 'pay_debt'; debtId: string; amount: number }
+  | { kind: 'transfer'; from: 'cash' | 'savings'; to: 'cash' | 'savings'; amount: number }
+  | { kind: 'save_extra_debt_payment'; monthlyAmount: number }
+  | { kind: 'save_cash_buffer'; amount: number }
   | { kind: 'save_investments'; monthlyAmount: number; allocation: Record<Asset, number> }
   | { kind: 'save_budget'; monthlyAmount: number }
   | { kind: 'choose_insurance'; coverage: Coverage; planId: string | null }

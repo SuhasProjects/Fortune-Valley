@@ -33,13 +33,20 @@ export function selectPanelModel(game: GameState, config: GameConfig, netWorth: 
   return {
     editable: game.status === 'playing' || game.status === 'paused', cash: game.cash, savings: game.savings, netWorth,
     savingsContribution: field(game.policy.savingsContributionPerMonth), investmentContribution: field(game.policy.investmentContributionPerMonth),
+    bankTools: {
+      transferToSavings: { ...field(0, game.cash, .01), unavailableReason: game.cash <= 0 ? 'No cash available to transfer.' : undefined },
+      transferToCash: { ...field(0, game.savings, .01), unavailableReason: game.savings <= 0 ? 'No savings available to transfer.' : undefined },
+      extraDebtPayment: field(game.policy.extraDebtPaymentPerMonth),
+      minCashBuffer: field(game.policy.minCashBuffer, BOUNDS.cashMax)
+    },
     discretionaryBudget: field(game.household.discretionaryMonthly, BOUNDS.monthlySpendMax),
-    debts: game.debts.map(debt => ({ id: debt.id, name: debt.name, balance: debt.balance, apr: debt.apr, minimumDue: debt.minimumPayment, extraPayment: { ...field(0, BOUNDS.cashMax, .01), unavailableReason: game.cash <= 0 ? 'No cash available for an extra payment.' : debt.balance <= 0 ? 'This debt is already repaid.' : undefined } })),
+    debts: game.debts.map(debt => ({ id: debt.id, name: debt.name, balance: debt.balance, apr: debt.apr, minimumDue: debt.minimumPayment, extraPayment: { ...field(0, game.cash, .01), unavailableReason: game.cash <= 0 ? 'No cash available for an extra payment.' : debt.balance <= 0 ? 'This debt is already repaid.' : undefined } })),
     allocation: game.policy.targetAllocation, positions: game.investments,
     marketAssumptions: (['stock', 'bond', 'etf'] as const).map(asset => ({ asset, annualReturn: game.assumptions.assets[asset].expectedAnnualReturn, annualVolatility: game.assumptions.assets[asset].annualVolatility })),
     employment: {
       status: `${game.employment.status} · ${game.employment.title}`, grossAnnual: game.employment.grossAnnualSalary,
       grossMonthly: selectMonthlyTakeHome(game, 0), withholdingMonthly: taxPosted ? Math.abs(taxPosted.amountSigned) : undefined,
+      withholdingLabel: 'Last paycheck withholding',
       takeHomeMonthly: estimatedTakeHome,
       monthlyContext: 'Gross monthly pay and take-home are engine estimates for current employment. Withholding shows the latest posted paycheck, when available, and may precede a job change. Unemployment benefits are shown in paycheck history rather than the salary estimate.',
       lastPaycheck: gross ? row(gross) : undefined
@@ -73,6 +80,9 @@ export function planPanelCommand(game: GameState, command: PanelCommand): { acti
     case 'save_savings': actions = [{ type: 'set_contributions', savingsContributionPerMonth: command.monthlyAmount, investmentContributionPerMonth: game.policy.investmentContributionPerMonth }]; break;
     case 'save_investments': actions = [{ type: 'set_allocation', allocation: command.allocation }, { type: 'set_contributions', savingsContributionPerMonth: game.policy.savingsContributionPerMonth, investmentContributionPerMonth: command.monthlyAmount }]; break;
     case 'pay_debt': actions = [{ type: 'make_extra_payment', debtId: command.debtId, amount: command.amount }]; break;
+    case 'transfer': actions = [{ type: 'transfer', from: command.from, to: command.to, amount: command.amount }]; break;
+    case 'save_extra_debt_payment': actions = [{ type: 'set_extra_debt_payment', amount: command.monthlyAmount }]; break;
+    case 'save_cash_buffer': actions = [{ type: 'set_min_cash_buffer', amount: command.amount }]; break;
     case 'save_budget': actions = [{ type: 'set_budget', discretionaryMonthly: command.monthlyAmount }]; break;
     case 'choose_insurance':
       if (command.coverage === 'home') return { error: 'Separate home insurance is not modeled; use the renters coverage line.' };
@@ -97,7 +107,7 @@ export function dispatchPanelCommand(command: PanelCommand): CommandResult {
     const result = store.dispatchAction(action);
     if (!result?.ok) return { ok: false, error: result && !result.ok ? result.message : 'No story is running.' };
   }
-  return { ok: true, message: command.kind === 'choose_event' ? 'Choice recorded.' : command.kind === 'pay_debt' ? 'One-time payment applied.' : 'Policy saved.' };
+  return { ok: true, message: command.kind === 'choose_event' ? 'Choice recorded.' : command.kind === 'pay_debt' ? 'One-time payment applied.' : command.kind === 'transfer' ? 'One-time transfer applied.' : 'Policy saved.' };
 }
 
 export function ConnectedBuildingPanel({ building }: { building: BuildingId }) {

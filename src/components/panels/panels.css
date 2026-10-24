@@ -19,6 +19,7 @@
 .ft-panel :disabled { opacity: .6; cursor: not-allowed; }
 .ft-panel :focus-visible { outline: 4px solid #284d98; outline-offset: 4px; }
 .ft-input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; } .ft-input-row input { flex: 1; min-width: 100px; width: 120px; }
+.ft-input-row + .ft-muted { margin-top: 8px; }
 .ft-weight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 16px; }
 .ft-panel fieldset { min-width: 0; margin: 16px 0; padding: 12px; border: 2px solid #b18b54; }
 .ft-panel legend { font-size: 13px; padding: 0 8px; }
