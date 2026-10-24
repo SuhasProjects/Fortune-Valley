@@ -6,7 +6,7 @@ Read against src/types/domain.ts, src/fixtures/index.ts, and the current engine/
 
 No exported PixelPanel, Button, Input, Slider, Bar, or Toast kit exists in the checkout or any fetched team branch, including upstream/main, agent1-core, agent4-flow, and frontendpixelart. Checked file paths and component exports. src/styles/pixel-tokens.css supplies tokens, not React components.
 
-**Requested:** the canonical import path and supported component props. TODO(shared-ui-kit) marks the semantic shell/control boundaries. Until the owner supplies the kit, the reduced panels are an explicitly unskinned semantic integration scaffold. They add no local CSS, substitute pixel components, palette, gradients, shadows, fonts, or charts. Final pixel-kit acceptance remains blocked by this dependency.
+**Requested:** the canonical import path and supported component props. The latest user request explicitly asks for a centered yellow parchment frame and concise corner help, so scroll-panel.css now implements that presentation within the owned folder. It is not presented as the missing shared kit. No financial/domain logic is coupled to the skin.
 
 ## Live policy preview — owner: Agent 1
 

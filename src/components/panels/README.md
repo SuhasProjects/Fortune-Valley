@@ -1,45 +1,24 @@
-﻿# Agent 3 — reduced canonical panels
+﻿# Financial panels — centered parchment update
 
-All changes in this pass are confined to src/components/panels/. No domain, engine, store, AI, root app, or root test source is changed.
+The latest user request authorizes the scoped parchment presentation in scroll-panel.css. All source changes remain in src/components/panels/; the root app, host, engine, store, and AI code are unchanged.
 
-## Public contract
+## Current behavior
 
-```tsx
-import { BuildingPanel } from './components/panels';
-<BuildingPanel building={buildingTarget} state={gameState} dispatch={dispatchAction} />
-```
+- Financial dialogs are centered and up to 860px wide. Other dialog types keep their existing layout. The host override is scoped with :has(.ft-sheet).
+- A warm yellow parchment frame uses a stepped clip-path for lightly torn edges, with no image downloads or soft-shadow/gradient dependency.
+- Main views show balances, required inputs, Save buttons, and short monthly/one-time amounts. History stays collapsed.
+- The corner ? opens a short guide. Escape or its close button restores focus to ?. A second Escape closes the host modal. Clicking elsewhere dismisses help.
+- All amounts and actions still use canonical state/engine contracts. No financial or tax calculations were added.
 
-BuildingPanelProps uses canonical BuildingId, GameState, GameAction, and ActionResult from src/types/domain.ts. The registry keys are bank, market, hospital, home, and office. Named panel exports remain available. ConnectedBuildingPanel subscribes to Agent 4's store and passes the canonical state and dispatch directly; there is no alternate PanelModel, PanelCommand, or financial calculation adapter.
+The public API remains BuildingPanel { building, state, dispatch }. The registry uses canonical bank/market/hospital/home/office IDs; ConnectedBuildingPanel still delegates to Agent 4's store.
 
-PanelShell has exactly three zones: current status, decision control, projected consequence. History/details are collapsed. Changes only apply on explicit Save through engine actions. Engine errors are shown verbatim. No projection is calculated in the UI.
-
-## Reduced features
-
-- Bank: balances/net worth, debt balance/APR/minimum, monthly savings contribution, and a collapsible one-time extra debt payment. Payment input is bounded by both debt and available cash. Transfers, recurring extra debt payments, and cash-buffer editors from the previous scope are removed.
-- Market: three actual positions/returns, 100% allocation validation, monthly investment contribution, and labeled annual assumptions. Allocation and contribution are separate canonical actions and separate Save controls, preventing partially accepted combined changes.
-- Insurance: exactly two health choices, comparing low premium/high deductible with high premium/low deductible. Mini-table shows actual catalog premiums, deductibles, medical coverage, coinsurance and caps. No other editable insurance decisions.
-- Home: one budget slider using BOUNDS.monthlySpendMax; rent and essentials are read-only.
-- Office: read-only employment and gross/recorded pay details. Job offers use apply_event_option with canonical eventId and optionId for Accept/Decline. Missing net estimate is explicitly marked TODO instead of computed in UI.
-
-## Missing owner dependencies
-
-See MISSING.md. The shared React pixel kit does not exist on any published team branch checked. These panels deliberately add no styling or substitute pixel kit: semantic HTML is a clearly marked unskinned integration scaffold until the owner supplies PixelPanel/Button/Input/Slider/Bar/Toast. The old custom panel CSS is removed. Pixel-kit visual acceptance is not complete.
-
-previewPolicy(state, draftPolicy) and its canonical result type are missing. The 12-month preview says unavailable; it does not manufacture a runway/cash-buffer number. Office also awaits a complete engine monthly pay summary. Policy has no budget/one-time-action fields; those are not invented for preview purposes.
-
-## Stress route
-
-From the repository root:
+## Development and checks
 
 ```powershell
 npm.cmd exec vite -- --config src/components/panels/vite.config.ts --host 127.0.0.1 --port 5174
 ```
 
-Open http://127.0.0.1:5174/dev/stress-states. The folder-owned Vite config adds that exact dev route without modifying root files. The app owner may alternatively mount StressStatesPage from dev/StressStatesPage.tsx in the default app route.
-
-The page renders every panel for no cash, high debt, no insurance, unemployed, and all four starting profiles: 40 panels total. Fixtures use the canonical sample and engine createGame/applyAction; no financial engine is implemented in the harness. Accepted edits remain local to each fixture sandbox.
-
-## Checks
+Open http://127.0.0.1:5174/ for the real town, or /dev/stress-states for all 40 panel/state combinations.
 
 ```powershell
 npm.cmd run typecheck
@@ -48,4 +27,10 @@ npm.cmd run build
 npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts
 ```
 
-Typecheck/build, 59 tests, and both desktop/mobile stress-route browser projects pass. Current screenshots are screenshots/desktop-stress-bank.png and screenshots/mobile-stress-bank.png; they document the unskinned scaffold, not a completed pixel-kit design. The old root browser selectors require an owner update for the reduced forms, as recorded in MISSING.md.
+Current checks: 61 tests, typecheck, build, and four desktop/mobile browser checks pass. Screenshots are in screenshots/, including desktop-centered-bank.png, mobile-centered-bank.png and the matching bank-help images.
+
+## Existing limitations
+
+The shared React pixel kit was not found in the published branches. The current scoped styling follows the user's explicit parchment request; it is not claimed to be that missing kit.
+
+The 12-month preview and complete take-home estimate remain unavailable. They are kept concise and explained in help, not calculated in the UI. See MISSING.md. No credentials were added to source or the repository.
