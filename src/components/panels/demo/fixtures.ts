@@ -33,12 +33,12 @@ export function fixtureFor(index: number): PanelModel {
     model.insurance.selected = {}; model.insurance.claims = [];
   }
   if (index === 2) {
-    model.cash = 8000; model.savings = 22000; model.netWorth = 38000; model.positions = { stock: 3000, bond: 2000, etf: 8000 }; model.debts[0].extraPayment.max = 5000;
+    model.cash = 8000; model.savings = 22000; model.netWorth = 38000; model.positions = { stock: 3000, bond: 2000, etf: 8000 }; model.debts[0]!.extraPayment.max = 5000;
     model.employment = { status: 'Employed', grossAnnual: 96000, grossMonthly: 8000, withholdingMonthly: 1920, takeHomeMonthly: 6080 };
   }
   if (index === 3) {
     model.cash = 1800; model.savings = 3200; model.netWorth = -1000; model.housing.description = 'A rented family home, with childcare in essentials.';
-    model.housing.essentialsMonthly = 1200; model.housing.recurring[1].amount = -1200;
+    model.housing.essentialsMonthly = 1200; model.housing.recurring[1]!.amount = -1200;
     model.debts = [{ id: 'family-loan', name: 'Family loan', balance: 9000, apr: .09, minimumDue: 220, extraPayment: field(0, 1800) }];
   }
   return model;

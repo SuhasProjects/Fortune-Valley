@@ -6,3 +6,8 @@ dist
 .vercel
 *.log
 .DS_Store
+
+*.tsbuildinfo
+.vite/
+test-results/
+playwright-report/

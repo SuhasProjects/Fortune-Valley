@@ -1,10 +1,8 @@
-﻿# Financial Town panels — Agent 3 handoff
+﻿# Financial Town panels — integrated handoff
 
-Integrated against shared commit `a67f79b` (main's merge of agent4-flow) on local branch `agent3-panels`. The user authorized the small App.tsx integration; all other source changes are within src/components/panels/.
+The panel branch combines canonical engine/flow commit c202e0a from upstream/main with Agent 2 town commit f69c091 from upstream/frontendpixelart. All five buildings mount real store-controlled panels through ConnectedBuildingPanel in App.tsx. Agent 2's native PanelHost owns focus containment, Escape/backdrop close, initial focus, and restoration.
 
-## Run
-
-From the repository root:
+## Run from repository root
 
 ```powershell
 npm.cmd ci
@@ -12,38 +10,44 @@ npm.cmd run dev
 npm.cmd run typecheck
 npm.cmd test
 npm.cmd run build
+npm.cmd exec playwright -- install chromium --only-shell
+npm.cmd run test:browser
 ```
 
-The actual game now mounts ConnectedBuildingPanel inside the existing building dialog. For the isolated, explicitly labeled fixture workshop, run `npm.cmd exec vite -- src/components/panels --host 127.0.0.1 --port 5174` from the root. Use the root dependency installation only, avoiding duplicate React copies. The workshop has no financial engine or live AI; it demonstrates draft/save behavior and rejects fixture transactions/event resolution rather than faking effects.
+The production app uses the root dependency installation. The isolated fixture workshop remains available with `npm.cmd exec vite -- src/components/panels --host 127.0.0.1 --port 5174`. That workshop is explicitly UI-only and rejects simulated transactions/events rather than faking an engine.
 
-## Public components
+## Exports and integration
 
-`index.ts` exports BuildingPanel, panelRegistry, the five named panels, and presentation types. Import ConnectedBuildingPanel from its own module to use the shared store. Keeping that connector out of index.ts keeps the pure panels and fixture workshop independent of Zustand and the engine.
+- index.ts: BuildingPanel, panelRegistry, BankPanel, MarketPanel, OfficePanel, HomePanel, InsurancePanel, and presentation types.
+- ConnectedBuildingPanel.tsx: ConnectedBuildingPanel, selectPanelModel, planPanelCommand, dispatchPanelCommand.
+- Canonical BuildingId uses hospital; the presentation adapter maps it to insurance.
+- Canonical GameState, GameAction, InsuranceLine, and LedgerCategory are imported from src/types/domain.ts. PanelModel is display-only, not an alternate game schema.
+- The registry imports scoped panels.css; import it explicitly when using individual named panels.
+- App preserves Agent 2's optional panels override and renderReveal hook for teammates. The default reveal reports the actual computed Monte Carlo payload; Agent 5 can replace it with charts.
 
-```tsx
-<ConnectedBuildingPanel building={store.openBuildingId} />
-```
+## Canonical action mapping
 
-ConnectedBuildingPanel maps the shared hospital building key to the presentation insurance key. The canonical GameState/GameAction definitions are imported from src/types/domain.ts. PanelModel is a presentation adapter, not an alternate GameState. Numerical balances, net worth, policy values, debt fields, and insurance details come from shared state/selectors. No financial calculator is implemented inside the panels.
+| UI command | Engine action |
+| --- | --- |
+| save_savings | set_contributions, preserving investments |
+| save_investments | set_allocation plus set_contributions, preserving savings |
+| pay_debt | make_extra_payment, one-time cash debit |
+| save_budget | set_budget, discretionary monthly spending |
+| choose_insurance | set_insurance with health/auto/renters and plan ID or null |
+| choose_event | apply_event_option with event ID and option ID |
 
-## Actions and present engine limitations
+Every action batch is preflighted through applyAction before any store dispatch; rejected batches leave policies untouched. Dispatch uses the current store state and handles its ActionResult. Saved values only change when the host supplies updated props. Async pure-panel callbacks show pending/rejection feedback.
 
-- Savings: uses set_contributions, preserving the investment contribution. The next month uses the shared engine's actual savings logic.
-- Market: preflights allocation plus contribution through applyActionPure before synchronously dispatching either action; preserves the savings policy. Invalid batches dispatch nothing. The current engine saves allocation but sends all investment contributions to ETF and does not apply returns. This limitation is visible in the panel.
-- Events: commands contain event ID and option ID. The connector resolves the current canonical option and sends its engine-owned action. Missing, stale, or expired events reject. It does not manually assign salary.
-- Debt extra payments, discretionary budgets, and insurance changes are not implemented by the shared runtime. Those controls are disabled or unavailable, and command calls reject with an explanation. Implement their canonical engine actions before enabling them.
-- Current InsurancePlan has no coverage category, dollar cap, exclusions, or selectable catalog. Current plans are shown read-only with the actual recorded coverage fraction; it is never misrepresented as a dollar limit. No category is inferred from a plan ID.
-- No monthly pay/tax selectors exist. Office uses recorded income/tax ledger entries when available and labels unavailable figures explicitly. Take-home estimate remains unavailable; the UI does not invent tax arithmetic. Per-asset annual return/volatility assumptions are also unavailable.
-- Money-field min/max/step settings are numeric presentation guards, not engine affordability limits. The engine must remain authoritative.
+## Display and financial boundaries
 
-`planPanelCommand` and `dispatchPanelCommand` return clear engine rejection feedback. Inputs remain drafts until Save. Async command failures and pending submission locks are supported by the pure panels. History is read from immutable ledger rows and displayed newest first.
+The engine owns all balance changes, affordability, claims, returns, taxes, bounds, and policy replay. Office uses annualWithholding and selectMonthlyTakeHome; the UI aggregates the two engine-provided annual tax components before passing them into the pay selector. Its displayed withholding is explicitly the latest posted paycheck amount, not a forward withholding estimate. Paycheck history can include unemployment benefits, separate from the salary estimate.
 
-## Overlay boundary and visual design
+Insurance reads the actual assumptions catalog. Null coverage caps mean no payout cap, not zero coverage. No-coverage options map to canonical null. Plan descriptions explain per-claim deductible, coinsurance, out-of-pocket maximum, and payout cap. A payout cap can leave additional costs to the player. Separate home insurance is not modeled by this schema; property shocks use renters coverage. Claims show actual realized gross cost, insurer payment, and signed out-of-pocket cost.
 
-The existing App.tsx dialog now has an accessible name and named close button. Agent 2 still owns focus trapping, Escape dismissal, initial focus, restoration, and scroll-shell polish; these are not fully implemented in the fetched shell. Panel contents use explicit labels, 44px controls, focus outlines, live feedback, table headers, and collapsible history.
+Market displays all three positions and annual asset assumptions, and accepts only draft weights totaling 100%. Savings/investment settings are recurring policies; debt extra payments are explicitly one-time. History retains account names and signed amounts from the real ledger. Every active event for the selected building is displayed, with IDs passed to the canonical engine.
 
-Scoped panels.css provides a local 4px grid, square borders, offset shadows, warm parchment, forest green, and monospace type. No external asset or font requests are introduced. Import panels.css explicitly when using individual named panels without the registry.
+No schema or financial engine implementation was changed during this integration. No AI key or credential was added. Personalized UI copy now accurately describes the existing optional AI gateway and fallback rather than falsely claiming all input stays local.
 
-## Verification
+## Validation
 
-See VERIFICATION.md. Root typecheck/build and 23 tests pass, including all four shared scenarios, store policy persistence, next-month savings, invalid market batches, and unsupported action rejection. Actual allocation-dependent returns, claims, debt interest, and insurance changes still need the canonical engine. No AI server or Monte Carlo implementation was added.
+See VERIFICATION.md. Typecheck/build, 31 unit/integration tests, and 4 desktop/mobile browser checks pass. Updated screenshots are in docs/screenshots/. Browser coverage includes real policy persistence, responsive overflow, keyboard navigation, focus, notifications, timeline/finish, and runtime errors. Other browser engines and live AI credentials were not tested.

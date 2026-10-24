@@ -43,7 +43,10 @@ export function History({ rows, title = 'Recent activity' }: { rows?: HistoryRow
   return <details className="ft-card"><summary>{title}</summary>{rows?.length ? <ul className="ft-history">{rows.map(row => <li key={row.id}><div><small>{row.month}</small><span>{row.description}</span></div><strong>{money(row.amount)}</strong></li>)}</ul> : <p className="ft-muted">No recorded activity yet.</p>}</details>;
 }
 export function EventDecision({ building, model, onCommand }: PanelProps & { building: Building }) {
-  const task = useCommand(onCommand); const event = model.event;
-  if (!event || event.building !== building) return null;
-  return <section className="ft-card ft-event" aria-label="Pending decision"><span className="ft-kicker">Opportunity · {event.source === 'fallback' ? 'Offline fallback' : event.source === 'ai' ? 'AI narrative' : 'Engine event'}</span><h3>{event.title}</h3><p>{event.body}</p><div className="ft-choices">{event.options.map(option => <div key={option.id}><button disabled={!model.editable || task.pending || !!option.disabledReason} onClick={() => void task.send({ kind: 'choose_event', eventId: event.id, optionId: option.id })}>{option.label}</button>{(option.description || option.disabledReason) && <small>{option.disabledReason || option.description}</small>}</div>)}</div>{task.feedback}</section>;
+  const events = model.events ?? (model.event ? [model.event] : []);
+  return <>{events.filter(event => event.building === building).map(event => <Decision key={event.id} event={event} editable={model.editable} onCommand={onCommand} />)}</>;
+}
+function Decision({ event, editable, onCommand }: { event: NonNullable<PanelProps['model']['event']>; editable: boolean; onCommand: PanelProps['onCommand'] }) {
+  const task = useCommand(onCommand);
+  return <section className="ft-card ft-event" aria-label="Pending decision"><span className="ft-kicker">{event.source === 'fallback' ? 'Offline opportunity' : event.source === 'ai' ? 'AI narrative' : 'Engine event'}</span><h3>{event.title}</h3><p>{event.body}</p><div className="ft-choices">{event.options.map(option => <div key={option.id}><button disabled={!editable || task.pending || !!option.disabledReason} onClick={() => void task.send({ kind: 'choose_event', eventId: event.id, optionId: option.id })}>{option.label}</button>{(option.description || option.disabledReason) && <small>{option.disabledReason || option.description}</small>}</div>)}</div>{task.feedback}</section>;
 }

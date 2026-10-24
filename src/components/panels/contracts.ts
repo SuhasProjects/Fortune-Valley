@@ -1,4 +1,4 @@
-/** Presentation-only adapter. Replace its mapping when the canonical domain/store land.
+/** Presentation-only adapter mapped to canonical domain/store by ConnectedBuildingPanel.
  * Values (including totals and pay estimates) must be supplied by engine selectors.
  * This is deliberately NOT a GameState or GameAction definition.
  */
@@ -24,12 +24,13 @@ export interface PanelModel {
   housing: { description: string; rentMonthly: number; essentialsMonthly: number; recurring: { id: string; label: string; amount: number }[] };
   insurance: {
     selected: Partial<Record<Coverage, string>>;
-    plans: { id: string; kind: Coverage; name: string; premiumMonthly: number; deductible: number; coverageLimit: number; assumptions: string; available: boolean }[];
+    plans: { id: string; canonicalPlanId?: string | null; kind: Coverage; name: string; premiumMonthly: number; deductible: number; coverageLimit: number | null; assumptions: string; available: boolean }[];
     claims: HistoryRow[];
     readOnlyPlans?: { id: string; name: string; premiumMonthly: number; deductible: number; coverageDescription: string }[];
   };
   history: Partial<Record<Building, HistoryRow[]>>;
   event?: { id: string; building: Building; title: string; body: string; source: 'engine' | 'ai' | 'fallback'; options: { id: string; label: string; description?: string; disabledReason?: string }[] };
+  events?: NonNullable<PanelModel['event']>[];
 }
 /** Integration intents, not engine actions. The host maps them to canonical actions. */
 export type PanelCommand =
@@ -37,7 +38,7 @@ export type PanelCommand =
   | { kind: 'pay_debt'; debtId: string; amount: number }
   | { kind: 'save_investments'; monthlyAmount: number; allocation: Record<Asset, number> }
   | { kind: 'save_budget'; monthlyAmount: number }
-  | { kind: 'choose_insurance'; coverage: Coverage; planId: string }
+  | { kind: 'choose_insurance'; coverage: Coverage; planId: string | null }
   | { kind: 'choose_event'; eventId: string; optionId: string };
 export type CommandResult = { ok: true; message?: string } | { ok: false; error: string };
 export interface BuildingPanelProps {

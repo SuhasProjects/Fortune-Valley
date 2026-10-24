@@ -19,7 +19,7 @@ function Preview() {
       if (command.kind === 'save_savings') next.savingsContribution.value = command.monthlyAmount;
       if (command.kind === 'save_investments') { next.investmentContribution.value = command.monthlyAmount; next.allocation = command.allocation; }
       if (command.kind === 'save_budget') next.discretionaryBudget.value = command.monthlyAmount;
-      if (command.kind === 'choose_insurance') next.insurance.selected[command.coverage] = command.planId;
+      if (command.kind === 'choose_insurance') next.insurance.selected[command.coverage] = command.planId ?? undefined;
       return next;
     });
     return { ok: true, message: 'Saved to the UI fixture only. No financial simulation is running.' };

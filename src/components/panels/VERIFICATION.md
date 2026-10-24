@@ -1,34 +1,28 @@
 ﻿# Verification — October 24, 2026
 
-## Shared app integration
+Integrated upstream/main c202e0a (Agent 1 canonical engine plus Agent 4 flow) and upstream/frontendpixelart f69c091 (Agent 2 town and dialog shell) into agent3-panels.
 
-Base: main commit a67f79b, fetched from GitHub; local working branch agent3-panels.
+## Commands
 
-From repository root:
+- npm.cmd run typecheck — passed, app and Node/server configuration.
+- npm.cmd test — passed, 31 tests across 5 files.
+- npm.cmd run build — passed, production Vite bundle.
+- npm.cmd run test:browser — passed, 4 tests across desktop 1366x768 and mobile 390x844.
 
-- npm.cmd run typecheck: passed.
-- npm.cmd test: passed, 23 tests across 3 files.
-- npm.cmd run build: passed. Vite emits upstream Framer Motion use-client directive warnings; bundle output succeeds.
+The merged package lock preserves the canonical dependency ranges and adds the existing UI/browser test dependencies. Vite needed permission to read parent directories outside this environment's filesystem sandbox. The missing Playwright Chromium headless shell was installed using the official package's install command.
 
-Panel tests cover all 20 fixture render combinations and all 20 real shared-scenario/building combinations, draft-only edits, pending locks, rejection feedback, event-ID resolution, store persistence, invalid batch rejection with no dispatch, next-month savings, and unavailable engine actions.
+## Financial integration checks
 
-## Browser smoke checks
+All five panels render for all four shared archetypes and all four labeled workshop fixtures. Tests exercise recurring savings transfers over two months, preserved companion contributions, allocation-dependent investment paths under the same seed, invalid market batch rejection without partial dispatch, actual cash/debt reduction, repayment capped at debt balance, insufficient-funds rejection, recurring budget ledger entries, engine-bounded validation, engine-derived pay estimates, and canonical event resolution with replayable effects.
 
-Edge at http://127.0.0.1:5173/:
+Insurance checks use a deterministic medical-cost fixture exceeding the deductible. A policy change does not refund/debit historical premiums; next-month premiums reflect the chosen plan. Insured and uninsured runs sample identical shock kinds and gross costs under the same seed, while insured out-of-pocket cost is lower. An initial test fixture fell below the deductible, correctly producing no insurer payment; the fixture was corrected rather than changing the engine.
 
-1. Launched the shared Entry-Level Worker scenario.
-2. Opened Pine Bank and saw actual store cash ($1,800), savings ($2,200), net worth (-$4,600), debt ($9,200), and saved contribution ($250/month).
-3. Changed savings contribution to $300, saved, and received Policy saved feedback.
-4. Closed the panel and advanced one month using the shared clock.
-5. Reopened Bank: contribution remained $300/month; savings rose to $2,500; debt/cash/net worth reflected the shared engine update.
-6. Unsupported extra debt payment controls were disabled with a visible explanation.
+## Browser checks and visual inspection
 
-Earlier fixture-workshop browser checks also verified investment total validation (110% disables Save, 100% enables it), Home navigation to Insurance, and fixture plan selection persistence. These fixture checks do not prove actual insurance engine functionality.
+Both viewport projects verify all five keyboard-activated building buttons, dialog Tab containment/Escape/focus return/backdrop close, month controls, pause/resume, event badges, notification history, finish/reset, overflow, and no runtime errors. Both also save savings, investment allocation/contribution, and insurance policies through actual UI controls, advance a month, and confirm persistence after reopening buildings.
 
-## Visual and engine limitations
+Updated landing/town/panel screenshots are in docs/screenshots/. The desktop and mobile panel screenshots were visually inspected; the parchment content fits the responsive native dialog and its controls remain accessible through internal scrolling. This supersedes the earlier fixture-only screenshot/mobile verification limitation.
 
-Earlier screenshot capture failed twice with Page.captureScreenshot timeouts; no screenshots were produced or visually inspected. A requested 390px viewport override did not apply (measured viewport stayed 1028px); it was reset. Mobile visual QA remains unverified.
+## Remaining scope
 
-The fetched runtime is explicitly temporary: investment contributions currently all enter ETF despite saved target allocation; investment returns, debt interest, claims, extra payments, insurance changes, and discretionary budgets are not implemented. Panels expose these limitations and disable unsupported controls. Office has no forward tax/pay selectors, so absent estimates remain unavailable. Insurance coverage is displayed as the recorded fraction, not an invented dollar limit.
-
-The shared town dialog still needs Agent 2's full focus management and Escape handling. Its accessible title and close-button label were added during panel integration.
+Live AI credentials were not tested; fallback remains available. Agent 5's chart/reveal module is not present in the fetched branches, so the app retains an accurate plain-text computed Monte Carlo reveal and its renderReveal hook. Cross-browser testing beyond Chromium is not covered.

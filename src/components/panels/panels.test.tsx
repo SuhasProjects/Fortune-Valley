@@ -73,6 +73,6 @@ describe('controlled financial panels', () => {
     render(<BuildingPanel building="bank" model={model} onCommand={onCommand} />);
     fireEvent.change(screen.getByLabelText('Extra payment toward Student loan'), { target: { value: '100' } }); fireEvent.click(screen.getByText('Pay once'));
     await waitFor(() => expect(onCommand).toHaveBeenCalledWith({ kind: 'pay_debt', debtId: 'student-loan', amount: 100 }));
-    expect(model.cash).toBe(2400); expect(model.debts[0].balance).toBe(5000);
+    expect(model.cash).toBe(2400); expect(model.debts[0]!.balance).toBe(5000);
   });
 });
