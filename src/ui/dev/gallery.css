@@ -5,3 +5,5 @@
 .fv-gallery__fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(50 * var(--px))), 1fr)); gap: calc(3 * var(--px)); margin-bottom: calc(4 * var(--px)); }
 .fv-gallery__stage { position: relative; min-height: calc(80 * var(--px)); background: var(--c-grass-shade); margin: 0 calc(-4 * var(--px)); }
 .fv-gallery__stage > .fv-button { position: absolute; top: calc(35 * var(--px)); left: calc(4 * var(--px)); }
+/* Narrow screens: the control bar wraps onto several rows, so the stage grows and the example button sits under the status tag. */
+@media (max-width: 700px) { .fv-gallery__stage { min-height: calc(120 * var(--px)); } .fv-gallery__stage > .fv-button { top: calc(28 * var(--px)); } }
