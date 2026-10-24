@@ -1,7 +1,7 @@
 ﻿import type { BuildingId } from '../../types/domain'
 import { buildingIds, buildings } from './buildings'
 
-export const TOWN_ART = '/assets/town-valley-v2.png'
+export const TOWN_ART = '/assets/town-valley-v3.png'
 
 // Both the map and the card portraits reference the same original raster artwork.
 // Crops use a normalized 1536 x 1024 coordinate space, not separate sprite assets.
