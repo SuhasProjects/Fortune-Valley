@@ -1,0 +1,18 @@
+size 16x16
+--- 0
+hhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhh
+hhjhhhhhhhhhhhhh
+hjjjhhhhhhhhhhhh
+hhhhhhhhhhhhhhhh
+hhhhhhhhhhHhhhhh
+hhhhhhhhhHHHhhhh
+hhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhh
+hhhhhhhhhhhhhhhh
+hhhhhhhhhhhhjhhh
+hhhhhhhhhhhjjjhh
+hhhhhhhhhhhhhhhh
+hhhHhhhhhhhhhhhh
+hhHHHhhhhhhhhhhh
+hhhhhhhhhhhhhhhh
