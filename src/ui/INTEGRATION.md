@@ -38,8 +38,8 @@ closes on Escape/backdrop click, restores focus and locks body scrolling.
 The close button is named `Close panel`. Number fields forward native input props,
 including caller-provided `aria-label`. Select/Slider/Toggle callbacks receive values.
 
-Legacy CSS and `PixelArt.tsx` are retained because existing screens still import
-them. Remove those only after their consumers migrate, during Agent 1's cleanup.
+`PixelArt.tsx` is gone and `world.css` / `pixel-tokens.css` only keep the legacy classes and
+`--ft-*` tokens that panels, flow and charts still reference. Remove the rest when those migrate.
 
 ## Validation
 

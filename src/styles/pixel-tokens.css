@@ -41,18 +41,7 @@
   --ft-font-body: 'Press Start 2P', 'VT323', ui-monospace, monospace;
 }
 
-.pixel-border {
-  border: var(--px2) solid var(--ft-border);
-  box-shadow: inset 0 0 0 var(--pixel) var(--ft-panel-dark);
-  border-radius: 0;
-}
 .pixel-panel {
   background: var(--ft-panel);
   color: var(--ft-ink);
 }
-.pixel-icon {
-  width: 64px;
-  height: 64px;
-  image-rendering: pixelated;
-}
-.pixel-sprite { image-rendering: pixelated; image-rendering: crisp-edges; }
