@@ -1,7 +1,7 @@
 // Ground layer: art-src/world/ground-mask.txt (materials) -> public/art/world/ground.png (static) and
 // water.png (3-frame sheet of only the water pixels). Textures are seeded noise per material; an edge pass adds
 // the reference's path rims, bank steps and plaza outline. Deterministic. Owner: Agent 1.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { paletteMap, parseGrid, pngBytes, renderSheet } from './grid.mjs';
 import { loadPalette } from './palette.mjs';
@@ -74,19 +74,25 @@ export function buildGround(mask) {
   return { ground: { name: '0', rows: staticRows }, water: waterFrames, w: W, h: H };
 }
 
+/** Every ground mask: `<folder>/ground-mask.txt` → `public/art/<folder>/ground.png` + `water.png`, manifest `<folder>/ground|water`. */
+export const GROUNDS = ['world', 'title'];
+
 export function writeGround(root) {
   const palette = paletteMap(loadPalette());
-  const parsed = parseGrid(readFileSync(join(root, 'art-src/world/ground-mask.txt'), 'utf8'), palette, 'art-src/world/ground-mask.txt');
-  for (const row of parsed.frames[0].rows) for (const k of row) if (!MATERIAL_KEYS.has(k)) throw new Error(`ground-mask.txt: "${k}" is not a material key (h a s u w j)`);
-  const built = buildGround(parsed.frames[0].rows);
-  const out = join(root, 'public/art/world');
-  mkdirSync(out, { recursive: true });
-  writeFileSync(join(out, 'ground.png'), pngBytes(renderSheet([built.ground], palette)));
-  writeFileSync(join(out, 'water.png'), pngBytes(renderSheet(built.water, palette)));
-  const entries = {
-    'world/ground': { src: '/art/world/ground.png', w: built.w, h: built.h, frames: ['0'] },
-    'world/water': { src: '/art/world/water.png', w: built.w, h: built.h, frames: built.water.map((f) => f.name), speed: WATER_SPEED },
-  };
-  for (const [name, entry] of Object.entries(entries)) writeFileSync(join(out, `${name.split('/')[1]}.json`), `${JSON.stringify(entry, null, 2)}\n`);
+  const entries = {};
+  for (const folder of GROUNDS) {
+    const maskPath = `art-src/${folder}/ground-mask.txt`;
+    if (!existsSync(join(root, maskPath))) continue;
+    const parsed = parseGrid(readFileSync(join(root, maskPath), 'utf8'), palette, maskPath);
+    for (const row of parsed.frames[0].rows) for (const k of row) if (!MATERIAL_KEYS.has(k)) throw new Error(`${maskPath}: "${k}" is not a material key (h a s u w j)`);
+    const built = buildGround(parsed.frames[0].rows);
+    const out = join(root, `public/art/${folder}`);
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'ground.png'), pngBytes(renderSheet([built.ground], palette)));
+    writeFileSync(join(out, 'water.png'), pngBytes(renderSheet(built.water, palette)));
+    entries[`${folder}/ground`] = { src: `/art/${folder}/ground.png`, w: built.w, h: built.h, frames: ['0'] };
+    entries[`${folder}/water`] = { src: `/art/${folder}/water.png`, w: built.w, h: built.h, frames: built.water.map((f) => f.name), speed: WATER_SPEED };
+    for (const name of ['ground', 'water']) writeFileSync(join(out, `${name}.json`), `${JSON.stringify(entries[`${folder}/${name}`], null, 2)}\n`);
+  }
   return entries;
 }

@@ -9,34 +9,10 @@ const sprites = {
       "0"
     ]
   },
-  "title/cottage-blue": {
-    "src": "/art/title/cottage-blue.png",
-    "w": 24,
-    "h": 20,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/cottage": {
-    "src": "/art/title/cottage.png",
-    "w": 24,
-    "h": 20,
-    "frames": [
-      "0"
-    ]
-  },
   "title/favicon": {
     "src": "/art/title/favicon.png",
     "w": 16,
     "h": 16,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/flowers": {
-    "src": "/art/title/flowers.png",
-    "w": 64,
-    "h": 12,
     "frames": [
       "0"
     ]
@@ -49,38 +25,6 @@ const sprites = {
       "0"
     ]
   },
-  "title/meadow": {
-    "src": "/art/title/meadow.png",
-    "w": 16,
-    "h": 16,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/mountain-far": {
-    "src": "/art/title/mountain-far.png",
-    "w": 128,
-    "h": 64,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/mountain-mid": {
-    "src": "/art/title/mountain-mid.png",
-    "w": 128,
-    "h": 48,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/mountain-near": {
-    "src": "/art/title/mountain-near.png",
-    "w": 128,
-    "h": 40,
-    "frames": [
-      "0"
-    ]
-  },
   "title/parent": {
     "src": "/art/title/parent.png",
     "w": 32,
@@ -88,22 +32,6 @@ const sprites = {
     "frames": [
       "0",
       "1"
-    ]
-  },
-  "title/path": {
-    "src": "/art/title/path.png",
-    "w": 48,
-    "h": 48,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/pine": {
-    "src": "/art/title/pine.png",
-    "w": 20,
-    "h": 32,
-    "frames": [
-      "0"
     ]
   },
   "title/pointer": {
@@ -133,6 +61,38 @@ const sprites = {
       "2"
     ]
   },
+  "title/scene/hills": {
+    "src": "/art/title/scene/hills.png",
+    "w": 480,
+    "h": 44,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/scene/mountains-far": {
+    "src": "/art/title/scene/mountains-far.png",
+    "w": 480,
+    "h": 70,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/scene/mountains-mid": {
+    "src": "/art/title/scene/mountains-mid.png",
+    "w": 480,
+    "h": 60,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/scene/sky": {
+    "src": "/art/title/scene/sky.png",
+    "w": 480,
+    "h": 146,
+    "frames": [
+      "0"
+    ]
+  },
   "title/sign-small": {
     "src": "/art/title/sign-small.png",
     "w": 120,
@@ -145,14 +105,6 @@ const sprites = {
     "src": "/art/title/sign.png",
     "w": 200,
     "h": 56,
-    "frames": [
-      "0"
-    ]
-  },
-  "title/sky-dither": {
-    "src": "/art/title/sky-dither.png",
-    "w": 4,
-    "h": 4,
     "frames": [
       "0"
     ]
@@ -1522,6 +1474,25 @@ const sprites = {
   },
   "world/water": {
     "src": "/art/world/water.png",
+    "w": 480,
+    "h": 288,
+    "frames": [
+      "0",
+      "1",
+      "2"
+    ],
+    "speed": 400
+  },
+  "title/ground": {
+    "src": "/art/title/ground.png",
+    "w": 480,
+    "h": 288,
+    "frames": [
+      "0"
+    ]
+  },
+  "title/water": {
+    "src": "/art/title/water.png",
     "w": 480,
     "h": 288,
     "frames": [

@@ -1,0 +1,11 @@
+{
+  "src": "/art/title/water.png",
+  "w": 480,
+  "h": 288,
+  "frames": [
+    "0",
+    "1",
+    "2"
+  ],
+  "speed": 400
+}
