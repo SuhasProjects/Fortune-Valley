@@ -40,7 +40,7 @@ const snap = (s: GameState): MonthSnapshot => ({
 export function previewMonth(state: GameState, overrides: PreviewOverrides): MonthPreview {
   const rejected: string[] = [];
   let s: GameState = structuredClone(state);
-  if (s.status === 'finished') s.status = 'playing';
+  if (s.status === 'finished' || s.status === 'paused' || s.status === 'setup') s.status = 'playing';
   const tryAction = (label: string, a: Parameters<typeof applyAction>[1]) => {
     const r = applyAction(s, a);
     if (r.ok) s = r.state; else rejected.push(`${label}: ${r.message}`);
@@ -59,7 +59,7 @@ export function previewMonth(state: GameState, overrides: PreviewOverrides): Mon
     if (v !== undefined) tryAction(`${line} insurance`, { type: 'set_insurance', line, planId: v });
   }
   const base = structuredClone(state);
-  if (base.status === 'finished') base.status = 'playing';
+  if (base.status === 'finished' || base.status === 'paused' || base.status === 'setup') base.status = 'playing';
   const baseline = snap(advanceMonth(base, { lean: true, inPlace: true }));
   const withChange = snap(advanceMonth(s, { lean: true, inPlace: true }));
   return {
@@ -74,4 +74,38 @@ export function previewMonth(state: GameState, overrides: PreviewOverrides): Mon
     },
     rejected,
   };
+}
+
+/**
+ * Multi-month what-if (for "12-month runway" style previews). Deterministic: both
+ * paths use the game's own seed streams, so they differ only by the overrides.
+ * Returns one snapshot per month for each path (index 0 = after month 1).
+ */
+export function previewHorizon(state: GameState, overrides: PreviewOverrides, months = 12): { baseline: MonthSnapshot[]; withChange: MonthSnapshot[]; rejected: string[]; monthsUntilShortfall: { baseline: number | null; withChange: number | null } } {
+  const first = previewMonth(state, overrides);
+  const run = (apply: boolean): MonthSnapshot[] => {
+    let s: GameState = structuredClone(state);
+    if (s.status !== 'playing') s.status = 'playing';
+    if (apply) {
+      const p = overrides.policy ?? {};
+      s.policy = { ...s.policy, ...p, targetAllocation: p.targetAllocation ?? s.policy.targetAllocation };
+      if (overrides.household) s.household = { ...s.household, ...overrides.household };
+      if (overrides.insurance) {
+        s.insurance = { ...s.insurance, ...overrides.insurance };
+        s.policy.insurancePlanIds = { ...s.policy.insurancePlanIds, ...overrides.insurance };
+      }
+    }
+    s.durationMonths = s.monthIndex + Math.max(1, months);
+    const out: MonthSnapshot[] = [];
+    for (let i = 0; i < months; i++) {
+      s = advanceMonth(s, { lean: true, inPlace: true });
+      out.push(snap(s));
+    }
+    return out;
+  };
+  const baseline = run(false);
+  // Only apply overrides the single-month preview accepted (same validation path).
+  const withChange = first.rejected.length ? baseline : run(true);
+  const firstShort = (arr: MonthSnapshot[]) => { const i = arr.findIndex((m) => m.shortfall); return i === -1 ? null : i + 1; };
+  return { baseline, withChange, rejected: first.rejected, monthsUntilShortfall: { baseline: firstShort(baseline), withChange: firstShort(withChange) } };
 }

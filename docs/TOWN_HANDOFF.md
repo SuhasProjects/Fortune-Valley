@@ -1,34 +1,32 @@
-# Integration update — Agent 3
+# Town and interface handoff
 
-The original branch notes below describe f69c091. The integrated panel branch now uses canonical BuildingId, the real engine/store, connected panels, and a computed plain-text Monte Carlo reveal. App retains panels/renderReveal extension points. Typecheck/build, 61 unit tests, and 4 desktop/mobile browser checks pass. See ../src/components/panels/README.md and VERIFICATION.md for current contracts.
+## Whole-site design
 
-# Agent 2: town and app shell
+`src/styles/world.css` is the active interface stylesheet, imported by `src/styles/index.css` after Tailwind, the locally bundled Pixelify Sans / VT323 fonts, and shared `pixel-tokens.css`. It replaces the earlier layered town/valley/illustrated stylesheets. No font network requests are made at runtime.
 
-## Integration points
+The visual language is inspired by cozy pixel-art games, with an original layout: an ambient pixel landscape, hanging wooden title sign, character save slots, a two-page question journal, inventory-style HUD, framed game buttons, centered wooden dialog headers, ruled financial journals, activity notes, and matching results presentation. All text, controls and menus remain accessible HTML. The style reference is inspiration, not a requirement to reproduce another game's composition.
 
-- `TownScene({ onBuildingClick, eventBuildings?, eventBuilding? })` uses the canonical `BuildingId`: `bank`, `office`, `home`, `hospital`, `market`. `eventBuildings` supports multiple active events; the singular prop remains supported for existing callers. Its five native buttons carry both sprite and label; the hotspot cannot drift away from its art. Percentage positions live in `components/town/buildings.ts`.
-- `PanelHost({ building?, title?, onClose, children })` is a native modal dialog. Escape, close button, and clicks outside the dialog close it. Native modal behavior contains keyboard focus; unmount returns focus to the opener. Body scrolling is locked while mounted. Desktop width is 500px including borders, inner padding 24px; mobile has 8px viewport margins and 18px inner padding. Contents scroll within the dialog. Do not use fixed child widths.
-- `GameShell({ children, topBar?, toasts? })` provides the responsive container and persistent simulation disclaimer. Notifications are in document flow below map and time controls, never covering hotspots. Agent 4's `NotificationStack` limits visibility to three; history now has an accessible host.
-- `App({ panels?, renderReveal? })`: Agent 3 can supply a partial `Record<BuildingId, ReactNode>` of controlled panels. Use a wrapper subscribed to the store so props remain current. Agent 5 supplies `renderReveal(FinishPayload)` using the type exported by `stores/useGameStore.ts`; the default shows actual observed net worth and computed Monte Carlo summary, quantiles, risks, and assumptions. Percentiles appear only when the engine supplies them for matching horizons. The chart remains Agent 5's integration slot. `?dev=engine` preserves main's engine harness.
+`components/layout/PixelArt.tsx` supplies original code-native character portraits, context icons, and the ambient landscape. `BuildingOverview.tsx` shows read-only canonical store values when a controlled building panel has not been supplied. It contains no simulation math.
 
-## State boundaries
+## Integration contracts
 
-All launch/time/pause/event/finish controls call Agent 4's store backed by Agent 1's canonical engine. HUD uses its net-worth and debt selectors. No simulation math is introduced here. Money uses the existing USD formatter. Finishing at the duration limit exposes a review button to request the store's finish payload. Events come from `activeEvents`; option IDs dispatch `apply_event_option`. Store validation errors are surfaced.
+- `TownScene({ onBuildingClick, eventBuildings?, eventBuilding? })` uses canonical `BuildingId` values (`bank`, `office`, `home`, `hospital`, `market`). The five native buttons carry accessible labels and visible focus. Multiple event markers are supported.
+- `PanelHost({ building?, title?, onClose, children })` uses a native modal dialog with Tab containment, Escape, outside-click and close-button handling. Unmount restores opener focus; body scroll is locked. The dialog is centered, up to 620px wide including borders, with 25px content padding. Mobile uses 12px viewport margins and 18px content padding. Content scrolls within its viewport limit; children must not impose fixed widths.
+- `GameShell({ children, topBar?, toasts? })` owns the ambient world, responsive container, skip link and persistent disclaimer. Notifications remain below the controls without covering the map.
+- `App({ panels?, renderReveal? })` accepts a partial `Record<BuildingId, ReactNode>` for Agent 3's controlled panels. Use a store-subscribed wrapper to keep props current. Agent 5 mounts via `renderReveal(FinishPayload)`; the payload type comes from `stores/useGameStore.ts`. Default results show the actual computed Monte Carlo summary, assumptions and risks. Percentiles only appear when supplied by the engine for matching horizons. `?dev=engine` preserves the engine harness.
 
-The integration retains main's full financial engine, server-side AI gateway, Vite development middleware, environment template, fixtures and engine/API tests. Personalized prompts use the gateway when available and its local fallback otherwise; the UI describes this data flow. Detailed panel modules remain labeled integration slots. No external art, font requests, or client-side credentials were added.
+## State and artwork
 
-## Design system
+All scenario, time, event, pause and finish controls call the existing store. HUD values use canonical debt/net-worth selectors. Building summaries read canonical state. The AI gateway and local fallback remain unchanged. No client-side credentials are introduced.
 
-The original raster backdrop `public/assets/town-valley-v1.png` was generated with the built-in imagegen tool using the user's farm screenshot as a style reference. The full prompt is beside it in `town-valley-v1.prompt.md`. No game assets or reference screenshots are redistributed. The 1536 x 1024 art is shown at its 3:2 aspect ratio without cropping or stretching; hotspot coordinates in `buildings.ts` match the inspected output. `BuildingSprite` uses SVG viewports to display building portraits from this same image. The cozy valley theme in `styles/valley.css` gives all panels, HUD, controls, notifications and graph defaults warm parchment surfaces, wooden borders, square corners, hard shadows, monospace text, and `--pixel: 4px`. No font download is needed. Graph colors: `--chart-grid`, `--chart-observed`, `--chart-positive`, `--chart-negative`. Future Recharts surfaces inherit crisp edges and monospace text; Agent 5 should disable chart animation for reduced motion and avoid smoothing pixel-styled lines.
+The functional town uses `public/assets/town-valley-v1.png`, an original imagegen backdrop. Its full generation prompt is saved beside it. The user's reference screenshot is not redistributed. The image keeps its 3:2 ratio; percentage hit areas in `buildings.ts` follow the inspected art on both phone and desktop. The landing page uses the original pixel landscape and portraits rather than embedding a town image as its design.
 
-Map height follows the fixed 3:2 artwork ratio at every viewport, with a minimum 44px hotspot height on phones. The page scrolls vertically when required. `styles/illustrated-town.css` preserves the same map coordinates on desktop and mobile. All interactive controls retain visible focus. Motion is subtle and disabled by `prefers-reduced-motion`.
+Shared `--ft-*` palette/chart tokens remain available. Active graphs inherit the same pixel typography and crisp edges. Agent 5 should respect reduced motion and keep assumptions legible.
 
-## Local commands
+## Verification
 
-`npm install`, `npm run dev`, `npm run typecheck`, `npm test`, `npm run build`.
+Commands: `npm install`, `npm run dev`, `npm run typecheck`, `npm test`, `npm run build`.
 
-On PowerShell with script execution disabled, use `npm.cmd` instead of `npm`.
+PowerShell may require `npm.cmd`. Browser QA: `npx playwright install chromium`, then `npm run test:browser`. Tests start a fresh Vite server on port 5175 to avoid silently reusing stale preview styles. Normal user preview uses port 5173.
 
-Browser QA: `npx playwright install chromium`, then `npm run test:browser`. The Playwright config starts Vite automatically. Tests cover 1366×768 desktop and 390×844 phone layouts, five keyboard-activated buildings, dialog Tab containment / Escape / focus return / backdrop close, HUD ticks, pause/resume, decision badges, notification history, finish/reset, overflow, and runtime errors. Screenshots from both viewports are in `docs/screenshots/`.
-
-Validation after merging main: TypeScript (client and server), production build, 40 Vitest tests, and both Chromium browser projects pass. Browser tests stub the AI gateway as unavailable to verify the offline fallback. Other browser engines have not been checked. The merged dependency versions retain npm audit advisories (Anthropic SDK memory helpers and Vitest tooling); this merge does not introduce unrelated dependency major-version upgrades.
+Typecheck, all 40 Vitest tests, build, and desktop/mobile Chromium smoke tests pass. Browser checks cover fonts/styles being loaded, all five pointer/keyboard targets, focus containment/return, Escape/backdrop close, HUD month ticks, pause/resume, activity history, offline opportunities, computed results, reset, overflow and runtime errors. Updated landing/town/panel/results screenshots are in `docs/screenshots/` at 1366x768 and 390x844. Other browser engines have not been checked.

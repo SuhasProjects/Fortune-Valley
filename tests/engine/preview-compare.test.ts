@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { archetypeConfig } from '@/config/archetypes';
-import { advanceMonth, applyAction, compareWithBaseline, createGame, hasPolicyDecisions, histogram, previewMonth } from '@/engine';
+import { advanceMonth, applyAction, compareWithBaseline, createGame, hasPolicyDecisions, histogram, previewHorizon, previewMonth, selectPaySummary } from '@/engine';
 import { allowRequest } from '../../api/_lib/rateLimit';
 import { handleAiRequest } from '../../api/_lib/handler';
 
@@ -14,6 +14,26 @@ describe('previewMonth', () => {
     expect(p.rejected).toEqual([]);
     expect(p.delta.netWorth).toBeCloseTo(s.household.discretionaryMonthly - 50, 0);
     expect(p.withChange.investments).toBeCloseTo(p.baseline.investments, 1); // same returns, same contributions
+  });
+  it('works on paused games and over a 12-month horizon', () => {
+    let s = createGame(archetypeConfig('young_family', 9));
+    s = advanceMonth(s);
+    s = applyAction(s, { type: 'pause' }).state;
+    const one = previewMonth(s, { household: { discretionaryMonthly: 0 } });
+    expect(one.baseline.netWorth).not.toBe(one.withChange.netWorth);
+    const h = previewHorizon(s, { household: { discretionaryMonthly: 0 } }, 12);
+    expect(h.baseline).toHaveLength(12);
+    expect(h.withChange[11]!.netWorth - h.baseline[11]!.netWorth).toBeGreaterThan(12 * 400 * 0.9);
+    expect(h.rejected).toEqual([]);
+  });
+  it('pay summary matches the engine withholding', () => {
+    const s = createGame(archetypeConfig('entry_worker', 1));
+    const p = selectPaySummary(s);
+    expect(p.grossMonthly).toBeCloseTo(58000 / 12, 1);
+    expect(p.takeHomeMonthly).toBeCloseTo(p.grossMonthly - p.withholdingMonthly, 2);
+    expect(p.note).toMatch(/Illustrative/);
+    const u = { ...s, employment: { ...s.employment, status: 'unemployed' as const } };
+    expect(selectPaySummary(u).takeHomeMonthly).toBe(0);
   });
   it('reports rejected overrides instead of throwing', () => {
     const s = createGame(archetypeConfig('professional', 1));

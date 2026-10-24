@@ -59,7 +59,7 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 
 ## What-if preview (for panels)
 
-`previewMonth(state, { policy?, household?, insurance? })` runs one month with the change and one without, under the same seed streams, and returns `baseline`, `withChange`, `delta` and any `rejected` overrides. Pure and cheap (~1 ms); call it on every form change to show "next month this would …".
+`previewMonth(state, { policy?, household?, insurance? })` runs one month with the change and one without, under the same seed streams, and returns `baseline`, `withChange`, `delta` and any `rejected` overrides. Pure and cheap (~1 ms); call it on every form change to show "next month this would …". `previewHorizon(state, overrides, 12)` does the same over N months and reports `monthsUntilShortfall` for each path (the "12-month runway" preview Agent 3's MISSING.md asked for). `selectPaySummary(state)` gives gross, income-tax, payroll, total withholding and take-home per month for the Office panel.
 
 ## Reveal extras (Agent 5)
 
