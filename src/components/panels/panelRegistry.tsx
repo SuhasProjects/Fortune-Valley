@@ -1,15 +1,16 @@
-import type { BuildingPanelProps } from './contracts';
-import { BankPanel } from './BankPanel';
-import { MarketPanel } from './MarketPanel';
-import { OfficePanel } from './OfficePanel';
-import { HomePanel } from './HomePanel';
-import { InsurancePanel } from './InsurancePanel';
-import './panels.css';
-export const panelRegistry = { bank: BankPanel, market: MarketPanel, office: OfficePanel, home: HomePanel, insurance: InsurancePanel };
-/** Content only. Town's PanelHost owns dialog semantics, Escape, close, and focus restoration.
- * Keying by building prevents pending feedback/drafts leaking between buildings.
- */
-export function BuildingPanel({ building, ...props }: BuildingPanelProps) {
+﻿import type { ComponentType } from 'react';
+import type { BuildingId } from '../../types/domain';
+import type { BuildingPanelProps, PanelProps } from './panelTypes';
+import { BankPanel } from './canonical/BankPanel';
+import { MarketPanel } from './canonical/MarketPanel';
+import { InsurancePanel } from './canonical/InsurancePanel';
+import { HomePanel } from './canonical/HomePanel';
+import { OfficePanel } from './canonical/OfficePanel';
+
+export const panelRegistry: Record<BuildingId, ComponentType<PanelProps>> = {
+  bank: BankPanel, market: MarketPanel, hospital: InsurancePanel, home: HomePanel, office: OfficePanel
+};
+export function BuildingPanel({ building, state, dispatch }: BuildingPanelProps) {
   const Panel = panelRegistry[building];
-  return <div>{props.model.integrationNotes?.length ? <aside className="ft-panel" aria-label="Prototype limitations">{props.model.integrationNotes.map(note => <p key={note}>{note}</p>)}</aside> : null}<Panel key={building} {...props} /></div>;
+  return <Panel key={building} state={state} dispatch={dispatch} />;
 }

@@ -3,7 +3,7 @@
  * during integration — no math lives here). Calls engine functions only.
  */
 import { create } from 'zustand';
-import { advanceMonth, applyAction, compareWithBaseline, createGame, runMonteCarlo, netWorthOf, shouldRequestOpportunity, summarizeForAi } from '@/engine';
+import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
 import { explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 
@@ -29,6 +29,10 @@ export interface GameStore {
   aiStatus: 'idle' | 'loading' | 'online' | 'offline';
   finishPayload: FinishPayload | null;
   requestVersion: number;
+  /** Set when a valid save exists in storage (checked on load and after saves). */
+  savedGame: { savedAt: string; title: string; monthIndex: number } | null;
+  /** Injectable for tests; null = no persistence available. */
+  storage: KeyValueStorage | null;
 
   startGame(config: GameConfig): void;
   advanceOneMonth(): void;
@@ -44,10 +48,30 @@ export interface GameStore {
   requestOpportunity(): Promise<void>;
   /** Ask the AI (or offline template) to explain the finish payload; fills finishPayload.explanation. */
   requestExplanation(question?: string): Promise<void>;
+  /** Mid-game "explain this" for a salient event or player question; no Monte Carlo involved. */
+  requestInsight(question: string): Promise<{ text: string; source: 'ai' | 'fallback' } | null>;
+  lastInsight: { monthIndex: number; question: string; text: string; source: 'ai' | 'fallback' } | null;
   finishGame(): void;
   resetGame(): void;
   generatePersonalized(prompt: string, numbers?: Omit<PersonalizedInput, 'freeText'>): Promise<PersonalizationResult>;
+  /** Persist the current run (one slot, schema-versioned). Returns false if storage is unavailable. */
+  saveGame(): boolean;
+  /** Restore the saved run; returns false (and clears a corrupt save) when nothing valid is stored. */
+  loadSavedGame(): boolean;
+  clearSavedGame(): void;
+  /** Re-read storage to refresh `savedGame` (call once on app start). */
+  refreshSavedGame(): void;
 }
+
+const readSaveMeta = (storage: KeyValueStorage | null): GameStore['savedGame'] => {
+  if (!storage) return null;
+  try {
+    const parsed = parseSave(storage.getItem(SAVE_STORAGE_KEY));
+    return parsed.ok ? { savedAt: parsed.save.savedAt, title: parsed.save.config.title, monthIndex: parsed.save.state.monthIndex } : null;
+  } catch {
+    return null;
+  }
+};
 
 export const useGameStore = create<GameStore>((set, get) => ({
   game: null,
@@ -61,6 +85,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   aiStatus: 'idle',
   finishPayload: null,
   requestVersion: 0,
+  savedGame: null,
+  storage: defaultStorage(),
+  lastInsight: null,
 
   startGame: (config) => {
     const game = createGame(config);
@@ -85,6 +112,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game || game.status !== 'playing') return;
     const next = advanceMonth(game);
     set({ game: next });
+    get().saveGame();
     if (shouldRequestOpportunity(game, next)) {
       void get().requestOpportunity();
     }
@@ -129,6 +157,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  requestInsight: async (question) => {
+    const { game, config, requestVersion } = get();
+    if (!game || !config) return null;
+    const q = question.trim().slice(0, 500);
+    if (!q) return null;
+    const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
+    const result = await explainOutcome(summary, q);
+    if (get().requestVersion !== requestVersion) return null;
+    const insight = { monthIndex: game.monthIndex, question: q, text: result.text, source: result.source };
+    set({ lastInsight: insight, aiStatus: result.source === 'ai' ? 'online' : 'offline' });
+    return { text: result.text, source: result.source };
+  },
+
   requestExplanation: async (question = 'What do these results mean for my strategy?') => {
     const { finishPayload, config, requestVersion } = get();
     if (!finishPayload || !config) return;
@@ -152,7 +193,34 @@ export const useGameStore = create<GameStore>((set, get) => ({
     void get().requestExplanation();
   },
 
-  resetGame: () => set((s) => ({ game: null, config: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
+  saveGame: () => {
+    const { game, config, storage } = get();
+    if (!game || !config || !storage) return false;
+    try {
+      storage.setItem(SAVE_STORAGE_KEY, serializeSave(config, game));
+      set({ savedGame: { savedAt: new Date().toISOString(), title: config.title, monthIndex: game.monthIndex } });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  loadSavedGame: () => {
+    const { storage } = get();
+    if (!storage) return false;
+    let parsed: ReturnType<typeof parseSave>;
+    try { parsed = parseSave(storage.getItem(SAVE_STORAGE_KEY)); } catch { return false; }
+    if (!parsed.ok) { get().clearSavedGame(); return false; }
+    const { config, state } = parsed.save;
+    set((s) => ({ config: structuredClone(config), game: structuredClone(state), finishPayload: null, openBuildingId: null, timelineOpen: false, historyOpen: false, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1, savedGame: { savedAt: parsed.save.savedAt, title: config.title, monthIndex: state.monthIndex } }));
+    return true;
+  },
+  clearSavedGame: () => {
+    try { get().storage?.removeItem(SAVE_STORAGE_KEY); } catch { /* ignore */ }
+    set({ savedGame: null });
+  },
+  refreshSavedGame: () => set((s) => ({ savedGame: readSaveMeta(s.storage) })),
+
+  resetGame: () => set((s) => ({ game: null, config: null, lastInsight: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
 
   generatePersonalized: async (prompt, numbers = {}) => {
     const clean = prompt.trim();

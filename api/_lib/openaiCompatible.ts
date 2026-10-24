@@ -21,7 +21,14 @@ export class UpstreamError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 
-const stripFences = (s: string): string => s.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+const stripFences = (s: string): string => {
+  const t = s.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  if (t.startsWith('{')) return t;
+  // Models sometimes wrap JSON in prose; take the outermost object.
+  const first = t.indexOf('{');
+  const last = t.lastIndexOf('}');
+  return first >= 0 && last > first ? t.slice(first, last + 1) : t;
+};
 
 export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelClient {
   const f = o.fetchImpl ?? fetch;
@@ -29,12 +36,21 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (o.authHeader === 'api-key') headers['Api-Key'] = o.apiKey; else headers['Authorization'] = `Bearer ${o.apiKey}`;
 
+  /** Some OpenAI-compatible servers reject `response_format`; remember that and stop sending it. */
+  let supportsResponseFormat = true;
+
   async function chat(messages: { role: 'system' | 'user' | 'assistant'; content: string }[], maxTokens: number): Promise<{ text: string; finish: string | null }> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), o.timeoutMs ?? 25_000);
     try {
-      const res = await f(url, { method: 'POST', headers, signal: ctrl.signal, body: JSON.stringify({ model: o.model, max_tokens: maxTokens, temperature: 0.2, response_format: { type: 'json_object' }, messages }) });
-      const body = (await res.json().catch(() => null)) as { choices?: { message?: { content?: string | null }; finish_reason?: string | null }[]; error?: { message?: string } | string } | null;
+      const send = (withFormat: boolean) => f(url, { method: 'POST', headers, signal: ctrl.signal, body: JSON.stringify({ model: o.model, max_tokens: maxTokens, temperature: 0.2, ...(withFormat ? { response_format: { type: 'json_object' } } : {}), messages }) });
+      let res = await send(supportsResponseFormat);
+      let body = (await res.json().catch(() => null)) as { choices?: { message?: { content?: string | null }; finish_reason?: string | null }[]; error?: { message?: string } | string } | null;
+      if (res.status === 400 && supportsResponseFormat && /response_format|json_object/i.test(JSON.stringify(body ?? ''))) {
+        supportsResponseFormat = false;
+        res = await send(false);
+        body = (await res.json().catch(() => null)) as typeof body;
+      }
       if (!res.ok) throw new UpstreamError(res.status, typeof body?.error === 'string' ? body.error : body?.error?.message ?? `HTTP ${res.status}`);
       const choice = body?.choices?.[0];
       return { text: choice?.message?.content ?? '', finish: choice?.finish_reason ?? null };

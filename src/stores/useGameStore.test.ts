@@ -88,6 +88,41 @@ describe('game store', () => {
     expect(payload.explanation?.text).toMatch(/median ending net worth/i);
     expect(payload.explanation?.text).toMatch(/illustrative/);
   });
+  it('saves after each month and restores an identical run; corrupt saves are discarded', () => {
+    const mem = new Map<string, string>();
+    const storage = { getItem: (k: string) => mem.get(k) ?? null, setItem: (k: string, v: string) => { mem.set(k, v); }, removeItem: (k: string) => { mem.delete(k); } };
+    useGameStore.setState({ storage });
+    useGameStore.getState().startGame(scenarios[1]!);
+    useGameStore.getState().dispatchAction({ type: 'set_budget', discretionaryMonthly: 123 });
+    for (let i = 0; i < 4; i++) useGameStore.getState().advanceOneMonth();
+    const before = useGameStore.getState().game!;
+    expect(useGameStore.getState().savedGame?.monthIndex).toBe(4);
+    useGameStore.getState().resetGame();
+    useGameStore.setState({ storage });
+    expect(useGameStore.getState().loadSavedGame()).toBe(true);
+    const after = useGameStore.getState().game!;
+    expect(after).toEqual(before);
+    expect(after.household.discretionaryMonthly).toBe(123);
+    useGameStore.getState().advanceOneMonth();
+    expect(useGameStore.getState().game!.monthIndex).toBe(5);
+    // Tampered balance no longer reconciles → rejected and cleared.
+    const raw = JSON.parse(mem.get('financial-town:save:v1')!);
+    raw.state.cash += 1000;
+    mem.set('financial-town:save:v1', JSON.stringify(raw));
+    useGameStore.getState().resetGame();
+    useGameStore.setState({ storage });
+    expect(useGameStore.getState().loadSavedGame()).toBe(false);
+    expect(mem.has('financial-town:save:v1')).toBe(false);
+    useGameStore.setState({ storage: null });
+  });
+  it('answers a mid-game question with a labeled explanation', async () => {
+    useGameStore.getState().startGame(scenarios[3]!);
+    useGameStore.getState().advanceOneMonth();
+    const r = await useGameStore.getState().requestInsight('Why is my cash going down?');
+    expect(r?.source).toBe('fallback');
+    expect(r?.text).toMatch(/illustrative/);
+    expect(useGameStore.getState().lastInsight?.monthIndex).toBe(1);
+  });
   it('does not retain personalized free text in game state', async () => {
     const privateText = 'my private details about a student loan';
     const result = await useGameStore.getState().generatePersonalized(privateText);

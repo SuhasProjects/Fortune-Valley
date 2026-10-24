@@ -47,6 +47,17 @@ describe('OpenAI-compatible provider', () => {
       expect(r.body).toMatchObject({ code });
     }
   });
+  it('falls back to no response_format when the server rejects it, and extracts JSON wrapped in prose', async () => {
+    const { makeOpenAiCompatibleClient } = await import('../../api/_lib/openaiCompatible');
+    const { impl, calls } = fakeFetch([{ status: 400, body: { error: { message: 'response_format is not supported' } } }, 'Sure! Here is the JSON: {"text":"Median ending net worth was fine."} Hope that helps.']);
+    const client = makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: 'k', model: env.AI_MODEL, fetchImpl: impl });
+    const r = await handleAiRequest(JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' }), env, client);
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ text: 'Median ending net worth was fine.' });
+    expect(calls).toHaveLength(2);
+    expect('response_format' in (calls[0]!.body as object)).toBe(true);
+    expect('response_format' in (calls[1]!.body as object)).toBe(false);
+  });
   it('refuses to start without AI_BASE_URL / AI_MODEL', async () => {
     const r = await handleAiRequest(JSON.stringify({ kind: 'opportunity', summary: summary() }), { AI_PROVIDER: 'openai_compatible', AI_API_KEY: 'k' });
     expect(r.body).toMatchObject({ code: 'disabled' });

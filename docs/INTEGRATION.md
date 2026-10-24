@@ -39,7 +39,7 @@ netWorthOf(state) === cash + savings + stock + bond + etf − Σ debts   // the 
   - Home: `set_budget` (discretionary), `set_housing`; show `state.household`.
   - Hospital/Insurance: `set_insurance(line, planId|null)` using `state.assumptions.insurancePlans`; show claims from `state.realizedShocks`.
 - **Agent 4 flow**: notifications = `state.notifications` (kind `info` is routine; show the last N unread). Timeline = `state.timeline` (every entry has `netWorthAfter`; `action` holds the structured decision). Events = `state.activeEvents` (array; Type A are acknowledgements, Type B are decisions; `expiresAtMonth` is inclusive). Dispatch `apply_event_option` / `dismiss_event`.
-- **Agent 5 reveal**: consume `MonteCarloResult` from `useGameStore(s => s.finishPayload?.monteCarlo)`. `endingNetWorths` is sorted ascending (histogram-ready); `bands[m]` gives p10/median/p90 per month for a fan chart; `observedNetWorth` is the engine's actual value and `percentileOfObserved` = share of paths that ended **below** it (only defined when `observedHorizonMatches`). Always print `assumptionsSummary` and never describe the percentile as a score. Optional `comparison` for paired A/B. `finishPayload.explanation` (filled asynchronously by `requestExplanation()`, called automatically by `finishGame()`) holds the AI or offline-template explanation with its `source` label — show it, labeled, when present.
+- **Agent 5 reveal**: consume `MonteCarloResult` from `useGameStore(s => s.finishPayload?.monteCarlo)`. `endingNetWorths` is sorted ascending (histogram-ready); `bands[m]` gives p10/median/p90 per month for a fan chart; `observedNetWorth` is the engine's actual value and `percentileOfObserved` = share of paths that ended **below** it (only defined when `observedHorizonMatches`). Always print `assumptionsSummary` and never describe the percentile as a score. Optional `comparison` for paired A/B. Mid-game: `store.requestInsight(question)` returns `{ text, source }` (AI or labeled offline template) about the current state and sets `store.lastInsight` — use it for a "Why did this happen?" button on shock toasts or in panels. `finishPayload.explanation` (filled asynchronously by `requestExplanation()`, called automatically by `finishGame()`) holds the AI or offline-template explanation with its `source` label — show it, labeled, when present.
 
 ## Actions (discriminated union)
 
@@ -59,11 +59,15 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 
 ## What-if preview (for panels)
 
-`previewMonth(state, { policy?, household?, insurance? })` runs one month with the change and one without, under the same seed streams, and returns `baseline`, `withChange`, `delta` and any `rejected` overrides. Pure and cheap (~1 ms); call it on every form change to show "next month this would …".
+`previewMonth(state, { policy?, household?, insurance? })` runs one month with the change and one without, under the same seed streams, and returns `baseline`, `withChange`, `delta` and any `rejected` overrides. Pure and cheap (~1 ms); call it on every form change to show "next month this would …". `previewHorizon(state, overrides, 12)` does the same over N months and reports `monthsUntilShortfall` for each path (the "12-month runway" preview Agent 3's MISSING.md asked for). `selectPaySummary(state)` gives gross, income-tax, payroll, total withholding and take-home per month for the Office panel.
 
 ## Reveal extras (Agent 5)
 
 `finishPayload.monteCarlo.comparison` (when the player made any decision) pairs the player's strategy against the default policy under identical luck: `a`/`b` summaries, `pairedMedianDifference`, `probabilityAOutperformsB`. `histogram(endingNetWorths, bins)` returns chart-ready buckets. Full gateway examples: `docs/AI_API.md`.
+
+## Save & resume (one slot)
+
+The store autosaves after every month (`saveGame()`), exposes `savedGame` metadata for a "Continue" button, `loadSavedGame()`, `clearSavedGame()` and `refreshSavedGame()` (call once at app start). Saves are schema-versioned (`SAVE_SCHEMA_VERSION`), validated and reconciled on load; anything invalid is discarded rather than loaded. Storage is `localStorage` when available, otherwise persistence is silently off.
 
 ## Town shell (Agent 2)
 

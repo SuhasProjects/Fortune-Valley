@@ -10,10 +10,10 @@ import { BOUNDS } from '@/config/defaults';
 
 const reject = (state: GameState, code: ActionErrorCode, message: string): ActionResult => ({ ok: false, code, message, state });
 
-function logPolicy(s: GameState, action: GameAction, type: TimelineEntry['type'], description: string, extra?: Partial<TimelineEntry>, resolvedEffect?: Parameters<typeof applyEffect>[1]) {
+function logPolicy(s: GameState, action: GameAction, type: TimelineEntry['type'], description: string, extra?: Partial<TimelineEntry>, resolvedEffect?: Parameters<typeof applyEffect>[1], contextStatus?: GameState['employment']['status']) {
   action = structuredClone(action);
   resolvedEffect = resolvedEffect ? structuredClone(resolvedEffect) : undefined;
-  s.policyLog.push(resolvedEffect ? { monthIndex: s.monthIndex, action, resolvedEffect } : { monthIndex: s.monthIndex, action });
+  s.policyLog.push(resolvedEffect ? { monthIndex: s.monthIndex, action, resolvedEffect, context: { employmentStatus: contextStatus ?? s.employment.status } } : { monthIndex: s.monthIndex, action });
   s.timeline.push({ id: makeId('T', s, s.timeline.length), monthIndex: s.monthIndex, type, description, action, netWorthAfter: netWorthOf(s), ...extra });
 }
 
@@ -135,11 +135,12 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
       if (ev.expiresAtMonth !== undefined && s.monthIndex > ev.expiresAtMonth) return reject(input, 'event_expired', 'This opportunity has expired');
       const opt = ev.options.find((o) => o.id === action.optionId);
       if (!opt) return reject(input, 'unknown_option', `Unknown option ${action.optionId}`);
+      const statusBefore = s.employment.status;
       const err = applyEffect(s, opt.effect);
       if (err) return reject(input, 'invalid_effect', err);
       s.activeEvents = s.activeEvents.filter((e) => e.id !== action.eventId);
       if (ev.type === 'B' || opt.effect.template !== 'none') {
-        logPolicy(s, action, ev.source === 'engine' ? 'choice' : 'ai_event', `${ev.title}: ${opt.label} — ${describeEffect(opt.effect)}`, { eventId: ev.id }, opt.effect);
+        logPolicy(s, action, ev.source === 'engine' ? 'choice' : 'ai_event', `${ev.title}: ${opt.label} — ${describeEffect(opt.effect)}`, { eventId: ev.id }, opt.effect, statusBefore);
       }
       return { ok: true, state: s };
     }

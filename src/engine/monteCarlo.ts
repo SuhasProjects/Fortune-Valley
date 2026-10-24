@@ -63,6 +63,9 @@ function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: numbe
       const a = entry.action;
       if (a.type === 'apply_event_option' || a.type === 'dismiss_event' || a.type === 'enqueue_event') {
         if (entry.resolvedEffect) {
+          // Guardrail: a job decision taken while unemployed (or employed) only makes sense in
+          // paths with the same employment status at that month; otherwise skip it (documented fallback).
+          if (entry.resolvedEffect.template === 'offer_job' && entry.context && entry.context.employmentStatus !== s.employment.status) { fallbacks += 1; continue; }
           const err = applyEffect(s, entry.resolvedEffect, true);
           if (err) fallbacks += 1;
         }

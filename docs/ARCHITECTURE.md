@@ -29,6 +29,10 @@ Invariant: `netWorth = cash + savings + stock + bond + etf − Σ debts`; ledger
 
 For `i in 0..N−1`: `createGame({...config, seed: hash(baseSeed,'mc-path',i)})`, replay `policyLog` entries at their original `monthIndex`, then `advanceMonth` — for `months` = months actually played (so the observed marker is on the same horizon). Event-option decisions are replayed as their `resolvedEffect` (the event itself was path-specific). Actions rejected for insufficient funds are skipped and counted in `replayFallbacks`. Metrics: sorted ending net worths, median/p10/p90/mean, P(net worth < 0), P(any overdraft borrowing), per-month bands. `observedNetWorth` is computed from the real final state. Path counts must be integers from 1 to 10,000; horizons must be integers from 1 to 240 months; seeds must be safe integers. Invalid values are rejected before loops begin. In this environment the 1,000-path, 60-month regression takes about one second. `compareStrategies` pairs path seeds so two policy logs face identical luck.
 
+**Replay guardrail after divergence.** Each logged event decision records `context.employmentStatus` at the time. During replay, an `offer_job` effect is applied only in paths whose employment status matches that context (a "return to work" offer accepted while unemployed is skipped in paths that never lost the job; a competing offer accepted while employed is skipped in paths currently unemployed). Skips are counted in `replayFallbacks`. All other effects are unconditional policy changes and replay as-is.
+
+Annual raises apply at every 12th month; if the player is unemployed at that moment the raise is applied to the salary they return to.
+
 This is a retrospective replay from the initial state, not a forward forecast from today's balances.
 
 ## AI gateway (server only)

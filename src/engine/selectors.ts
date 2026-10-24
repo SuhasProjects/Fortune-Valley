@@ -3,6 +3,7 @@
  */
 import type { GameState, StateSummary } from '@/types/domain';
 import { debtTotal, investmentsTotal, monthLabel, netWorthOf } from './accounting';
+import { annualWithholding } from './advanceMonth';
 
 export const selectNetWorth = netWorthOf;
 export const selectInvestmentsTotal = (s: GameState): number => investmentsTotal(s.investments);
@@ -13,6 +14,24 @@ export function selectMonthsOfEssentialsCovered(s: GameState): number {
   const essentials = s.household.housingMonthly + s.household.essentialsMonthly;
   if (essentials <= 0) return 99;
   return Math.round(((s.cash + s.savings) / essentials) * 10) / 10;
+}
+
+/** Monthly pay summary for the Office panel: gross, illustrative withholding and take-home (0 while unemployed/student). */
+export function selectPaySummary(s: GameState): { grossMonthly: number; incomeTaxMonthly: number; payrollMonthly: number; withholdingMonthly: number; takeHomeMonthly: number; status: GameState['employment']['status']; note: string } {
+  const gross = s.employment.status === 'employed' ? s.employment.grossAnnualSalary / 12 : 0;
+  const w = s.employment.status === 'employed' ? annualWithholding(s, s.employment.grossAnnualSalary) : { incomeTax: 0, payroll: 0 };
+  const incomeTaxMonthly = Math.round((w.incomeTax / 12) * 100) / 100;
+  const payrollMonthly = Math.round((w.payroll / 12) * 100) / 100;
+  const withholdingMonthly = Math.round((incomeTaxMonthly + payrollMonthly) * 100) / 100;
+  return {
+    grossMonthly: Math.round(gross * 100) / 100,
+    incomeTaxMonthly,
+    payrollMonthly,
+    withholdingMonthly,
+    takeHomeMonthly: Math.round((gross - withholdingMonthly) * 100) / 100,
+    status: s.employment.status,
+    note: s.assumptions.tax.note,
+  };
 }
 
 export function selectMonthlyTakeHome(s: GameState, withholdingAnnual: number): number {
