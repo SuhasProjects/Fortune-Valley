@@ -12,9 +12,21 @@ import type { z } from 'zod';
 import type { AiErrorResponse, AiResponse } from '../../src/types/domain';
 import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM } from './prompts';
 import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas';
+import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible';
 
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
-export interface HandlerEnv { AI_API_KEY?: string; AI_MODEL?: string; AI_ENABLED?: string; AI_TIMEOUT_MS?: string }
+export interface HandlerEnv {
+  AI_API_KEY?: string;
+  AI_MODEL?: string;
+  AI_ENABLED?: string;
+  AI_TIMEOUT_MS?: string;
+  /** 'anthropic' (default) or 'openai_compatible' (e.g. Luminal router, vLLM). */
+  AI_PROVIDER?: string;
+  /** Base URL for openai_compatible, e.g. https://router.luminal.cloud */
+  AI_BASE_URL?: string;
+  /** 'bearer' (default) or 'api-key' for openai_compatible. */
+  AI_AUTH_HEADER?: string;
+}
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
 const err = (status: number, code: AiErrorResponse['code'], error: string): HandlerResult => ({ status, body: { error, code } });
@@ -41,6 +53,16 @@ export function makeAnthropicClient(env: HandlerEnv): ModelClient {
   };
 }
 
+export function makeClientFromEnv(env: HandlerEnv): ModelClient | { error: HandlerResult } {
+  if (!env.AI_API_KEY) return { error: err(503, 'disabled', 'AI_API_KEY is not configured') };
+  if ((env.AI_PROVIDER ?? 'anthropic') === 'openai_compatible') {
+    if (!env.AI_BASE_URL) return { error: err(503, 'disabled', 'AI_BASE_URL is required for AI_PROVIDER=openai_compatible') };
+    if (!env.AI_MODEL) return { error: err(503, 'disabled', 'AI_MODEL is required for AI_PROVIDER=openai_compatible') };
+    return makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: env.AI_API_KEY, model: env.AI_MODEL, authHeader: env.AI_AUTH_HEADER === 'api-key' ? 'api-key' : 'bearer', timeoutMs: Number(env.AI_TIMEOUT_MS) || 25_000 });
+  }
+  return makeAnthropicClient(env);
+}
+
 export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?: ModelClient): Promise<HandlerResult> {
   let json: unknown;
   try {
@@ -51,8 +73,13 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
   const parsed = AiRequestSchema.safeParse(json);
   if (!parsed.success) return err(400, 'invalid_request', `Invalid request: ${parsed.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ').slice(0, 400)}`);
   if (env.AI_ENABLED === 'false') return err(503, 'disabled', 'AI is disabled on this deployment (AI_ENABLED=false)');
-  if (!client && !env.AI_API_KEY) return err(503, 'disabled', 'AI_API_KEY is not configured');
-  const model = client ?? makeAnthropicClient(env);
+  let model: ModelClient;
+  if (client) model = client;
+  else {
+    const made = makeClientFromEnv(env);
+    if ('error' in made) return made.error;
+    model = made;
+  }
   const req = parsed.data;
 
   try {
@@ -73,6 +100,12 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
     if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the explain schema');
     return { status: 200, body: { kind: 'explain', source: 'ai', text: r.parsed.text, warnings: [] } };
   } catch (e) {
+    if (e instanceof UpstreamError) {
+      if (e.status === 429) return err(429, 'rate_limited', 'Model rate limited');
+      if (e.status === 504) return err(504, 'timeout', 'Model request timed out');
+      if (e.status === 401 || e.status === 403) return err(502, 'upstream_error', 'AI credentials rejected');
+      return err(502, 'upstream_error', `Model error ${e.status}: ${e.message.slice(0, 120)}`);
+    }
     if (e instanceof Anthropic.RateLimitError) return err(429, 'rate_limited', 'Model rate limited');
     if (e instanceof Anthropic.APIConnectionTimeoutError) return err(504, 'timeout', 'Model request timed out');
     if (e instanceof Anthropic.AuthenticationError) return err(502, 'upstream_error', 'AI credentials rejected');

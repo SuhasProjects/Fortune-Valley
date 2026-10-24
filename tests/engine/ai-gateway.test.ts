@@ -13,6 +13,46 @@ const fake = (output: unknown, stopReason = 'end_turn'): ModelClient => ({
 });
 const summary = () => summarizeForAi(fixtureState, fixtureConfig.narrativeFocus, 'entry_worker');
 
+describe('OpenAI-compatible provider', () => {
+  const env = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://router.example', AI_MODEL: 'test/model', AI_API_KEY: 'k' };
+  const fakeFetch = (replies: (string | { status: number; body: unknown })[]) => {
+    const calls: { url: string; body: unknown; headers: Record<string, string> }[] = [];
+    const impl = (async (url: string, init: RequestInit) => {
+      calls.push({ url, body: JSON.parse(String(init.body)), headers: init.headers as Record<string, string> });
+      const r = replies.shift() ?? '{}';
+      if (typeof r !== 'string') return new Response(JSON.stringify(r.body), { status: r.status });
+      return new Response(JSON.stringify({ choices: [{ message: { content: r }, finish_reason: 'stop' }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    return { impl, calls };
+  };
+  it('requests JSON, validates with Zod, and retries once with the validation error', async () => {
+    const { makeOpenAiCompatibleClient } = await import('../../api/_lib/openaiCompatible');
+    const { impl, calls } = fakeFetch(['```json\n{"text": 42}\n```', '{"text":"Median ending net worth was fine."}']);
+    const client = makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: 'k', model: env.AI_MODEL, fetchImpl: impl });
+    const r = await handleAiRequest(JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' }), env, client);
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ kind: 'explain', source: 'ai', text: 'Median ending net worth was fine.' });
+    expect(calls).toHaveLength(2);
+    expect(calls[0]!.url).toBe('https://router.example/v1/chat/completions');
+    expect(calls[0]!.headers.Authorization).toBe('Bearer k');
+    expect((calls[0]!.body as { response_format: { type: string } }).response_format.type).toBe('json_object');
+    expect(JSON.stringify(calls[1]!.body)).toMatch(/did not validate/);
+  });
+  it('maps upstream 401/429 to gateway error codes so the client falls back', async () => {
+    const { makeOpenAiCompatibleClient } = await import('../../api/_lib/openaiCompatible');
+    for (const [status, code] of [[401, 'upstream_error'], [429, 'rate_limited']] as const) {
+      const { impl } = fakeFetch([{ status, body: { error: 'Invalid API key' } }]);
+      const client = makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: 'k', model: env.AI_MODEL, fetchImpl: impl });
+      const r = await handleAiRequest(JSON.stringify({ kind: 'opportunity', summary: summary() }), env, client);
+      expect(r.body).toMatchObject({ code });
+    }
+  });
+  it('refuses to start without AI_BASE_URL / AI_MODEL', async () => {
+    const r = await handleAiRequest(JSON.stringify({ kind: 'opportunity', summary: summary() }), { AI_PROVIDER: 'openai_compatible', AI_API_KEY: 'k' });
+    expect(r.body).toMatchObject({ code: 'disabled' });
+  });
+});
+
 describe('AI gateway', () => {
   it('rejects malformed requests with 400 and never calls the model', async () => {
     const r = await handleAiRequest('{"kind":"scenario","input":{"freeText":"x","grossAnnualIncome":-5}}', { AI_API_KEY: 'k' }, fake({}));

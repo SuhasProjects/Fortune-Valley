@@ -18,6 +18,8 @@ Requires Node 20+.
 
 Copy `.env.example` → `.env` and set `AI_API_KEY` (server-side only; never `VITE_`). `npm run dev` serves `POST /api/ai` through a Vite middleware; on Vercel the same handler runs as `api/ai.ts`. Without a key the app uses clearly labeled offline fallbacks. `AI_MODEL` defaults to `claude-opus-5-5`; `AI_ENABLED=false` forces fallback; `VITE_AI_OFFLINE=true` skips the network entirely in the browser.
 
+Any OpenAI-compatible endpoint works too: set `AI_PROVIDER=openai_compatible`, `AI_BASE_URL` (e.g. `https://router.luminal.cloud`), `AI_MODEL` (an id from `GET /v1/models`) and `AI_API_KEY`; `AI_AUTH_HEADER=api-key` switches from a bearer token to an `Api-Key` header. Output is still Zod-verified and the engine re-validates every effect.
+
 ## Layout
 
 See `docs/INTEGRATION.md` (import map, signatures, who-owns-what) and `docs/ARCHITECTURE.md` (accounting order, randomness, Monte Carlo, AI guardrails).
