@@ -25,15 +25,19 @@
 .ft-sheet__popover { position: fixed; z-index: 2; top: calc(25 * var(--px)); right: calc(7 * var(--px)); width: min(calc(105 * var(--px)), calc(100vw - 28 * var(--px))); max-height: calc(100dvh - 50 * var(--px)); overflow: auto; color: var(--c-outline); font: var(--fs-body)/1.2 var(--font-body); }
 .ft-sheet__popover::before { content: ''; display: block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); margin: 0 auto calc(-2 * var(--px)); position: relative; z-index: 1; }
 .ft-sheet__help-heading { margin-bottom: calc(2 * var(--px)); }
-.ft-window-hint { margin: 0 0 calc(2 * var(--px)); font: var(--fs-label)/1.1 var(--font-body); }
+.ft-window-hint { grid-area: hint; margin: 0; color: var(--c-paper); font: var(--fs-label)/1.1 var(--font-body); }
 .fv-window:has(.ft-building-portrait) { --building-roof: var(--c-roof-red); --building-roof-dark: var(--c-roof-red-dark); max-width: calc(100vw - 10 * var(--px)); }
 .fv-window:has([data-building='bank']) { --building-roof: var(--c-roof-blue); --building-roof-dark: var(--c-roof-blue-dark); }
 .fv-window:has([data-building='office']) { --building-roof: var(--c-roof-teal); --building-roof-dark: var(--c-roof-teal-dark); }
 .fv-window:has([data-building='market']) { --building-roof: var(--c-roof-green); --building-roof-dark: var(--c-roof-green-dark); }
-.fv-window:has(.ft-building-portrait) > .fv-window__header { background: var(--building-roof); border-bottom: var(--px) solid var(--building-roof-dark); padding: calc(2 * var(--px)); }
-.ft-building-portrait { display: flex; align-items: center; justify-content: center; flex: 0 0 calc(16 * var(--px)); }
+.fv-window:has(.ft-building-portrait) > .fv-window__header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: 'portrait title help close' 'portrait hint help close'; background: var(--building-roof); border-bottom: var(--px) solid var(--building-roof-dark); padding: calc(2 * var(--px)); }
+.fv-window:has(.ft-building-portrait) > .fv-window__header > h2 { grid-area: title; }
+.fv-window:has(.ft-building-portrait) > .fv-window__header > .fv-icon-button { grid-area: close; }
+.ft-building-portrait { grid-area: portrait; display: flex; align-items: center; justify-content: center; }
 .ft-building-portrait .fv-sprite { flex-shrink: 0; }
-.ft-window-help-slot { margin-left: auto; }
+/* Full world buildings use a smaller integer zoom as header portraits. */
+.ft-building-portrait .fv-portrait { --px: var(--portrait-px); }
+.ft-window-help-slot { grid-area: help; margin-left: auto; }
 .ft-keeper { display: flex; gap: calc(3 * var(--px)); align-items: center; margin-bottom: calc(3 * var(--px)); }
 .ft-keeper__portrait { flex: 0 0 calc(24 * var(--px)); width: calc(24 * var(--px)); height: calc(24 * var(--px)); background-size: calc(48 * var(--px)) calc(24 * var(--px)); image-rendering: pixelated; animation: ft-keeper-blink 4s step-end infinite; }
 .ft-keeper__portrait--bank { background-image: url('/art/windows/keepers/bank.png'); }

@@ -35,7 +35,7 @@ export function BankPanel({ state, dispatch }: PanelProps) {
         <MoneyInput label="One-time debt payment" raw={payment} onChange={setPayment} min={paymentMax > 0 ? .01 : 0} max={paymentMax} disabled={disabled || paymentMax <= 0} />
         <p>{!paymentError ? `${money(-Number(payment))} once` : `Up to ${money(paymentMax)}`}</p>
         {!paymentError && debt && <PaymentPreview state={state} debtId={debt.id} amount={Number(payment)} />}
-        <Button type="submit" variant="primary" disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</Button>
+        <Button type="submit" variant="wood" disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</Button>
       </form>
     </details>{task.feedback}
   </>} consequence={<><p>Savings after Save · {money(draftPolicy.savingsContributionPerMonth)} / month</p><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} compact /></>} help={<><ul><li>Savings repeats each month after bills.</li><li>Extra payments use cash and reduce the debt.</li><li>Edits apply when you save.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} /></>} details={<LedgerHistory state={state} categories={['savings_contribution', 'savings_interest', 'debt_payment', 'debt_interest']} />} />;
