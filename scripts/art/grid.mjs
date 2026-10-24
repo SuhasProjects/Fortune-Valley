@@ -60,7 +60,7 @@ export function parseGrid(text, palette, file = '<grid>') {
   if (!meta.w || !meta.h) fail(1, 'missing "size WxH"');
   if (!Number.isInteger(meta.frames) || meta.frames < 1) fail(1, 'frames must be a positive integer');
   if (frames.length !== meta.frames) fail(1, `declared ${meta.frames} frame(s) but found ${frames.length}`);
-  for (const v of meta.variants) if (!['hover', 'lit'].includes(v)) fail(1, `unknown variant "${v}"`);
+  for (const v of meta.variants) if (!['hover', 'lit', 'lights'].includes(v)) fail(1, `unknown variant "${v}"`);
   const grids = frames.map((f) => {
     if (f.rows.length !== meta.h) fail(f.line, `frame "${f.name}" has ${f.rows.length} rows, expected ${meta.h}`);
     for (const { row, line } of f.rows) if ([...row].length !== meta.w) fail(line, `row has ${[...row].length} pixels, expected ${meta.w}`);
@@ -88,12 +88,17 @@ export function litFrame(frame) {
   return { name: 'lit', rows: frame.rows.map((r) => r.map((ch) => (ch === '9' || ch === '8' ? '7' : ch))) };
 }
 
+/** Dusk overlay: only the lit window pixels (`7`), everything else transparent. */
+export function lightsFrame(frame) {
+  return { name: 'lights', rows: litFrame(frame).rows.map((r) => r.map((ch) => (ch === '7' ? '7' : '.'))) };
+}
+
 /** Authored frames followed by derived variants (each derived from frame 0). */
 export function expandFrames(parsed, file = '<grid>') {
   const out = [...parsed.frames];
   for (const v of parsed.meta.variants) {
     try {
-      out.push(v === 'hover' ? outlineFrame(parsed.frames[0]) : litFrame(parsed.frames[0]));
+      out.push(v === 'hover' ? outlineFrame(parsed.frames[0]) : v === 'lights' ? lightsFrame(parsed.frames[0]) : litFrame(parsed.frames[0]));
     } catch (e) {
       throw new Error(`${file}: ${e.message}`);
     }

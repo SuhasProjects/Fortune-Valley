@@ -1,0 +1,13 @@
+{
+  "src": "/art/world/props/lamp.png",
+  "w": 9,
+  "h": 19,
+  "frames": [
+    "0",
+    "lit"
+  ],
+  "anchor": [
+    4,
+    18
+  ]
+}

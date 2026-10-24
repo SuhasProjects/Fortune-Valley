@@ -1,0 +1,16 @@
+size 11x13
+anchor 5,12
+--- 0
+...kkkkk...
+..kqqqqqk..
+.kqqqIqqqk.
+.kqqIIIqqk.
+.kqqIIIqqk.
+.kqqqIqqqk.
+.kqqqqqqqk.
+.kqqqIqqqk.
+..kqqqqqk..
+...kkkkk...
+....kqk....
+.....k.....
+...........

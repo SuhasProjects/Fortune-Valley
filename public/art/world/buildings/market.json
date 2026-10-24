@@ -1,0 +1,15 @@
+{
+  "src": "/art/world/buildings/market.png",
+  "w": 86,
+  "h": 49,
+  "frames": [
+    "0",
+    "hover",
+    "lit",
+    "lights"
+  ],
+  "anchor": [
+    43,
+    48
+  ]
+}

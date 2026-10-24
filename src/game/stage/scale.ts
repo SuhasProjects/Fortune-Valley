@@ -6,7 +6,7 @@ export const MAP_W = 480;
 export const MAP_H = 288;
 export const CORE_OFFSET_X = (MAP_W - CORE_W) / 2;
 export const CORE_OFFSET_Y = (MAP_H - CORE_H) / 2;
-export const MIN_SCALE = 2;
+export const MIN_SCALE = 1;
 
 export interface StageScale { px: number; viewW: number; viewH: number }
 

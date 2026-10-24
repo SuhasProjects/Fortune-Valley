@@ -1,0 +1,11 @@
+size 9x9
+--- 0
+....i....
+..iiiii..
+.iiiiiii.
+.iiiiiii.
+iiiiiiiii
+.iiiiiii.
+.iiiiiii.
+..iiiii..
+....i....

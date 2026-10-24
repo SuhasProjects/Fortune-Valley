@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/bush.png",
+  "w": 12,
+  "h": 10,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    6,
+    9
+  ],
+  "speed": 1100
+}

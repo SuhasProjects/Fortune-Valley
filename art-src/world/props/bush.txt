@@ -1,0 +1,26 @@
+size 12x10
+frames 2
+anchor 6,9
+speed 1100
+--- 0
+............
+.wwN....tNq.
+..Nt..t..NQ.
+.qNttttMtNs.
+.sNxxttTTNq.
+.sJNNxxNNNz.
+.ssWkNNNkWs.
+.skwDNwqqqq.
+.Gkwwbbpppp.
+............
+--- 1
+............
+..wwN....tNq
+...Nt..t..NQ
+..qNttttMtNs
+..sNxxttTTNq
+.sJNNxxNNNz.
+.ssWkNNNkWs.
+.skwDNwqqqq.
+.Gkwwbbpppp.
+............
