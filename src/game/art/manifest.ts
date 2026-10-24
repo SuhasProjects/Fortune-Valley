@@ -1076,6 +1076,56 @@ const sprites = {
       "0"
     ]
   },
+  "windows/keepers/bank": {
+    "src": "/art/windows/keepers/bank.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
+  "windows/keepers/home": {
+    "src": "/art/windows/keepers/home.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
+  "windows/keepers/hospital": {
+    "src": "/art/windows/keepers/hospital.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
+  "windows/keepers/market": {
+    "src": "/art/windows/keepers/market.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
+  "windows/keepers/office": {
+    "src": "/art/windows/keepers/office.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
   "world/buildings/bank": {
     "src": "/art/world/buildings/bank.png",
     "w": 64,
