@@ -13,6 +13,7 @@ import type { AiErrorResponse, AiResponse } from '../../src/types/domain';
 import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM } from './prompts';
 import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas';
 import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible';
+import { allowRequest, MAX_BODY_BYTES } from './rateLimit';
 
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
 export interface HandlerEnv {
@@ -63,7 +64,14 @@ export function makeClientFromEnv(env: HandlerEnv): ModelClient | { error: Handl
   return makeAnthropicClient(env);
 }
 
-export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?: ModelClient): Promise<HandlerResult> {
+export interface RequestMeta { clientKey?: string }
+
+export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?: ModelClient, meta: RequestMeta = {}): Promise<HandlerResult> {
+  if (rawBody.length > MAX_BODY_BYTES) return err(413, 'invalid_request', 'Request body too large');
+  if (meta.clientKey) {
+    const gate = allowRequest(meta.clientKey);
+    if (!gate.ok) return err(429, 'rate_limited', `Too many AI requests; retry in ${gate.retryAfterSec}s`);
+  }
   let json: unknown;
   try {
     json = JSON.parse(rawBody || '{}');

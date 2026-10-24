@@ -21,7 +21,7 @@ export function aiDevMiddleware(): Plugin {
         req.on('end', async () => {
           try {
             const { handleAiRequest } = await server.ssrLoadModule('/api/_lib/handler.ts') as typeof import('../api/_lib/handler');
-            const result = await handleAiRequest(raw, process.env);
+            const result = await handleAiRequest(raw, process.env, undefined, { clientKey: req.socket?.remoteAddress ?? 'dev' });
             send(result.status, result.body);
           } catch (e) {
             send(500, { error: e instanceof Error ? e.message : 'Internal error', code: 'upstream_error' });

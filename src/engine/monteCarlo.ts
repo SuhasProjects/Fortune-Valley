@@ -142,6 +142,38 @@ export function runMonteCarlo(config: GameConfig, policyLog: PolicyLogEntry[], o
   };
 }
 
+/** Histogram bins over a sorted sample (chart-ready). `bins` equal-width buckets spanning [min, max]. */
+export function histogram(sortedValues: number[], bins = 24): { start: number; end: number; count: number }[] {
+  if (sortedValues.length === 0) return [];
+  const min = sortedValues[0]!;
+  const max = sortedValues[sortedValues.length - 1]!;
+  const width = max > min ? (max - min) / bins : 1;
+  const out = Array.from({ length: bins }, (_, i) => ({ start: min + i * width, end: min + (i + 1) * width, count: 0 }));
+  for (const v of sortedValues) {
+    const i = Math.min(bins - 1, Math.max(0, Math.floor((v - min) / width)));
+    out[i]!.count += 1;
+  }
+  return out;
+}
+
+/** True if the log contains anything that changes the policy or balances (i.e. a comparison vs "no changes" is meaningful). */
+export function hasPolicyDecisions(policyLog: PolicyLogEntry[]): boolean {
+  return policyLog.some((e) => {
+    const t = e.action.type;
+    if (t === 'apply_event_option' || t === 'dismiss_event' || t === 'enqueue_event') return e.resolvedEffect !== undefined && e.resolvedEffect.template !== 'none';
+    return t !== 'advance_month' && t !== 'pause' && t !== 'resume' && t !== 'finish' && t !== 'mark_notifications_read';
+  });
+}
+
+/**
+ * Convenience: the player's strategy vs the archetype's default policy with no changes,
+ * under identical luck. Returns undefined when the player made no decisions.
+ */
+export function compareWithBaseline(config: GameConfig, policyLog: PolicyLogEntry[], months: number, options: MonteCarloOptions = {}): MonteCarloComparison | undefined {
+  if (!hasPolicyDecisions(policyLog)) return undefined;
+  return compareStrategies(config, policyLog, [], { a: 'Your strategy', b: 'Default policy, no changes' }, { ...options, months });
+}
+
 /** Paired comparison: same path seeds (same exogenous luck), two different policy logs. */
 export function compareStrategies(
   config: GameConfig,

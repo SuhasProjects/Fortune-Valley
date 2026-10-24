@@ -3,7 +3,7 @@
  * during integration — no math lives here). Calls engine functions only.
  */
 import { create } from 'zustand';
-import { advanceMonth, applyAction, createGame, runMonteCarlo, netWorthOf, shouldRequestOpportunity, summarizeForAi } from '@/engine';
+import { advanceMonth, applyAction, compareWithBaseline, createGame, runMonteCarlo, netWorthOf, shouldRequestOpportunity, summarizeForAi } from '@/engine';
 import { explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 
@@ -144,7 +144,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game || !config) return;
     const r = game.status === 'finished' ? { ok: true as const, state: game } : applyAction(game, { type: 'finish' });
     const finalState = r.ok ? r.state : game;
-    const monteCarlo = runMonteCarlo(config, finalState.policyLog, finalState);
+    const base = runMonteCarlo(config, finalState.policyLog, finalState);
+    // Paired counterfactual: same luck, player's decisions vs the default policy untouched.
+    const comparison = compareWithBaseline(config, finalState.policyLog, base.months, { paths: base.pathsRequested, seed: base.seed });
+    const monteCarlo = comparison ? { ...base, comparison } : base;
     set((s) => ({ game: finalState, finishPayload: { config: structuredClone(config), finalState, policyLog: finalState.policyLog, monteCarlo }, aiStatus: 'idle', requestVersion: s.requestVersion + 1 }));
     void get().requestExplanation();
   },

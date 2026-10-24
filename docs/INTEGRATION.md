@@ -57,6 +57,14 @@ Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unkn
 
 `POST /api/ai` with body `AiRequest` → `AiResponse` or `AiErrorResponse` (see domain.ts). Env (server only): `AI_API_KEY`, `AI_MODEL` (default `claude-opus-5-5`), `AI_ENABLED`, `AI_TIMEOUT_MS`. Set `VITE_AI_OFFLINE=true` to force client fallback. Browser code never sees the key.
 
+## What-if preview (for panels)
+
+`previewMonth(state, { policy?, household?, insurance? })` runs one month with the change and one without, under the same seed streams, and returns `baseline`, `withChange`, `delta` and any `rejected` overrides. Pure and cheap (~1 ms); call it on every form change to show "next month this would …".
+
+## Reveal extras (Agent 5)
+
+`finishPayload.monteCarlo.comparison` (when the player made any decision) pairs the player's strategy against the default policy under identical luck: `a`/`b` summaries, `pairedMedianDifference`, `probabilityAOutperformsB`. `histogram(endingNetWorths, bins)` returns chart-ready buckets. Full gateway examples: `docs/AI_API.md`.
+
 ## Town shell (Agent 2)
 
 `App({ panels?, renderReveal? })`: Agent 3 passes `panels` as a partial `Record<BuildingId, ReactNode>`; Agent 5 passes `renderReveal(payload: FinishPayload)`. `TownScene` takes `eventBuildings: BuildingId[]`; `PanelHost` is the accessible dialog every panel renders inside. See `docs/TOWN_HANDOFF.md`.

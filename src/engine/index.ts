@@ -2,7 +2,8 @@
 export { createGame } from './createGame';
 export { advanceMonth, annualWithholding, type AdvanceOptions } from './advanceMonth';
 export { applyAction } from './actions';
-export { runMonteCarlo, compareStrategies, quantile, assumptionsSummary, type MonteCarloOptions } from './monteCarlo';
+export { runMonteCarlo, compareStrategies, compareWithBaseline, hasPolicyDecisions, histogram, quantile, assumptionsSummary, type MonteCarloOptions } from './monteCarlo';
+export { previewMonth, type MonthPreview, type PreviewOverrides, type MonthSnapshot } from './preview';
 export { netWorthOf, investmentsTotal, debtTotal, monthLabel, monthlyRate, round2, uiId } from './accounting';
 export { settleClaim, applyEffect, describeEffect, activePlan } from './events';
 export { validateAllocation, validateEffect, validateConfig, validatePlanId } from './validation';
