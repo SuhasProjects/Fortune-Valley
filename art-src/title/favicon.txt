@@ -1,0 +1,18 @@
+size 16x16
+--- 0
+.....kkkkkk.....
+...kkOOOOOOkk...
+..kOOOiiiOOOOk..
+.kOOiOOOOOOOnOk.
+.kOiOOOiiOOOOnk.
+kOOiOOkOOkOOOOnk
+kOOiOOkOOkOOOOnk
+kOOiOOkOOkOOOOnk
+kOOiOOkOOkOOOOnk
+kOOiOOkOOkOOOOnk
+kOOiOOOkkOOOOOnk
+.kOOiOOOOOOOnOk.
+.kOOOiiiiiiOnOk.
+..kOOOOOOOOOnk..
+...kkOOOOOOkk...
+.....kkkkkk.....

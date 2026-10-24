@@ -12,18 +12,19 @@ export async function openTitle(page: Page) {
 
 /** Assert the title screen is showing (used after "play again" / quit to title). */
 export async function expectOnTitle(page: Page) {
-  await expect(page.getByRole('heading', { name: 'Small choices. A clearer financial future.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Fortune Valley', exact: true })).toBeVisible()
 }
 
 /** From the title screen, start one of the premade lives by its archetype title. */
 export async function startStory(page: Page, life: 'College Student' | 'Entry-Level Worker' | 'Professional' | 'Young Family') {
+  await page.getByRole('button', { name: 'New Story', exact: true }).click()
   await page.getByRole('button', { name: new RegExp(life) }).click()
   await expect(page.getByRole('button', { name: /Open Pine Bank:/ })).toBeVisible()
 }
 
 /** Assert the results (reveal) screen is showing after "Finish & reveal". */
 export async function expectReveal(page: Page) {
-  await expect(page.getByRole('dialog', { name: 'Your next chapter' })).toContainText('Same strategy, 1,000 futures')
+  await expect(page.getByRole('main', { name: 'Simulation results' })).toContainText('Same strategy, 1,000 futures')
 }
 
 /** Leave the reveal and return to the title screen. */
