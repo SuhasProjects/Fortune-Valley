@@ -19,10 +19,13 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
   await page.route('**/api/ai', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"disabled"}' }))
   await openTitle(page)
   await startStory(page, 'Entry-Level Worker')
-  for (const name of ['Pine Bank', 'Town Office', 'Health House', 'Your Home', 'Market Hall']) {
+  const buildingNames = ['Pine Bank', 'Town Office', 'Health House', 'Your Home', 'Market Hall']
+  for (const [index, name] of buildingNames.entries()) {
     const button = page.getByRole('button', { name: new RegExp(`Open ${name}:`) })
     await button.scrollIntoViewIfNeeded()
-    await button.click()
+    await button.focus()
+    if (testInfo.project.name === 'mobile') await page.keyboard.press(String(index + 1))
+    else await button.click()
     await expect(page.getByRole('dialog', { name })).toBeVisible()
     await page.keyboard.press('Escape')
     await button.focus()

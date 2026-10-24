@@ -37,8 +37,8 @@ test('finishing without decisions explains how to unlock comparisons', async ({p
   await expect(page.getByLabel('Pick a decision', {exact:true})).toHaveCount(0)
 })
 
-// The ending engine belongs to Agent 1 and is not on this branch yet.
-// This explicit browser fixture verifies the real comparison UI without fabricating product results.
+// Isolate the comparison UI from simulation speed so selection, shared axes, cancellation and stale responses
+// can be tested deterministically. Other reveal tests use Agent 1's real engine.
 test('comparison selectors show paired charts with shared axes and replace an in-flight run', async ({page}) => {
   await page.route('**/src/game/reveal/ending-contract.ts*', route => route.fulfill({contentType:'application/javascript',body:`
     const original = {months:2,start:-14000,p10:-15000,median:-13000,p90:-10000,yourEvents:-12000,spread:5000};

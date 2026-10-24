@@ -1,5 +1,8 @@
 {
-  "width": 64,
-  "height": 12,
-  "frames": 1
+  "src": "/art/title/flowers.png",
+  "w": 64,
+  "h": 12,
+  "frames": [
+    "0"
+  ]
 }

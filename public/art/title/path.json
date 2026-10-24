@@ -1,5 +1,8 @@
 {
-  "width": 48,
-  "height": 48,
-  "frames": 1
+  "src": "/art/title/path.png",
+  "w": 48,
+  "h": 48,
+  "frames": [
+    "0"
+  ]
 }

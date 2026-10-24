@@ -13,11 +13,11 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
   const key = `${selection.decision}:${selection.alternative}`
   const result = response?.key === key ? response.result : undefined
   const error = response?.key === key ? response.error : undefined
-  const ready = Boolean(endingApi.runWhatIfAsync && selected && selection.alternative)
+  const ready = Boolean(selected && selection.alternative)
   const pending = ready && !result && !error
 
   useEffect(() => {
-    if (!ready || !endingApi.runWhatIfAsync) return
+    if (!ready || !selected) return
     const controller = new AbortController()
     let current = true
     void endingApi.runWhatIfAsync({
@@ -36,7 +36,6 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
   return <section className="fv-what-if" aria-labelledby="fv-what-if-title">
     <h2 id="fv-what-if-title">What if you’d chosen differently?</h2>
     {!hasPolicyDecisions(payload.policyLog) ? <p>You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p>
-      : !endingApi.listDecisions || !endingApi.runWhatIfAsync ? <p>Decision comparisons are unavailable in this version. Your original results are shown above.</p>
       : decisions.length === 0 ? <p>You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p>
       : <>
         <div className="fv-what-if-fields"><label>Pick a decision<select className="pixel-panel" value={selection.decision} onChange={event => {
