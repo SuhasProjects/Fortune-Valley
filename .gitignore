@@ -4,3 +4,6 @@ dist/
 .vite/
 .env*
 !.env.example
+test-results/
+playwright-report/
+debug.log
