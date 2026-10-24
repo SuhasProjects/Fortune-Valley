@@ -1,7 +1,7 @@
 ﻿import type { BuildingId } from '../../types/domain'
 import { buildingIds, buildings } from './buildings'
 
-export const TOWN_ART = '/assets/town-valley-v1.png'
+export const TOWN_ART = '/assets/town-valley-v2.png'
 
 // Both the map and the card portraits reference the same original raster artwork.
 // Crops use a normalized 1536 x 1024 coordinate space, not separate sprite assets.
@@ -25,7 +25,6 @@ export interface TownSceneProps {
 export function TownScene({ onBuildingClick, eventBuilding, eventBuildings = [] }: TownSceneProps) {
   return <section className="town-scene illustrated-town" aria-label="Financial Town. Choose a building to explore your finances.">
     <img className="town-illustration" src={TOWN_ART} alt="" width="1536" height="1024" fetchPriority="high" draggable={false}/>
-    <div className="map-location" aria-hidden="true">PINE VALLEY <span>•</span> EST. 2026</div>
     {buildingIds.map(id => {
       const event = eventBuilding === id || eventBuildings.includes(id)
       return <button key={id} className={`town-hotspot illustrated-hotspot hotspot-${id}`} style={{ left: `${buildings[id].x}%`, top: `${buildings[id].y}%` }} onClick={() => onBuildingClick(id)} aria-label={`Open ${buildings[id].title}: ${buildings[id].hint}${event ? '. Decision waiting' : ''}`}>
@@ -34,6 +33,5 @@ export function TownScene({ onBuildingClick, eventBuilding, eventBuildings = [] 
         {event && <span className="event-badge" aria-label="Decision waiting">!</span>}
       </button>
     })}
-    <div className="map-guide"><span aria-hidden="true">✦</span> Select a building. Shape your story.</div>
   </section>
 }
