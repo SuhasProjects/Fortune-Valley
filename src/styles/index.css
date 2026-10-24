@@ -2,5 +2,6 @@
 @import './pixel-tokens.css';
 @import './town.css';
 @import './valley.css';
+@import './illustrated-town.css';
 
 .pixel-sprite, .town-backdrop, .town-hotspot svg { image-rendering: pixelated; }
