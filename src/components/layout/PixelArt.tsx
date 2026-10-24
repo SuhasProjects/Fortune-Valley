@@ -1,3 +1,7 @@
+import { useEffect, useRef } from 'react'
+import { buildingIds, buildings } from '../town/buildings'
+import type { BuildingId } from '../../types/domain'
+
 export function PixelPortrait({ variant = 0 }: { variant?: number }) {
   const shirts = ['#7289b0', '#537b56', '#b07947', '#ac6570']
   return <svg viewBox="0 0 48 48" className="pixel-portrait" aria-hidden="true" shapeRendering="crispEdges">
@@ -46,3 +50,155 @@ export function WorldBackdrop() {
     <path fill="#e4ebd9" d="M100 150h40v-16h80v16h40v16H100zM1120 90h32V74h64v16h48v16h-144z"/>
   </svg></div>
 }
+
+/** Original low-resolution artwork. Each logical pixel occupies about four screen pixels. */
+export function ResponsiveTownArtwork() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const scene = canvas?.parentElement
+    if (!canvas || !scene) return
+    let frame = 0
+    function paint() {
+      if (!canvas || !scene) return
+      const bounds = scene.getBoundingClientRect()
+      if (!bounds.width || !bounds.height) return
+      const width = Math.max(80, Math.round(bounds.width / 4))
+      const height = Math.max(60, Math.round(bounds.height / 4))
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      ctx.imageSmoothingEnabled = false
+      const rect = (x: number, y: number, w: number, h: number, color: string) => {
+        ctx.fillStyle = color
+        ctx.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)))
+      }
+      const px = (x: number) => Math.round(width * x)
+      const py = (y: number) => Math.round(height * y)
+      rect(0, 0, width, height, '#a8bf85')
+      // Broad, quiet patches instead of individual grass blades and scattered props.
+      for (let i = 0; i < 28; i++) {
+        const x = (i * 67 + 17) % width
+        const y = (i * 41 + 11) % height
+        rect(x, y, 3 + i % 3, 2, i % 2 ? '#a0b87b' : '#b3c890')
+      }
+      const road = Math.max(7, Math.round(Math.min(width, height) * .075))
+      const lane = py(.47)
+      const vertical = (x: number, from: number, to: number) => {
+        rect(x - road / 2, from, road, to - from, '#bca16c')
+        rect(x - road / 2 + 1, from, road - 2, to - from, '#e3cc94')
+      }
+      rect(0, lane - road / 2, width, road, '#bca16c')
+      rect(0, lane - road / 2 + 1, width, road - 2, '#e3cc94')
+      vertical(px(.505), py(.15), py(.91))
+      for (const id of buildingIds) {
+        const item = buildings[id]
+        if (item.y < 47) vertical(px(item.x / 100), py(item.y / 100), lane)
+        else vertical(px(item.x / 100), lane, py(item.y / 100 + .13))
+      }
+      // A single small pond, with stepped shore and a few readable water highlights.
+      rect(0, py(.82), px(.12), height, '#819e78')
+      rect(0, py(.85), px(.16), height, '#819e78')
+      rect(0, py(.84), px(.105), height, '#679dab')
+      rect(0, py(.87), px(.145), height, '#679dab')
+      rect(0, py(.85), px(.09), height, '#85b9be')
+      rect(0, py(.89), px(.13), height, '#85b9be')
+      rect(px(.025), py(.9), 5, 1, '#c4dbce')
+      rect(px(.08), py(.96), 6, 1, '#c4dbce')
+      const tree = (x: number, y: number) => {
+        rect(x - 6, y + 7, 15, 3, '#8ca775')
+        rect(x - 1, y + 1, 3, 8, '#8b6745')
+        rect(x - 6, y - 9, 12, 11, '#4b7355')
+        rect(x - 9, y - 6, 18, 7, '#4b7355')
+        rect(x - 4, y - 12, 9, 4, '#4b7355')
+        rect(x - 5, y - 9, 9, 8, '#749956')
+        rect(x - 7, y - 5, 5, 4, '#88aa65')
+        rect(x - 3, y - 10, 5, 3, '#a1bc79')
+        rect(x + 3, y - 4, 4, 4, '#5d854e')
+      }
+      tree(px(.06), py(.15))
+      tree(px(.94), py(.16))
+      tree(px(.07), py(.7))
+      tree(px(.93), py(.73))
+      tree(px(.86), py(.93))
+      // A modest fountain and two flower beds are the only central decoration.
+      const fx = px(.505), fy = lane
+      rect(fx - 7, fy - 3, 15, 9, '#9c9d7d')
+      rect(fx - 6, fy - 4, 12, 8, '#d6cfaa')
+      rect(fx - 4, fy - 3, 8, 5, '#71a9b6')
+      rect(fx - 1, fy - 8, 3, 8, '#b2d3ca')
+      rect(fx - 2, fy - 9, 5, 2, '#e2e7cf')
+      for (const x of [.38, .72]) {
+        const bx = px(x), by = py(.41)
+        rect(bx - 4, by, 9, 3, '#7d945e')
+        rect(bx - 3, by - 2, 2, 2, '#eacb83')
+        rect(bx + 2, by - 1, 2, 2, '#d69583')
+      }
+      // Paint every sprite into the exact bounds of its accessible HTML hotspot.
+      const canvasBounds = canvas.getBoundingClientRect()
+      for (const id of buildingIds) {
+        const target = scene.querySelector<HTMLElement>(`.hotspot-${id}`)
+        if (!target) continue
+        const box = target.getBoundingClientRect()
+        const sx = (box.left - canvasBounds.left) / canvasBounds.width * width
+        const sy = (box.top - canvasBounds.top) / canvasBounds.height * height
+        const sw = box.width / canvasBounds.width * width
+        const sh = box.height / canvasBounds.height * height
+        const r = (x: number, y: number, w: number, h: number, color: string) => rect(sx + x / 48 * sw, sy + y / 48 * sh, w / 48 * sw, h / 48 * sh, color)
+        const colors: Record<BuildingId, [string, string, string]> = {
+          bank: ['#b4c4ba', '#637f8b', '#8ca3aa'],
+          office: ['#d1b88a', '#587f79', '#82a59a'],
+          hospital: ['#e5d5ac', '#b27668', '#cd9580'],
+          home: ['#d5ae76', '#ac6e50', '#cb9064'],
+          market: ['#c8b086', '#64836c', '#91a389'],
+        }
+        const [wall, roof, roofLight] = colors[id]
+        r(7, 41, 39, 5, '#859c72')
+        r(34, 21, 10, 21, '#927b59')
+        r(5, 21, 31, 21, '#6e5742')
+        r(7, 22, 27, 18, wall)
+        r(7, 23, 3, 16, '#e8d3a4')
+        r(7, 38, 27, 3, '#a78e65')
+        r(3, 19, 39, 5, '#536351')
+        r(6, 14, 34, 6, roof)
+        r(10, 10, 26, 5, roof)
+        r(14, 6, 18, 5, roof)
+        r(14, 6, 18, 2, roofLight)
+        r(10, 12, 24, 2, roofLight)
+        r(6, 18, 31, 2, roofLight)
+        r(37, 17, 5, 6, '#50675c')
+        r(11, 27, 8, 8, '#536a68')
+        r(12, 28, 5, 5, '#a7c7b8')
+        r(27, 27, 5, 8, '#536a68')
+        r(28, 28, 3, 5, '#a7c7b8')
+        r(20, 28, 6, 13, '#72563d')
+        r(21, 29, 4, 11, '#bc8c56')
+        r(24, 34, 1, 2, '#f2d391')
+        r(18, 41, 11, 2, '#dac69a')
+        r(16, 44, 15, 2, '#b5a783')
+        r(38, 28, 4, 7, '#6c7765')
+        r(38, 29, 2, 4, '#9bb5a4')
+        if (id === 'bank') {
+          r(18, 13, 10, 8, '#8a6a3a'); r(20, 13, 6, 7, '#e1b85b'); r(21, 14, 3, 2, '#f7db8e')
+        } else if (id === 'office') {
+          r(17, 4, 12, 12, '#6e6349'); r(19, 5, 8, 9, '#ead8ae'); r(22, 7, 1, 5, '#745c43'); r(23, 10, 3, 1, '#745c43')
+        } else if (id === 'hospital') {
+          r(17, 12, 13, 11, '#eee1bc'); r(22, 13, 3, 9, '#b96a5a'); r(19, 16, 9, 3, '#b96a5a')
+        } else if (id === 'home') {
+          r(31, 2, 5, 10, '#8c7860'); r(31, 2, 6, 2, '#c8baa0'); r(10, 35, 8, 2, '#7b945e'); r(12, 34, 2, 2, '#d39b82')
+        } else {
+          r(5, 24, 30, 6, '#e2d6a8'); r(5, 24, 5, 6, '#668466'); r(15, 24, 5, 6, '#668466'); r(25, 24, 5, 6, '#668466')
+          r(7, 36, 9, 6, '#9c794b'); r(8, 35, 3, 3, '#b76e50'); r(12, 35, 3, 3, '#d6b558')
+        }
+      }
+    }
+    const redraw = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(paint) }
+    const observer = new ResizeObserver(redraw)
+    observer.observe(scene)
+    redraw()
+    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [])
+  return <canvas ref={canvasRef} className="responsive-town-art" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', imageRendering: 'pixelated', pointerEvents: 'none' }}/>
+}
+
