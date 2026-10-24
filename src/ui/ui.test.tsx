@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
-import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, setUiReducedMotion, useReducedMotion } from './index'
+import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, IconButton, Icon, Select, Slider, Tooltip, setUiReducedMotion, useReducedMotion } from './index'
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); setUiReducedMotion(false) })
 beforeEach(() => {
@@ -59,5 +59,29 @@ describe('UI accessibility contracts', () => {
     setUiReducedMotion(true)
     function Example() { return <span>{String(useReducedMotion())}</span> }
     render(<Example/>); expect(screen.getByText('true')).toBeTruthy()
+  })
+})
+describe('UI kit components', () => {
+  it('renders button variants, sizes and icons, and names icon buttons', () => {
+    render(<><Button variant="primary" size="lg" icon="coin" iconRight="arrow-right">Next month</Button><IconButton icon="gear" label="Options"/></>)
+    const button = screen.getByRole('button', {name:'Next month'}); expect(button.className).toContain('fv-button--primary'); expect(button.className).toContain('fv-button--lg')
+    expect(button.querySelectorAll('img.fv-icon')).toHaveLength(2); expect(button.getAttribute('type')).toBe('button')
+    const icon = screen.getByRole('button', {name:'Options'}); expect(icon.getAttribute('title')).toBe('Options'); expect(icon.className).toContain('fv-icon-button')
+  })
+  it('hides decorative icons and labels named ones', () => {
+    const {container} = render(<><Icon name="coin"/><Icon name="leaf" size={16} label="Savings"/></>)
+    const [plain, named] = Array.from(container.querySelectorAll('img')); expect(plain!.getAttribute('aria-hidden')).toBe('true'); expect(plain!.getAttribute('alt')).toBe('')
+    expect(named!.getAttribute('aria-hidden')).toBeNull(); expect(named!.getAttribute('alt')).toBe('Savings'); expect(named!.getAttribute('src')).toContain('leaf-16.png')
+  })
+  it('emits select values and slider value text', () => {
+    const select = vi.fn(), slide = vi.fn()
+    render(<><Select label="Material" value="wood" onChange={select} options={[{value:'wood',label:'Wood'},{value:'paper',label:'Paper'}]}/><Slider label="Contribution" value={200} onChange={slide} min={0} max={1000} step={10} format={value => `$${value}`}/></>)
+    fireEvent.change(screen.getByRole('combobox', {name:'Material'}), {target:{value:'paper'}}); expect(select).toHaveBeenCalledWith('paper')
+    const slider = screen.getByRole('slider', {name:/Contribution/}); expect(slider.getAttribute('aria-valuetext')).toBe('$200')
+    fireEvent.change(slider, {target:{value:'300'}}); expect(slide).toHaveBeenCalledWith(300)
+  })
+  it('describes its child with a tooltip', () => {
+    render(<Tooltip content="Keyboard: N"><Button>Next</Button></Tooltip>)
+    const tip = screen.getByRole('tooltip'); expect(tip.textContent).toBe('Keyboard: N'); expect(screen.getByRole('button').closest('[aria-describedby]')?.getAttribute('aria-describedby')).toBe(tip.id)
   })
 })

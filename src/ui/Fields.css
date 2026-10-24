@@ -5,8 +5,8 @@
 textarea.fv-field-control { min-height: calc(24 * var(--px)); resize: vertical; }
 .fv-field__hint { font-size: var(--fs-label); } .fv-field__error { color: var(--c-money-down); }
 .fv-field-control[aria-invalid='true'] { outline: var(--px) solid var(--c-money-down); }
-.fv-number-field { position: relative; } .fv-number-field:has(.fv-number-field__prefix) input { padding-left: calc(5 * var(--px)); }
-.fv-number-field__prefix { position: absolute; left: calc(4 * var(--px)); bottom: calc(4 * var(--px)); z-index: 1; font: var(--fs-body)/1 var(--font-body); color: var(--c-outline); }
+.fv-field__wrap { position: relative; display: block; } .fv-field__wrap input { padding-left: calc(6 * var(--px)); }
+.fv-field__prefix { position: absolute; left: calc(3 * var(--px)); top: 50%; transform: translateY(-50%); z-index: 1; font: var(--fs-body)/1 var(--font-body); color: var(--c-outline); pointer-events: none; }
 .fv-select-wrap { position: relative; } .fv-select-wrap select { appearance: none; padding-right: calc(9 * var(--px)); }
 .fv-select-wrap > .fv-icon { position: absolute; right: calc(3 * var(--px)); top: calc(3 * var(--px)); width: calc(6 * var(--px)); height: calc(6 * var(--px)); transform: rotate(90deg); pointer-events: none; }
 .fv-slider { appearance: none; width: 100%; height: calc(4 * var(--px)); border: calc(2 * var(--px)) solid transparent; border-image: url('/art/ui/controls/slider-track.png') 2 fill / calc(2 * var(--px)) / 0 stretch; margin: calc(3 * var(--px)) 0; background: transparent; cursor: pointer; }
