@@ -10,7 +10,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 import type { AiErrorResponse, AiResponse } from '../../src/types/domain';
-import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM } from './prompts.js';
+import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM, buildExplainUser, buildOpportunityUser } from './prompts.js';
 import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas.js';
 import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible.js';
 import { allowRequest, MAX_BODY_BYTES } from './rateLimit.js';
@@ -98,12 +98,12 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
       return { status: 200, body: { kind: 'scenario', source: 'ai', proposal: r.parsed, warnings: [] } };
     }
     if (req.kind === 'opportunity') {
-      const r = await model.parse({ system: OPPORTUNITY_SYSTEM, user: JSON.stringify(req.summary), schema: OpportunityOutputSchema, maxTokens: 2000 });
+      const r = await model.parse({ system: OPPORTUNITY_SYSTEM, user: buildOpportunityUser(req), schema: OpportunityOutputSchema, maxTokens: 2000 });
       if (r.stopReason === 'refusal') return err(502, 'upstream_error', 'Model declined the request');
       if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the opportunity schema');
       return { status: 200, body: { kind: 'opportunity', source: 'ai', proposal: r.parsed.proposal, warnings: [] } };
     }
-    const r = await model.parse({ system: EXPLAIN_SYSTEM, user: JSON.stringify({ summary: req.summary, question: req.question, monteCarlo: req.monteCarlo ?? null }), schema: ExplainOutputSchema, maxTokens: 1500 });
+    const r = await model.parse({ system: EXPLAIN_SYSTEM, user: buildExplainUser(req), schema: ExplainOutputSchema, maxTokens: 800 });
     if (r.stopReason === 'refusal') return err(502, 'upstream_error', 'Model declined the request');
     if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the explain schema');
     return { status: 200, body: { kind: 'explain', source: 'ai', text: r.parsed.text, warnings: [] } };
