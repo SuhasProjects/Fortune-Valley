@@ -8,6 +8,9 @@ import { ConnectedBuildingPanel } from '../components/panels/ConnectedBuildingPa
 import { PixelIcon } from '../components/layout/PixelArt'
 import { ToastStack } from './flow/ToastStack'
 import { useShortcuts } from './flow/useShortcuts'
+import { ActivityWindow } from './flow/ActivityWindow'
+import { TimelineWindow } from './flow/TimelineWindow'
+import { ConfirmDialog } from './flow/ConfirmDialog'
 import { OptionsWindow } from './settings'
 import { sfx } from './audio/sfx'
 import { GameStage } from './stage/GameStage'
@@ -19,12 +22,14 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   const debt = useGameStore(selectDebtTotal)
   const [menu, setMenu] = useState<'pause' | 'options' | 'guide' | null>(null)
   const [finishConfirm, setFinishConfirm] = useState(false)
+  const [confirm, setConfirm] = useState<'restart' | 'delete-save' | null>(null)
   const [finishing, setFinishing] = useState(false)
   const [monthBanner, setMonthBanner] = useState(false)
   const [saved, setSaved] = useState(false)
   const previousMonth = useRef<number | null>(null)
   const previousCash = useRef<number | null>(null)
   const previousTypeB = useRef(0)
+  const pauseWasAlreadyPaused = useRef(false)
   useEffect(() => {
     if (!store.lastActionError) return
     const timeout = window.setTimeout(store.clearActionError, 5_000)
@@ -33,14 +38,24 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
   if (!store.game || !store.config) return null
   const { game, config } = store
   const panel = store.openBuildingId
-  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || finishConfirm)
+  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || finishConfirm || confirm)
+  const openPause = () => {
+    pauseWasAlreadyPaused.current = game.status === 'paused'
+    setMenu('pause')
+    store.setPaused(true)
+  }
+  const closePause = () => {
+    setMenu(null)
+    if (!pauseWasAlreadyPaused.current) store.setPaused(false)
+  }
   const closeTop = () => {
-    if (finishConfirm) setFinishConfirm(false)
+    if (confirm) setConfirm(null)
+    else if (finishConfirm) setFinishConfirm(false)
     else if (menu) setMenu(null)
     else if (store.historyOpen) store.setHistoryOpen(false)
     else if (store.timelineOpen) store.closeTimeline()
     else if (panel) store.closeBuilding()
-    else { setMenu('pause'); store.setPaused(true) }
+    else openPause()
   }
   const beginFinish = async () => {
     setFinishConfirm(false)
@@ -80,7 +95,7 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     return () => document.removeEventListener('click', click)
   }, [])
   const hud = <header className="town-hud"><div className="hud-brand"><span className="brand-mark"><PixelIcon/></span><div className="wordmark">FINANCIAL TOWN<small>{config.title}</small></div></div><dl className="hud-stats"><div className="hud-date"><dt><PixelIcon kind="calendar"/>{monthLabel(config.startMonth,game.monthIndex)}</dt><dd>Month {game.monthIndex} / {config.durationMonths}</dd></div><div><dt><PixelIcon kind="coin"/>Cash</dt><dd>{usd(game.cash)}</dd></div><div><dt><PixelIcon kind="leaf"/>Savings</dt><dd>{usd(game.savings)}</dd></div><div><dt><PixelIcon kind="book"/>Debt</dt><dd>{usd(debt)}</dd></div><div className="hud-net"><dt><PixelIcon kind="coin"/>Net worth</dt><dd>{usd(netWorth)}</dd></div></dl><button className="pixel-button" onClick={store.openTimeline}>Timeline ↗</button></header>
-  const gameStatus = <>{<span className="offline-tag">{game.status === 'paused' ? 'PAUSED' : game.status === 'finished' ? 'STORY COMPLETE' : store.aiStatus === 'loading' ? 'PREPARING OPPORTUNITY' : store.aiStatus === 'online' ? 'AI CONNECTED' : 'OFFLINE READY'}</span>}{saved && <span className="offline-tag" role="status">✓ Saved</span>}<button className="icon-button" aria-label="Open pause menu" onClick={() => { setMenu('pause'); store.setPaused(true) }}>⚙</button></>
+  const gameStatus = <>{<span className="offline-tag">{game.status === 'paused' ? 'PAUSED' : game.status === 'finished' ? 'STORY COMPLETE' : store.aiStatus === 'loading' ? 'PREPARING OPPORTUNITY' : store.aiStatus === 'online' ? 'AI CONNECTED' : 'OFFLINE READY'}</span>}{saved && <span className="offline-tag" role="status">✓ Saved</span>}<button className="icon-button" aria-label="Open pause menu" onClick={openPause}>⚙</button></>
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
   return <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
     <a className="skip-link" href="#town-main">Skip to town controls</a>
@@ -88,12 +103,22 @@ export function GameScreen({ panels = {} }: { panels?: Partial<Record<BuildingId
     {store.lastActionError && <p className="action-error pixel-panel" role="alert">{store.lastActionError}</p>}
     {monthBanner && <div className="month-banner pixel-panel" role="status">Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</div>}
     {panel && <PanelHost building={panel} onClose={store.closeBuilding}>{game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')).map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}{panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}</PanelHost>}
-    {store.timelineOpen && <PanelHost title="Your timeline" onClose={store.closeTimeline}>{game.timeline.length ? <ol className="story-list">{game.timeline.map(e=><li key={e.id}><span className="eyebrow">MONTH {e.monthIndex} · {e.type.replaceAll('_',' ')}</span><p>{e.description}</p></li>)}</ol> : <p>Your story starts here. Advance a month or make a decision to add to your timeline.</p>}</PanelHost>}
-    {store.historyOpen && <PanelHost title="Town activity" onClose={()=>store.setHistoryOpen(false)}><ol className="story-list">{game.notifications.map(n=><li key={n.id}><span className="eyebrow">MONTH {n.monthIndex} · {n.kind}</span><h3>{n.summary}</h3>{n.details && <p>{n.details}</p>}{n.amountSigned !== undefined && <strong>{usd(n.amountSigned,true)}</strong>}{n.relatedBuilding && <button className="pixel-button" onClick={()=>{ store.setHistoryOpen(false); store.openBuilding(n.relatedBuilding!) }}>Open building →</button>}</li>)}</ol></PanelHost>}
-    {menu === 'pause' && <PanelHost title="Paused" onClose={() => { setMenu(null); store.setPaused(false) }}><button className="pixel-button pixel-button--gold" onClick={() => { setMenu(null); store.setPaused(false) }}>Resume</button><button className="pixel-button" onClick={() => setMenu('options')}>Options</button><button className="pixel-button" onClick={() => setMenu('guide')}>Guide</button><button className="pixel-button" onClick={() => { store.saveGame(); store.resetGame() }}>Save &amp; quit to title</button></PanelHost>}
-    {menu === 'options' && <OptionsWindow onClose={() => setMenu('pause')}/>} 
+    {store.timelineOpen && <TimelineWindow entries={game.timeline} startMonth={config.startMonth} onClose={store.closeTimeline}/>}
+    {store.historyOpen && <ActivityWindow notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={building => { store.setHistoryOpen(false); store.openBuilding(building) }}/>}
+    {menu === 'pause' && <PanelHost title="Paused" onClose={closePause}><button className="pixel-button pixel-button--gold" onClick={() => { setMenu(null); store.setPaused(false) }}>Resume</button><button className="pixel-button" onClick={() => setMenu('options')}>Options</button><button className="pixel-button" onClick={() => setMenu('guide')}>Guide</button><button className="pixel-button" onClick={() => { store.saveGame(); store.resetGame() }}>Save &amp; quit to title</button><button className="pixel-button pixel-button--danger" onClick={() => { setMenu(null); setConfirm('restart') }}>Restart this story</button></PanelHost>}
+    {menu === 'options' && <PanelHost title="Options" onClose={() => setMenu('pause')}><OptionsWindow onClose={() => setMenu('pause')} onDeleteSave={() => { setMenu(null); setConfirm('delete-save') }}/></PanelHost>}
     {menu === 'guide' && <PanelHost title="Guide" onClose={() => setMenu('pause')}><p>Space pauses, N advances, 1–5 open buildings, T opens the timeline, A opens activity, and Esc closes the top window.</p></PanelHost>}
     {finishConfirm && <PanelHost title="Finish early?" onClose={() => setFinishConfirm(false)}><p>You've played {game.monthIndex} of {config.durationMonths} months. Results will use the months you played.</p><button className="pixel-button pixel-button--gold" onClick={() => void beginFinish()}>Finish now</button><button className="pixel-button" onClick={() => setFinishConfirm(false)}>Keep playing</button></PanelHost>}
+    {confirm === 'restart' && <ConfirmDialog
+      title="Restart this story?" body="Your current progress will be replaced with a fresh version of this story."
+      confirmLabel="Restart" danger onCancel={() => { setConfirm(null); setMenu('pause') }}
+      onConfirm={() => { setConfirm(null); store.startGame(config) }}/>
+    }
+    {confirm === 'delete-save' && <ConfirmDialog
+      title="Delete saved game?" body="Your saved run will be permanently removed. Your current run will stay open."
+      confirmLabel="Delete save" danger onCancel={() => { setConfirm(null); setMenu('options') }}
+      onConfirm={() => { store.clearSavedGame(); setConfirm(null); setMenu('options') }}/>
+    }
     {finishing && <div className="finish-overlay" role="status"><div className="pixel-panel"><h2>Counting 1,000 possible futures…</h2><p aria-hidden="true">● ● ● ● ●</p></div></div>}
     {game.status === 'finished' && !finishing && <div className="completion-banner pixel-panel"><p>Your {config.durationMonths} months are complete.</p><button className="pixel-button pixel-button--gold" onClick={() => void beginFinish()}>Review your story →</button></div>}
     </FullscreenGameView>
