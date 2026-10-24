@@ -1,0 +1,3 @@
+export function GameClock({ status, onAdvance, onPause, onFinish }: { status: 'setup'|'playing'|'paused'|'finished'; onAdvance: () => void; onPause: (paused: boolean) => void; onFinish: () => void }) {
+  return <div className="clock-controls" aria-label="Time controls"><button className="pixel-button" onClick={() => onPause(status === 'playing')} disabled={status === 'finished'}>{status === 'paused' ? '▶ Resume' : 'Ⅱ Pause'}</button><button className="pixel-button pixel-button--gold" onClick={onAdvance} disabled={status !== 'playing'}>Next month →</button><button className="text-button" onClick={onFinish} disabled={status === 'finished'}>Finish &amp; reveal</button></div>
+}
