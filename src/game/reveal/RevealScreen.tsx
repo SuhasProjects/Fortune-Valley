@@ -1,16 +1,13 @@
-import { useRef, useState, useEffect, type ComponentType } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { createGame, netWorthOf } from '@/engine'
 import { useGameStore, type FinishPayload } from '@/stores/useGameStore'
 import { usd } from '@/components/flow/format'
 import { TitleStage, Ledger, MenuButton, readReduceMotion } from '../title/contracts'
-import { TitleScene } from '../title/TitleScene'
+import { TownWorld } from '@/game/world/TownWorld'
 import { originalLines } from './ending-contract'
 import { OutcomeChart, sharedYDomain } from './OutcomeChart'
 import { WhatIfSection } from './WhatIfSection'
 import './reveal.css'
-
-const worlds = import.meta.glob<{ TownWorld: ComponentType<{ timeOfDay: 'dusk' }> }>('/src/game/world/TownWorld.tsx', { eager: true })
-const TownWorld = Object.values(worlds)[0]?.TownWorld
 
 export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload; onPlayAgain: () => void }) {
   const { monteCarlo: mc } = payload
@@ -23,7 +20,7 @@ export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload;
   const requestExplanation = useGameStore(state => state.requestExplanation)
   const mounted = useRef(true)
   useEffect(() => { mounted.current = true; heading.current?.focus(); return () => { mounted.current = false } }, [])
-  return <div data-fv-reveal="true"><TitleStage label="Simulation results" world={TownWorld ? <TownWorld timeOfDay="dusk"/> : <TitleScene dusk/>}>
+  return <div data-fv-reveal="true"><TitleStage label="Simulation results" world={<TownWorld timeOfDay="dusk"/>}>
     <div className="fv-reveal-ui" data-reduce-motion={readReduceMotion()}>
       <Ledger className="fv-reveal-ledger">
         <header className="fv-reveal-heading"><span>Your Next Chapter</span><h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1>
