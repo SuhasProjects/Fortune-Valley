@@ -1,8 +1,6 @@
-@import 'tailwindcss';
+﻿@import 'tailwindcss';
+@import '@fontsource/pixelify-sans/latin-400.css';
+@import '@fontsource/pixelify-sans/latin-700.css';
+@import '@fontsource/vt323/latin-400.css';
 @import './pixel-tokens.css';
-@import './town.css';
-@import './valley.css';
-@import './illustrated-town.css';
-
-html, body, #root { min-height: 100%; }
-.pixel-sprite, .building-icon { image-rendering: pixelated; }
+@import './world.css';
