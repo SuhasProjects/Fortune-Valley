@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, type FormEvent } from 'react'
+import { Board, Button, Field, Tag } from '@/ui'
 import { useGameStore, type PersonalizationResult } from '@/stores/useGameStore'
 import type { PersonalizedInput } from '@/types/domain'
 import { scenarioCards } from '@/data/scenarios'
-import { Ledger, MenuButton } from './contracts'
 
 const examples = ["I'm 24, earn $48k, rent is $1,400 and I have $9k of card debt.", 'How could I build an emergency fund while raising two children?', 'I want to explore investing while paying down a student loan.']
 type Numbers = Omit<PersonalizedInput, 'freeText'>
@@ -41,22 +41,22 @@ export function CustomStoryLetter() {
       if (active.current && request === version.current) setError(reason instanceof Error ? reason.message : 'Please try again.')
     }
   }
-  return <Ledger className="fv-letter">
-    {result ? <div className="fv-letter-result"><span>Your invitation to the valley</span><h2 ref={resultHeading} tabIndex={-1}>{result.config.title}</h2>
+  return <Board className="fv-letter" padding="lg">
+    {result ? <div className="fv-letter-result"><span className="fv-letter-kicker">Your invitation to the valley</span><h2 ref={resultHeading} tabIndex={-1}>{result.config.title}</h2>
       <p>Based on {scenarioCards.find(card => card.id === result.config.archetype)?.title ?? 'a fictional starting life'}.</p>
-      {result.fallback && <p className="offline-tag">Made offline from a template</p>}
+      {result.fallback && <p><Tag>Made offline from a template</Tag></p>}
       {result.warnings.length > 0 && <ul>{result.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul>}
-      <div className="fv-actions"><MenuButton primary onClick={() => start(result.config)}>Start this story</MenuButton><MenuButton onClick={() => setResult(null)}>Edit</MenuButton></div>
+      <div className="fv-actions"><Button variant="primary" onClick={() => start(result.config)}>Start this story</Button><Button onClick={() => setResult(null)}>Edit</Button></div>
     </div> : <form onSubmit={submit} aria-busy={loading}>
       <h2 tabIndex={-1}>Dear Valley, here is my situation…</h2><p>A fictional story shaped around what you want to explore.</p>
-      <label htmlFor="fv-story-prompt">What would you like to explore?</label>
-      <textarea className="pixel-panel" id="fv-story-prompt" required maxLength={2000} rows={4} value={prompt} onChange={event => setPrompt(event.target.value)} aria-describedby="fv-prompt-count fv-prompt-note"/>
-      <div className="fv-letter-meta"><small id="fv-prompt-note">Keep identifying details out of your letter.</small><small id="fv-prompt-count">{prompt.length} / 2,000</small></div>
-      <div className="fv-examples" aria-label="Example situations">{examples.map((example, i) => <MenuButton key={example} onClick={() => { setPrompt(example); document.getElementById('fv-story-prompt')?.focus() }}>Example {i + 1}: {example}</MenuButton>)}</div>
-      <details><summary>Add numbers <small>(optional)</small></summary><div className="fv-number-grid">{fields.map(field => <label key={field.key}>{field.label}<input className="pixel-panel" type="number" min={field.key === 'age' ? 13 : 0} max={field.max} step={field.step} value={numbers[field.key] ?? ''} onChange={event => setNumbers(previous => { const next = { ...previous }; if (event.target.value === '') delete next[field.key]; else next[field.key] = event.target.valueAsNumber; return next })}/></label>)}</div></details>
-      <div className="fv-actions"><MenuButton type="submit" primary disabled={loading || !prompt.trim()}>Write my story</MenuButton>
+      <Field multiline label="What would you like to explore?" id="fv-story-prompt" required maxLength={2000} rows={4} value={prompt} onChange={event => setPrompt(event.target.value)} hint="Keep identifying details out of your letter." aria-describedby="fv-prompt-count"/>
+      <div className="fv-letter-meta"><small id="fv-prompt-count">{prompt.length} / 2,000</small></div>
+      <div className="fv-examples" role="group" aria-label="Example situations">{examples.map((example, i) => <Button size="sm" key={example} onClick={() => { setPrompt(example); document.getElementById('fv-story-prompt')?.focus() }}>Example {i + 1}: {example}</Button>)}</div>
+      <details className="fv-letter-numbers"><summary>Add numbers <small>(optional)</small></summary><div className="fv-number-grid">{fields.map(field =>
+        <Field key={field.key} label={field.label} type="number" inputMode="decimal" min={field.key === 'age' ? 13 : 0} max={field.max} step={field.step} value={numbers[field.key] ?? ''} onChange={event => setNumbers(previous => { const next = { ...previous }; if (event.target.value === '') delete next[field.key]; else next[field.key] = event.target.valueAsNumber; return next })}/>)}</div></details>
+      <div className="fv-actions"><Button type="submit" variant="primary" disabled={loading || !prompt.trim()}>Write my story</Button>
       {loading && <span role="status"><span className="fv-quill" aria-hidden="true"/>The valley is preparing your story…</span>}</div>
       {(error || storeError) && <p role="alert">{error || storeError}</p>}
     </form>}
-  </Ledger>
+  </Board>
 }
