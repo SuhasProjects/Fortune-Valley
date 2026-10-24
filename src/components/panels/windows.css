@@ -26,6 +26,8 @@
 .ft-sheet__popover::before { content: ''; display: block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); margin: 0 auto calc(-2 * var(--px)); position: relative; z-index: 1; }
 .ft-sheet__help-heading { margin-bottom: calc(2 * var(--px)); }
 .ft-window-hint { grid-area: hint; margin: 0; color: var(--c-paper); font: var(--fs-label)/1.1 var(--font-body); }
+/* The world also calls its floating signs fv-plaque; keep kit header plaques in flow. */
+.fv-window__header > h2 > .fv-plaque { position: static; inset: auto; display: inline-block; text-align: left; pointer-events: auto; }
 .fv-window:has(.ft-building-portrait) { --building-roof: var(--c-roof-red); --building-roof-dark: var(--c-roof-red-dark); max-width: calc(100vw - 10 * var(--px)); }
 .fv-window:has([data-building='bank']) { --building-roof: var(--c-roof-blue); --building-roof-dark: var(--c-roof-blue-dark); }
 .fv-window:has([data-building='office']) { --building-roof: var(--c-roof-teal); --building-roof-dark: var(--c-roof-teal-dark); }

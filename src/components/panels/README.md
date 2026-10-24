@@ -1,38 +1,25 @@
-# Financial panels — current team integration
+# Fortune Valley building windows
 
-Based this pass on shared main 198491f, then reapplied the approved centered parchment/help design. Agent 1's canonical engine supplies every preview/pay/claim number; no financial math, tax logic, Monte Carlo implementation, or AI code is added in the panels.
+Public integration: BuildingWindow({ building, onClose }) from this folder's index.
+It reads the store, renders that building's pending events and canonical panel, and
+keeps Office job offers inside OfficePanel. PanelHost remains a thin shared-Modal
+wrapper for the existing GameScreen caller, so current players also see the new UI.
 
-## What now works
+The five windows use the shared pixel kit, roof colours, real building portraits,
+authored blinking keepers, short static greetings and three ledger sections.
+All money figures and effects still come from the engine/state. Controls keep their
+existing accessible names, raw drafts, disabled logic and explicit Save actions.
 
-- Live 12-month illustration through previewHorizon: savings and investment policy drafts, Home discretionary-budget overrides, and actual Insurance overrides. A compact cash/borrowing result appears while editing; ? opens the current-versus-draft table. Both paths use the same simulated luck and are explicitly illustrative.
-- One-time debt payment preview through applyAction and previewMonth. It shows cash/debt after payment and an optional next-month illustration without changing the real state or calling store dispatch.
-- Market shows last monthly returns and annual assumptions beside allocation inputs; inline validation uses validateAllocation from the engine.
-- Office uses selectPaySummary for monthly gross, withholding, income/payroll breakdown, and take-home. Last actual pay remains separate from the estimate.
-- Insurance compares the engine's settleClaim result for an illustrative $5,000 medical bill under the two catalog choices.
-- The shared app's event cards remain reachable. Styling accounts for those cards without changing App or the flow components.
+See WINDOW_HANDOFF.md for integration details, shared-kit API gaps and root smoke
+failures owned by the HUD/flow/title agents. VERIFICATION.md records the checks.
 
-Canonical API: BuildingPanel { building, state, dispatch }. The registry remains bank / market / hospital / home / office. The slim store connector, explicit Save actions, collapsed history, and corner help behavior are unchanged.
+## Preview
 
-## Preview and stress route
+- npm run dev: integrated game.
+- npm exec vite -- --config src/components/panels/vite.config.ts --host 127.0.0.1 --port 5174:
+  integrated game plus /dev/stress-states (40 canonical panel/state combinations).
+- node art-src/windows/compile-keepers.mjs: compile the five 24x24, two-frame keeper
+  grids using the shared palette/parser/renderer, without rewriting another agent's
+  generated manifest.
 
-```powershell
-npm.cmd exec vite -- --config src/components/panels/vite.config.ts --host 127.0.0.1 --port 5174
-```
-
-Open http://127.0.0.1:5174/ for the current town or /dev/stress-states for all 40 panel/state combinations. The default root dev server also runs the integrated app; only the special stress route needs the owned config.
-
-## Checks
-
-```powershell
-npm.cmd run typecheck
-npm.cmd test
-npm.cmd run test:browser
-npm.cmd exec playwright -- test --config src/components/panels/playwright.config.ts
-npm.cmd run build
-```
-
-Current checkpoint: 113 unit tests, ten root desktop/mobile checks, four panel desktop/mobile checks, and typecheck pass. Build passed at the previous checkpoint; it was not repeated for this pass. Current screenshots are in screenshots/ and the root suite's docs/screenshots/. Preview tests compare the displayed values to engine outputs and verify that original state is untouched. No credentials were added.
-
-## Remaining coordination
-
-A shared React pixel component kit still has not landed; the scoped parchment skin remains the latest user-approved design. Engine contracts previously listed as missing are now resolved. MISSING.md was removed after resolving the engine contracts; adopt the shared kit when its owner publishes it. Production deployment is owned by the team/Vercel project; pushing this branch does not itself deploy it.
+Owned screenshots live in screenshots/. The integrator owns root town screenshots.

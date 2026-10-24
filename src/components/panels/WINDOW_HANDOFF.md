@@ -29,7 +29,10 @@ option descriptions. Saved feedback expires after two seconds; errors persist.
 Run `node art-src/windows/compile-keepers.mjs` to compile only the keeper assets
 through the shared parser/palette/renderer. The integrator's next full art compile
 will add these grids to the generated global manifest. The shared BuildingPortrait
-is used directly; its current main implementation is still Agent 1's stub.
+now uses Agent 1's real world sprites. Headers choose a smaller whole-number zoom
+for these large building sprites; no fractional scaling is used. The window header
+also resets the world renderer's conflicting global fv-plaque positioning so the
+kit's name plaque stays in flow. Agent 1 can later scope its world plaque selector.
 
 Kit compatibility notes for Agent 2: NumberField currently discards empty drafts
 and string editing states, so money/allocation inputs use the kit's Field with
@@ -37,13 +40,17 @@ native number props. Slider currently drops disabled/aria-label/aria-invalid and
 aria-describedby props; Home keeps its native range with the shared fv-slider
 material until those props can be forwarded. No local control material is drawn.
 
-Validation: typecheck, production build and all 185 unit tests pass. The owned
-browser checks pass for all five windows at 1366x768 and 1440x900, both stress
-routes and the desktop/mobile Bank help/focus flow. The mobile opener uses keyboard
-activation because the shared HUD status currently intercepts the Bank hotspot.
+Validation on the real-world base: typecheck, production build and all 190 unit tests pass. All six
+owned browser checks pass (two laptop-only cases are intentionally skipped in the
+mobile project): all five windows at 1366x768 and 1440x900, both stress routes and
+desktop/mobile Bank help/focus. The mobile opener uses keyboard activation so the
+panel suite stays independent of the shared town's pointer overlays.
 
 Shared root smoke failures to coordinate (not changed here):
-- Agent 2: mobile HUD/gallery controls intercept pointer clicks; gallery image
-  readiness races at scale 4 (`img.complete` check without waiting for loading).
+- Agent 2: mobile gallery controls intercept pointer clicks at scales 4 and 6.
+- Agent 4: the mobile coach tip intercepts town building clicks.
 - Agent 4/5: the town test expects a `Your next chapter` dialog, while the new
   finish flow no longer renders that dialog immediately.
+
+The final root smoke run has 23 passing, four failing and three skipped checks.
+No other agent's tests were edited. PR: https://github.com/SuhasProjects/financegamething/pull/12
