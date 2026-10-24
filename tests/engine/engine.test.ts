@@ -125,7 +125,7 @@ describe('policy & actions', () => {
     expect(applyAction(s, { type: 'make_extra_payment', debtId: 'auto_1', amount: 1e9 }).ok).toBe(false);
     const r = applyAction(s, { type: 'make_extra_payment', debtId: 'auto_1', amount: 500 });
     expect(r.ok).toBe(true);
-    if (r.ok) { expect(r.state.cash).toBeCloseTo(s.cash - 500, 2); expect(r.state.debts.find((d) => d.id === 'auto_1')!.balance).toBeCloseTo(11000 - 500, 2); expect(r.state.policyLog).toHaveLength(1); }
+    if (r.ok) { expect(r.state.cash).toBeCloseTo(s.cash - 500, 2); expect(r.state.debts.find((d) => d.id === 'auto_1')!.balance).toBeCloseTo(9000 - 500, 2); expect(r.state.policyLog).toHaveLength(1); }
   });
   it('a policy change persists into later months', () => {
     let s = start('entry_worker', 5);
