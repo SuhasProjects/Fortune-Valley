@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { scenarios } from '../../data/scenarios'
 import { useGameStore } from '../../stores/useGameStore'
+import { TownIllustration } from './TownIllustration'
 
 const lifeDescriptions = [
   'Balance study costs, everyday spending, and early debt.',
@@ -25,13 +26,13 @@ export function Landing() {
     <a className="welcome-skip" href="#welcome-content">Skip to content</a>
     <header className="welcome-header">
       <a className="welcome-brand" href="#top" aria-label="Financial Town home">
-        <span className="welcome-logo" aria-hidden="true">ft.</span>
+        <span className="welcome-logo" aria-hidden="true">FT</span>
         <span>Financial Town<small>A space to learn about money</small></span>
       </a>
       <nav className="welcome-nav" aria-label="Main navigation">
-        <button type="button" className="welcome-nav-link" aria-expanded={howOpen} aria-controls="how-it-works" onClick={() => setHowOpen(open => !open)}>How it works <span className={howOpen ? 'welcome-chevron is-open' : 'welcome-chevron'} aria-hidden="true">⌄</span></button>
+        <button type="button" className="welcome-nav-link" aria-expanded={howOpen} aria-controls="how-it-works" onClick={() => { setHowOpen(open => !open); if (!howOpen) document.getElementById('top')?.scrollIntoView({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) }}>How it works</button>
         <a className="welcome-nav-link" href="#starting-lives">Starting lives</a>
-        <a className="welcome-nav-link" href="#your-question">Your question</a>
+        <a className="welcome-nav-link" href="#town-guide">The town</a><a className="welcome-nav-link" href="#questions">FAQs</a>
       </nav>
       <div className="welcome-accounts">
         <div><button type="button" disabled aria-describedby="account-placeholder">Sign in</button><button type="button" className="welcome-account-create" disabled aria-describedby="account-placeholder">Create account</button></div>
@@ -44,24 +45,58 @@ export function Landing() {
     </div>
 
     <section className="welcome-hero" id="welcome-content" aria-labelledby="welcome-title">
-      <div className="welcome-hero-copy"><span className="welcome-section-label"><span className="welcome-dot"/>Learn by making choices</span><h1 id="welcome-title">Small choices.<br/>A clearer financial future.</h1><p>Get comfortable with money, one decision at a time. Explore everyday trade-offs in a simple, interactive town.</p><div className="welcome-hero-actions"><a className="welcome-button welcome-button-primary" href="#starting-lives">Start exploring <span aria-hidden="true">↗</span></a><button className="welcome-button welcome-button-text" type="button" onClick={() => { setHowOpen(true); document.getElementById('how-it-works')?.scrollIntoView({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) }}>See how it works <span aria-hidden="true">↓</span></button></div><span className="welcome-hero-note">Free to explore. No account required.</span></div>
-      <div className="welcome-graphic" aria-label="Income connects to everyday costs, a savings cushion, and future goals">
-        <div className="welcome-graphic-heading"><span className="welcome-section-label">The everyday picture</span><span className="welcome-graphic-dot"/></div>
-        <div className="welcome-income"><span className="welcome-line-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="5" y="8" width="22" height="18" rx="2"/><path d="M11 8V5h10v3M5 15h22M13 15v4h6v-4"/></svg></span><span>Your income<small>A starting point for your choices</small></span></div>
-        <div className="welcome-connectors" aria-hidden="true"><i/><i/><i/></div>
-        <div className="welcome-goals">{['Everyday costs', 'A savings cushion', 'Future goals'].map((label, i) => <div key={label}><span className="welcome-line-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none">{i === 0 ? <><path d="m5 14 11-9 11 9M8 12v15h16V12M13 27v-9h6v9"/></> : i === 1 ? <><path d="M16 4 26 8v8c0 6-10 12-10 12S6 22 6 16V8L16 4Z"/><path d="m11 15 4 4 7-8"/></> : <><path d="M7 27V6M8 6h17l-4 6 4 6H8"/></>}</svg></span><span>{label}</span></div>)}</div>
-        <div className="welcome-graphic-footer"><span aria-hidden="true">↳</span><p>Explore how your choices work together.</p></div>
-      </div>
+      <div className="welcome-hero-copy"><span className="welcome-section-label">Learn by making choices</span><h1 id="welcome-title">Small choices.<br/>A clearer financial future.</h1><p>Get comfortable with money, one decision at a time. Explore everyday trade-offs in a simple, interactive town.</p><div className="welcome-hero-actions"><a className="welcome-button welcome-button-primary" href="#starting-lives">Start playing</a><button className="welcome-button welcome-button-text" type="button" onClick={() => { setHowOpen(true); document.getElementById('how-it-works')?.scrollIntoView({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) }}>See how it works</button></div><span className="welcome-hero-note">Free to explore. No account required.</span></div>
+      <TownIllustration/>
     </section>
 
-    <div className="welcome-benefits"><span><i aria-hidden="true">✓</i> Everyday financial decisions</span><span><i aria-hidden="true">✓</i> Learn at your own pace</span><span><i aria-hidden="true">✓</i> See a range of outcomes</span></div>
+    <div className="welcome-benefits"><span>Everyday financial decisions</span><span>Learn at your own pace</span><span>See a range of outcomes</span></div>
 
-    {store.savedGame && <section className="welcome-saved" aria-label="Saved game"><div><span className="welcome-section-label">Saved on this device</span><h2>Continue {store.savedGame.title}</h2><p>Pick up where you left off in month {store.savedGame.monthIndex}.</p></div><div><button type="button" className="welcome-button welcome-button-primary" onClick={() => store.loadSavedGame()}>Continue <span aria-hidden="true">↗</span></button><button type="button" className="welcome-button welcome-button-text" onClick={store.clearSavedGame}>Delete save</button></div></section>}
+    {store.savedGame && <section className="welcome-saved" aria-label="Saved game"><div><span className="welcome-section-label">Saved on this device</span><h2>Continue {store.savedGame.title}</h2><p>Pick up where you left off in month {store.savedGame.monthIndex}.</p></div><div><button type="button" className="welcome-button welcome-button-primary" onClick={() => store.loadSavedGame()}>Continue</button><button type="button" className="welcome-button welcome-button-text" onClick={store.clearSavedGame}>Delete save</button></div></section>}
 
-    <section id="starting-lives" className="welcome-lives" aria-labelledby="starting-title"><div className="welcome-section-heading"><div><span className="welcome-section-label">Find your starting point</span><h2 id="starting-title">A different life. A fresh perspective.</h2></div><p>Choose a fictional scenario.<br/>You can try another anytime.</p></div><div className="welcome-life-grid">{scenarios.map((scenario, i) => <button type="button" className="welcome-life-card" key={scenario.scenarioId} onClick={() => store.startGame(scenario)}><span className="welcome-life-index">0{i + 1}</span><h3>{scenario.title}</h3><p>{lifeDescriptions[i] ?? scenario.description}</p><span className="welcome-life-start">Explore this life <span aria-hidden="true">↗</span></span></button>)}</div></section>
+    <section id="learn-to-play" className="welcome-section welcome-play-guide" aria-labelledby="play-guide-title">
+      <div className="welcome-section-heading"><div><span className="welcome-section-label">How to play</span><h2 id="play-guide-title">Learn by living a little.</h2></div><p>No spreadsheets to set up.<br/>Just a starting life and a few choices.</p></div>
+      <div className="welcome-play-steps">{[
+        ['Set the scene', 'Choose a starting life. Your town begins with a fictional income, living costs, savings, and debt.'],
+        ['Build your strategy', 'Open a building to explore your options. Set a savings habit, adjust spending, or choose insurance.'],
+        ['Move time forward', 'Advance a month. Pay arrives, bills are paid, investments change, and unexpected events can happen.'],
+        ['Look at alternate futures', 'Finish when you are ready. Compare your played outcome with 1,000 paths using your strategy.'],
+      ].map(([title, text], i) => <article key={title}><span className="welcome-step-number">0{i + 1}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+    </section>
 
-    <section id="your-question" className="welcome-question" aria-labelledby="question-title"><div><span className="welcome-section-label">Start with what matters to you</span><h2 id="question-title">Have a question in mind?</h2><p>Turn a money question into a scenario you can explore. Try something like saving while paying off debt.</p><small>Keep personal details out. When available, AI helps build your scenario. Offline mode uses a local alternative.</small></div><form onSubmit={async e => { e.preventDefault(); setFormError(''); try { const result = await store.generatePersonalized(prompt); store.startGame(result.config) } catch (error) { setFormError(error instanceof Error ? error.message : 'We couldn’t prepare that scenario. Please try again.') } }}><label htmlFor="situation">What would you like to explore?</label><textarea id="situation" value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="How could I build savings while paying off debt?" required maxLength={1000}/><div className="welcome-form-bottom"><span>No sensitive information needed.</span><button type="submit" className="welcome-button welcome-button-primary" disabled={store.personalizationLoading}>{store.personalizationLoading ? 'Preparing your scenario…' : 'Explore my question'}<span aria-hidden="true">↗</span></button></div>{(formError || store.personalizationError) && <p role="alert" className="welcome-error">{formError || store.personalizationError}</p>}</form></section>
+    <section id="town-guide" className="welcome-section welcome-town-guide" aria-labelledby="town-guide-title">
+      <div className="welcome-section-heading"><div><span className="welcome-section-label">A town with a purpose</span><h2 id="town-guide-title">Five buildings. Connected choices.</h2></div><p>Click a building in the game<br/>to see what you can change.</p></div>
+      <div className="welcome-building-grid">{[
+        ['Bank', 'Build your buffer', 'Explore savings, debt payments, and the money you keep available.'],
+        ['Office', 'Understand your income', 'See your pay, illustrative withholding, and employment changes.'],
+        ['Home', 'Make room in your budget', 'Review housing and everyday spending as your life moves forward.'],
+        ['Insurance', 'Plan for surprises', 'Explore premiums, deductibles, and what happens after a covered event.'],
+        ['Market', 'Explore investing', 'Choose contributions and allocations, then watch returns unfold over time.'],
+      ].map(([building, title, text], i) => <article key={building}><div className={`welcome-building-symbol welcome-building-symbol-${i}`} aria-hidden="true"><svg viewBox="0 0 48 48" fill="none">{i === 0 ? <><path d="m6 17 18-9 18 9H6ZM10 21v17m9-17v17m10-17v17m9-17v17M5 40h38"/></> : i === 1 ? <><path d="M12 42V6h24v36M18 13h3m6 0h3m-12 8h3m6 0h3m-12 8h3m6 0h3M21 42v-7h6v7"/></> : i === 2 ? <><path d="m5 23 19-16 19 16M10 20v22h28V20M20 42V29h8v13"/></> : i === 3 ? <><path d="M24 6 39 12v12c0 9-15 18-15 18S9 33 9 24V12L24 6Z"/><path d="M24 17v14m-7-7h14"/></> : <><path d="M8 42V20h32v22M5 9h38l-3 11H8L5 9ZM15 28h10v9H15m16-9v14"/></>}</svg></div><span className="welcome-section-label">{building}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+    </section>
 
-    <footer className="welcome-footer"><a className="welcome-footer-name" href="#top">Financial Town</a><p>Fictional educational simulation. Assumptions are illustrative.<br/>For learning, not personal financial advice.</p><a href="#top">Back to top ↑</a></footer>
+    <section className="welcome-month-section" aria-labelledby="month-title"><div><span className="welcome-section-label">The game moves with you</span><h2 id="month-title">Play a month.<br/>See what changes.</h2><p>Your settings carry forward, so a small choice can become a lasting habit. Pause to look closer or take the next step when you are ready.</p><a className="welcome-button welcome-button-primary" href="#starting-lives">Choose a starting life</a></div><div className="welcome-month-board"><div className="welcome-month-heading"><span>A month in Financial Town</span><span>Turn-based play</span></div>{[
+      ['Income comes in', 'Pay and simplified withholding are recorded.'],
+      ['Life gets paid for', 'Housing, bills, premiums, and debt payments come next.'],
+      ['Your plan continues', 'Savings and investment contributions use available cash.'],
+      ['The month unfolds', 'Returns and unexpected events can change the picture.'],
+    ].map(([title, text], i) => <div className="welcome-month-row" key={title}><span>0{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></div>)}<p className="welcome-month-note">Routine updates stay in your activity feed. Open a building for the details.</p></div></section>
+
+    <section id="starting-lives" className="welcome-lives" aria-labelledby="starting-title"><div className="welcome-section-heading"><div><span className="welcome-section-label">Find your starting point</span><h2 id="starting-title">A different life. A fresh perspective.</h2></div><p>Choose a fictional scenario.<br/>You can try another anytime.</p></div><div className="welcome-life-grid">{scenarios.map((scenario, i) => <button type="button" className="welcome-life-card" key={scenario.scenarioId} onClick={() => store.startGame(scenario)}><span className="welcome-life-index">0{i + 1}</span><h3>{scenario.title}</h3><p>{lifeDescriptions[i] ?? scenario.description}</p><span className="welcome-life-start">Play this life</span></button>)}</div></section>
+
+    <section className="welcome-section welcome-outcomes" aria-labelledby="outcomes-title"><div className="welcome-section-heading"><div><span className="welcome-section-label">Beyond a single playthrough</span><h2 id="outcomes-title">One strategy. Many possible stories.</h2></div><p>There is no perfect score.<br/>The goal is to understand the trade-offs.</p></div><div className="welcome-outcome-grid"><article><span className="welcome-outcome-word">Your path</span><h3>See what happened.</h3><p>Your timeline keeps the decisions and events from your actual run, so you can look back at how things changed.</p></article><article><span className="welcome-outcome-word">1,000 futures</span><h3>Explore different luck.</h3><p>The simulation replays your strategy with different market returns and events over the same played time period.</p></article><article><span className="welcome-outcome-word">A wider view</span><h3>Understand the range.</h3><p>Compare typical outcomes and financial pressure. A strong or difficult result is not a verdict on your choices.</p></article></div><p className="welcome-outcomes-note">All returns, event probabilities, and financial assumptions are illustrative. These are learning scenarios, not forecasts.</p></section>
+
+    <section id="your-question" className="welcome-question" aria-labelledby="question-title"><div><span className="welcome-section-label">Start with what matters to you</span><h2 id="question-title">Have a question in mind?</h2><p>Turn a money question into a scenario you can explore. Try something like saving while paying off debt.</p><small>Keep personal details out. When available, AI helps build your scenario. Offline mode uses a local alternative.</small></div><form onSubmit={async e => { e.preventDefault(); setFormError(''); try { const result = await store.generatePersonalized(prompt); store.startGame(result.config) } catch (error) { setFormError(error instanceof Error ? error.message : 'We couldn’t prepare that scenario. Please try again.') } }}><label htmlFor="situation">What would you like to explore?</label><textarea id="situation" value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="How could I build savings while paying off debt?" required maxLength={1000}/><div className="welcome-form-bottom"><span>No sensitive information needed.</span><button type="submit" className="welcome-button welcome-button-primary" disabled={store.personalizationLoading}>{store.personalizationLoading ? 'Preparing your scenario…' : 'Explore my question'}</button></div>{(formError || store.personalizationError) && <p role="alert" className="welcome-error">{formError || store.personalizationError}</p>}</form></section>
+
+    <section id="questions" className="welcome-section welcome-faq" aria-labelledby="faq-title"><div><span className="welcome-section-label">Before you start</span><h2 id="faq-title">A few things to know.</h2><p>A game for exploring money, without putting your own money on the line.</p></div><div className="welcome-faq-list">{[
+      ['Do I need an account?', 'No. You can start playing right away. The sign-in and create-account buttons are placeholders and do not collect any information.'],
+      ['Is any real money involved?', 'No. Every balance, paycheck, investment, and payment belongs to a fictional simulation. No bank connection is needed.'],
+      ['Can I play at my own pace?', 'Yes. Time moves forward when you advance a month. Open the buildings, review your choices, and pause whenever you need.'],
+      ['What if AI is unavailable?', 'The starting lives work offline. Personal questions and narrative opportunities have clearly labeled local fallbacks.'],
+      ['Will this tell me the right financial decision?', 'The game helps you explore trade-offs and uncertainty. It does not provide personal financial advice or guarantee an outcome.'],
+    ].map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div></section>
+
+    <section className="welcome-final-invite"><span className="welcome-section-label">Your next chapter starts here</span><h2>A little practice.<br/>A new perspective on money.</h2><p>Choose a life and see where your decisions take you.</p><a className="welcome-button welcome-button-primary" href="#starting-lives">Start playing Financial Town</a></section>
+
+    <footer className="welcome-footer"><a className="welcome-footer-name" href="#top">Financial Town</a><p>Fictional educational simulation. Assumptions are illustrative.<br/>For learning, not personal financial advice.</p><a href="#top">Back to top</a></footer>
   </main>
 }
