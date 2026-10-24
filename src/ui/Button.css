@@ -1,18 +1,23 @@
 @import './tokens.css';
-.fv-button { --button-height: 11; box-sizing: border-box; height: calc(var(--button-height) * var(--px)); padding: 0 calc(3 * var(--px)); border: calc(4 * var(--px)) solid transparent; border-image: url('/art/ui/frames/button.png') 4 fill / calc(4 * var(--px)) / 0 stretch; background: transparent; color: var(--c-ink); font: 700 var(--fs-body)/1 var(--font-heading); white-space: nowrap; cursor: url('/art/ui/cursor/hand.png') 2 2, pointer; image-rendering: pixelated; }
-.fv-button__content { display: flex; align-items: center; justify-content: center; gap: calc(1.5 * var(--px)); margin: calc(-2 * var(--px)) calc(-1 * var(--px)); }
+/* The 9-slice frame is painted 4 art px wide (border-image-width) over a 1-art-px border, so the content box keeps a
+   usable height: a 9-art-px button fits a 6-art-px icon. min-height lets rich content (story cards) grow the button. */
+.fv-button { --button-height: 11; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: calc(1.5 * var(--px)); min-height: calc(var(--button-height) * var(--px)); padding: 0 calc(4 * var(--px)); border: var(--px) solid transparent; border-image: url('/art/ui/frames/button.png') 4 fill / calc(4 * var(--px)) / 0 stretch; background: transparent; color: var(--c-ink); font: 700 var(--fs-body)/1 var(--font-heading); text-align: center; vertical-align: middle; cursor: url('/art/ui/cursor/hand.png') 2 2, pointer; image-rendering: pixelated; }
+.fv-button__content { display: contents; }
 .fv-button .fv-icon { width: calc(6 * var(--px)); height: calc(6 * var(--px)); }
-.fv-button--sm { --button-height: 9; font-size: var(--fs-label); }
-.fv-button--lg { --button-height: 16; font-size: var(--fs-heading); }
+.fv-button--sm { --button-height: 9; font-size: var(--fs-label); padding: 0 calc(3 * var(--px)); }
+.fv-button--lg { --button-height: 16; font-size: var(--fs-heading); padding: 0 calc(6 * var(--px)); }
 .fv-button--primary { border-image-source: url('/art/ui/frames/button-primary.png'); }
-.fv-button--ghost { border-image: url('/art/ui/frames/ghost.png') 3 fill / calc(3 * var(--px)) / 0 stretch; }
-.fv-button--text { border-image: none; border-color: transparent; text-decoration: underline; text-underline-offset: var(--px); }
+.fv-button--ghost { border-image: url('/art/ui/frames/ghost.png') 3 fill / calc(3 * var(--px)) / 0 stretch; color: var(--c-outline); }
+.fv-button--text { border-image: none; border-color: transparent; color: var(--c-outline); text-decoration: underline; text-underline-offset: var(--px); }
 .fv-button:hover:not(:disabled) { border-image-source: url('/art/ui/frames/button-hover.png'); }
+.fv-button--ghost:hover:not(:disabled) { border-image-source: url('/art/ui/frames/ghost.png'); color: var(--c-ink); }
 .fv-button--text:hover:not(:disabled) { border-image: none; color: var(--c-wood); }
 .fv-button:active:not(:disabled) { border-image-source: url('/art/ui/frames/button-pressed.png'); }
-.fv-button:active:not(:disabled) .fv-button__content { transform: translateY(var(--px)); }
+.fv-button--ghost:active:not(:disabled), .fv-button--text:active:not(:disabled) { border-image-source: none; }
+.fv-button--ghost:active:not(:disabled) { border-image: url('/art/ui/frames/ghost.png') 3 fill / calc(3 * var(--px)) / 0 stretch; }
+.fv-button:active:not(:disabled) .fv-button__content > * { transform: translateY(var(--px)); }
 .fv-button:disabled { border-image-source: url('/art/ui/frames/button-disabled.png'); color: var(--c-wood-dark); cursor: default; }
-.fv-button--text:disabled { border-image: none; color: var(--c-parchment-shadow); }
+.fv-button--ghost:disabled, .fv-button--text:disabled { border-image: none; color: var(--c-parchment-shadow); }
+.fv-button--ghost:disabled { border-image: url('/art/ui/frames/ghost.png') 3 fill / calc(3 * var(--px)) / 0 stretch; }
 .fv-button:focus-visible, .fv-field-control:focus-visible, .fv-tab:focus-visible, .fv-toggle:focus-visible, .fv-slider:focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); outline-offset: var(--px); }
-.fv-icon-button { width: calc(var(--button-height) * var(--px)); padding: 0; flex: none; }
-.fv-icon-button .fv-button__content > span:empty { display: none; }
+.fv-icon-button { width: calc(var(--button-height) * var(--px)); padding: 0; flex: none; white-space: nowrap; }
