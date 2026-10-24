@@ -28,7 +28,8 @@
 .fv-coach-tip strong { font: 700 var(--fs-body)/1.1 var(--font-heading); }
 .fv-coach-tip p { margin: 0; }
 .fv-coach-tip .fv-button { justify-self: end; }
-.fv-coach-tip--0 { left: 18%; top: 42%; }
+/* Tips sit over scenery (the river, the plaza, under the HUD), never over a building. */
+.fv-coach-tip--0 { left: calc(3 * var(--px)); bottom: calc(30 * var(--px)); }
 .fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
 .fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(19 * var(--px)); }
 
@@ -63,7 +64,8 @@
   .fv-toasts { width: calc(70 * var(--px)); top: calc(36 * var(--px)); }
   .fv-toast p { display: none; }
   .fv-month-banner, .fv-action-error { top: calc(36 * var(--px)); }
-  .fv-coach-tip--2 { top: calc(36 * var(--px)); }
+  /* Narrow screens: every tip docks above the control bar so no building is covered. */
+  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2 { left: 50%; right: auto; top: auto; bottom: calc(44 * var(--px)); transform: translateX(-50%); }
 }
 [data-reduce-motion='true'] .fv-month-banner, [data-reduce-motion='true'] .fv-counter i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-month-banner, .fv-counter i { animation: none; } }
