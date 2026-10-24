@@ -17,7 +17,7 @@
  */
 import type { GameEvent, GameState, LedgerCategory } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
-import { coverShortfall, makeId, monthLabel, monthlyRate, netWorthOf, post, round2 } from './accounting';
+import { allocateAmount, coverShortfall, makeId, monthLabel, monthlyRate, netWorthOf, post, round2 } from './accounting';
 import { activePlan, rollEmployment, rollShocks } from './events';
 import { monthRng, type Rng } from './rng';
 
@@ -48,7 +48,7 @@ export function annualWithholding(s: GameState, annualGross: number): { incomeTa
 }
 
 export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameState {
-  if (input.status === 'finished') return input;
+  if (input.status === 'finished' || input.status === 'paused') return input;
   const s: GameState = opts.inPlace ? input : structuredClone(input);
   const lean = opts.lean === true;
   const m = s.monthIndex;
@@ -143,12 +143,10 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const investAmt = round2(Math.min(s.policy.investmentContributionPerMonth, available));
   if (investAmt > 0) {
     post(s, 'cash', 'investment_contribution', -investAmt, 'Investment contribution', lean);
-    let allocated = 0;
-    ASSET_CLASSES.forEach((c, i) => {
-      const share = i === ASSET_CLASSES.length - 1 ? round2(investAmt - allocated) : round2(investAmt * s.policy.targetAllocation[c]);
-      allocated = round2(allocated + share);
-      if (share > 0) post(s, c, 'investment_contribution', share, `Bought ${c}`, lean);
-    });
+    const shares = allocateAmount(investAmt, s.policy.targetAllocation);
+    for (const c of ASSET_CLASSES) {
+      if (shares[c] > 0) post(s, c, 'investment_contribution', shares[c], `Bought ${c}`, lean);
+    }
   }
   const trimmed = s.policy.savingsContributionPerMonth + s.policy.investmentContributionPerMonth - saveAmt - investAmt;
   if (trimmed > 0.5 && (s.policy.savingsContributionPerMonth + s.policy.investmentContributionPerMonth) > 0) {
