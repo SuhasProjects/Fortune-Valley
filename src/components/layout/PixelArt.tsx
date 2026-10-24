@@ -31,11 +31,8 @@ export function WorldBackdrop() {
     <path fill="#a8cbd0" d="M0 0h1440v900H0z"/>
     <path fill="#c6dfd4" d="M0 390h170v-50h110v-55h180v55h100v-75h210v70h170v-40h180v70h220v535H0z"/>
     <path fill="#7a9e78" d="M0 510h150v-80h140v35h150v-95h175v65h185v-55h150v80h180v-50h160v65h150v425H0z"/>
-    <path fill="#4f785c" d="M0 610h180v-55h180v30h175v-45h180v70h200v-45h175v-35h175v55h175v315H0z"/>
-    <path fill="#42684b" d="M0 740h1440v160H0z"/>
-    {[30,110,230,360,1070,1210,1320,1420].map((x,i)=><g key={x} transform={`translate(${x} ${650+i%3*55})`}><path fill="#674e38" d="M-7 0H7v75H-7z"/><path fill="#294f3e" d="M-16-100h32v20h18v25h18v38H30V5H-30v-22h-22v-38h18v-25h18z"/><path fill="#61864f" d="M-13-96h23v20h19v22H8v18h-37v-20h15z"/><path fill="#83a35c" d="M-10-90H4v9h-14zM-25-53h15v9h-15z"/></g>)}
-    <path fill="#e4ebd9" d="M100 150h40v-12h80v12h40v18H100zM1120 90h30V75h70v15h45v18h-145zM830 220h25v-14h60v14h35v15H830z"/>
-    <g fill="#d0b57b"><path d="M0 846h1440v5H0zM0 870h1440v4H0z"/>{Array.from({length:37},(_,i)=><path key={i} d={`M${i*40} 834h7v56h-7z`}/>)}</g>
-    <g fill="#cfbb7d">{[45,170,290,1170,1280,1370].map(x=><path key={x} d={`M${x} 801h5v6h-5zM${x+10} 815h4v4h-4z`}/>)}</g>
+    <path fill="#60856a" d="M0 610h180v-40h220v25h315v20h200v-35h230v30h295v290H0z"/>
+    {[85,270,1200,1390].map((x,i)=><g key={x} transform={`translate(${x} ${690+i%2*45})`}><path fill="#826548" d="M-8 0H8v65H-8z"/><path fill="#4c7155" d="M-16-80h32v16h16v24h16v32H24V8H-24V-8h-24v-32h16v-24h16z"/><path fill="#8cab71" d="M-12-76h24v16h16v20H8v16H-28v-20h16z"/></g>)}
+    <path fill="#e4ebd9" d="M100 150h40v-16h80v16h40v16H100zM1120 90h32V74h64v16h48v16h-144z"/>
   </svg></div>
 }

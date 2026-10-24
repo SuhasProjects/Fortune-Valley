@@ -19,6 +19,12 @@ export default function App(props: AppProps) {
   if (new URLSearchParams(window.location.search).get('dev') === 'engine') return <EngineHarness />
   return <Town {...props}/>
 }
+const startingLifeHints = [
+  'Practice everyday spending, student debt, and saving a little.',
+  'Get comfortable with paychecks, rent, and building savings.',
+  'Explore investing and protecting the savings you have built.',
+  'Plan household costs and save for everyday surprises.',
+]
 function Town({ panels = {}, renderReveal }: AppProps) {
   const [prompt, setPrompt] = useState('')
   const [formError, setFormError] = useState('')
@@ -33,13 +39,13 @@ function Town({ panels = {}, renderReveal }: AppProps) {
       <div className="title-sign"><span className="sign-nail nail-left"/><span className="sign-nail nail-right"/><h1>Your money.<br/>Your little world.</h1></div>
       <p>Put down roots. Make your choices.<br/>See what grows, one month at a time.</p>
       <a className="pixel-button pixel-button--gold hero-play" href="#starting-lives"><PixelIcon kind="leaf"/> Begin your story <span aria-hidden="true">&rarr;</span></a>
-      <div className="hero-details"><span>No scores to chase</span><span>Your choices carry forward</span><span>A new story every time</span></div>
+      <div className="hero-details"><span>Learn at your own pace. There is no perfect score.</span></div>
     </section>
     <section id="starting-lives" className="starting-lives quest-board">
       <div className="board-pin pin-left"/><div className="board-pin pin-right"/>
       <div className="section-heading"><PixelIcon kind="book"/><div><span className="eyebrow">NEW SAVE FILE</span><h2>Choose your starting life</h2></div><span>Who will you be?</span></div>
-      <div className="life-grid">{scenarios.map((scenario,index) => <button className="life-card pixel-panel" key={scenario.scenarioId} onClick={()=>store.startGame(scenario)}><div className="save-slot"><span>FILE 0{index+1}</span><span aria-hidden="true">&#10022;</span></div><PixelPortrait variant={index}/><h3>{scenario.title}</h3><p>{scenario.description}</p><span className="life-start">Start this story <span aria-hidden="true">&rarr;</span></span></button>)}</div>
-      <p className="board-caption">A starting point, not a prediction. You write the next chapter.</p>
+      <div className="life-grid">{scenarios.map((scenario,index) => <button className="life-card pixel-panel" key={scenario.scenarioId} onClick={()=>store.startGame(scenario)}><div className="save-slot"><span>FILE 0{index+1}</span><span aria-hidden="true">&#10022;</span></div><PixelPortrait variant={index}/><h3>{scenario.title}</h3><p>{startingLifeHints[index]}</p><span className="life-start">Start this story <span aria-hidden="true">&rarr;</span></span></button>)}</div>
+      <p className="board-caption">Pick a life that feels interesting. You can always start again.</p>
     </section>
     <section className="personalization pixel-panel"><div className="journal-intro"><PixelIcon kind="book"/><span className="eyebrow">A PAGE FROM YOUR OWN LIFE</span><h2>Got a question<br/>of your own?</h2><p>Explore a situation you care about. We'll turn it into a starting point using the town's financial mechanics.</p><small>Leave out sensitive details. The AI gateway can prepare a scenario; a local fallback is available offline.</small></div><form onSubmit={async event=>{event.preventDefault();setFormError('');try {const result=await store.generatePersonalized(prompt);store.startGame(result.config)} catch(error){setFormError(error instanceof Error ? error.message : 'Could not prepare your scenario.')}}}><label htmlFor="situation">Dear future me...</label><textarea id="situation" value={prompt} onChange={event=>setPrompt(event.target.value)} placeholder="How can I pay down debt while saving for a rainy day?" required maxLength={1000}/><button className="pixel-button pixel-button--gold" disabled={store.personalizationLoading}>{store.personalizationLoading ? 'Preparing your story...' : 'Explore my situation'} <span aria-hidden="true">&rarr;</span></button>{(formError||store.personalizationError)&&<p role="alert">{formError||store.personalizationError}</p>}</form></section>
     <footer className="simulation-footer">Fictional educational simulation &middot; Illustrative assumptions &middot; Not financial advice</footer>

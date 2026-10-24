@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test'
 
+test('larger text fits a narrow phone without horizontal overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto('/')
+  await page.evaluate(() => document.fonts.ready)
+  await expect(page.locator('.life-card p').first()).toHaveCSS('font-size', '22px')
+  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 320)
+  await page.getByRole('button', { name: /College Student/ }).click()
+  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 320)
+  await page.getByRole('button', { name: /Open Pine Bank/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Pine Bank' })).toBeVisible()
+})
+
 test('town navigation, focus, month tick, history and finish', async ({ page }, testInfo) => {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))

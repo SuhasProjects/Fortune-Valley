@@ -4,7 +4,7 @@
 
 `src/styles/world.css` is the active interface stylesheet, imported by `src/styles/index.css` after Tailwind, the locally bundled Pixelify Sans / VT323 fonts, and shared `pixel-tokens.css`. It replaces the earlier layered town/valley/illustrated stylesheets. No font network requests are made at runtime.
 
-The visual language is inspired by cozy pixel-art games, with an original layout: an ambient pixel landscape, hanging wooden title sign, character save slots, a two-page question journal, inventory-style HUD, framed game buttons, centered wooden dialog headers, ruled financial journals, activity notes, and matching results presentation. All text, controls and menus remain accessible HTML. The style reference is inspiration, not a requirement to reproduce another game's composition.
+The visual language is inspired by cozy pixel-art games, with an original layout: a sparse ambient pixel landscape, hanging wooden title sign, character save slots, a two-page question journal, inventory-style HUD, framed game buttons, centered wooden dialog headers, ruled financial journals, activity notes, and matching results presentation. Type is deliberately large (24px body, 22px phone card descriptions), copy is short, wood textures are flat, and decoration is sparse. Phone cards use one readable column; phone HUD balances use two columns. All text, controls and menus remain accessible HTML. The style reference is inspiration, not a requirement to reproduce another game's composition.
 
 `components/layout/PixelArt.tsx` supplies original code-native character portraits, context icons, and the ambient landscape. `BuildingOverview.tsx` shows read-only canonical store values when a controlled building panel has not been supplied. It contains no simulation math.
 
@@ -19,7 +19,7 @@ The visual language is inspired by cozy pixel-art games, with an original layout
 
 All scenario, time, event, pause and finish controls call the existing store. HUD values use canonical debt/net-worth selectors. Building summaries read canonical state. The AI gateway and local fallback remain unchanged. No client-side credentials are introduced.
 
-The functional town uses `public/assets/town-valley-v1.png`, an original imagegen backdrop. Its full generation prompt is saved beside it. The user's reference screenshot is not redistributed. The image keeps its 3:2 ratio; percentage hit areas in `buildings.ts` follow the inspected art on both phone and desktop. The landing page uses the original pixel landscape and portraits rather than embedding a town image as its design.
+The functional town uses `public/assets/town-valley-v2.png`, a simplified original imagegen backdrop. The edit prompt is saved beside it. Four trees, two tiny flower patches, a bench, a lamp, a fountain and a pond replace the earlier dense gardens, fences and props. The 2x2-pixels-into-one request is expressed as a chunkier art style rather than an exact resampling filter; live text is never pixelation-filtered. The user's reference screenshot is not redistributed. The image keeps its 3:2 ratio; percentage hit areas in `buildings.ts` follow the inspected art on both phone and desktop. The landing page uses the original sparse pixel landscape and portraits rather than embedding a town image as its design.
 
 Shared `--ft-*` palette/chart tokens remain available. Active graphs inherit the same pixel typography and crisp edges. Agent 5 should respect reduced motion and keep assumptions legible.
 
