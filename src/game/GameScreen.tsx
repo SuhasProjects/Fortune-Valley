@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { EventCard, monthLabel } from '../components/flow'
+import { monthLabel } from '../components/flow'
 import { useGameStore } from '../stores/useGameStore'
 import type { BuildingId, GameConfig, GameState } from '../types/domain'
-import { ConnectedBuildingPanel } from '../components/panels/ConnectedBuildingPanel'
+import { BuildingWindow } from '../components/panels/BuildingWindow'
+import { PanelHost } from '../components/town/PanelHost'
 import { freshScenario, scenarioById } from '../data/scenarios'
 import { ToastStack } from './flow/ToastStack'
 import { useShortcuts } from './flow/useShortcuts'
@@ -13,11 +14,10 @@ import { OptionsWindow, setSetting, useSettings } from './settings'
 import { sfx } from './audio/sfx'
 import { GameStage } from './stage/GameStage'
 import { TownWorld } from './world/TownWorld'
-import { BUILDINGS } from './world/landmarks'
 import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
 import { GuideWindow } from './title/GuideWindow'
 import { useGameClock } from '../hooks/useGameClock'
-import { Board, Button, IconButton, Modal, Plaque, Tag } from '../ui'
+import { Board, Button, IconButton, Modal, Tag } from '../ui'
 import './flow/flow.css'
 
 type Menu = 'pause' | 'options' | 'guide' | null
@@ -148,10 +148,12 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
     document.addEventListener('click', click)
     return () => document.removeEventListener('click', click)
   }, [])
+  // Building windows play their own open/close sounds (PanelHost); the flow windows play them here.
+  const flowWindowOpen = Boolean(store.timelineOpen || store.historyOpen || menu || confirm)
   useEffect(() => {
-    if (modalOpen !== previousModalOpen.current) sfx(modalOpen ? 'open' : 'close')
-    previousModalOpen.current = modalOpen
-  }, [modalOpen])
+    if (flowWindowOpen !== previousModalOpen.current) sfx(flowWindowOpen ? 'open' : 'close')
+    previousModalOpen.current = flowWindowOpen
+  }, [flowWindowOpen])
 
   const nextTip = () => {
     if (tipStep < 2) setTipStep(step => step + 1)
@@ -170,7 +172,6 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
     store.startGame(archetype ? freshScenario(archetype) : config)
   }
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
-  const panelEvents = panel ? game.activeEvents.filter(event => event.buildingTarget === panel && !(panel === 'office' && event.type === 'B')) : []
   const tip = tipStep >= 0 ? tips[tipStep] : null
 
   return <main aria-label="Fortune Valley town">
@@ -190,10 +191,9 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
         <p>Your {config.durationMonths} months are complete.</p>
         <Button variant="primary" size="lg" iconRight="arrow-right" onClick={() => void beginFinish()}>Review your story</Button>
       </Board>}
-      {panel && <Modal title={BUILDINGS[panel].title} plaque={<Plaque tone="wood">{BUILDINGS[panel].hint}</Plaque>} onClose={store.closeBuilding} width="lg">
-        {panelEvents.map(event => <EventCard key={event.id} event={event} onChoose={optionId => store.dispatchAction({ type: 'apply_event_option', eventId: event.id, optionId })}/>)}
-        {panels[panel] ?? <ConnectedBuildingPanel building={panel}/>}
-      </Modal>}
+      {panel && (panels[panel]
+        ? <PanelHost building={panel} onClose={store.closeBuilding}>{panels[panel]}</PanelHost>
+        : <BuildingWindow building={panel} onClose={store.closeBuilding}/>)}
       {store.timelineOpen && <TimelineWindow entries={game.timeline} startMonth={config.startMonth} onClose={store.closeTimeline}/>}
       {store.historyOpen && <ActivityWindow notifications={game.notifications} onClose={() => store.setHistoryOpen(false)} onMarkAllRead={store.markAllNotificationsRead} onOpenBuilding={building => { store.setHistoryOpen(false); store.openBuilding(building) }}/>}
       {menu === 'pause' && <Modal title="Paused" onClose={closePause} width="sm">
