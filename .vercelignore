@@ -1,0 +1,8 @@
+.claude
+.git
+node_modules
+test-results
+playwright-report
+dist
+*.log
+.env*
