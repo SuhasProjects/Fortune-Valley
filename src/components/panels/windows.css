@@ -17,7 +17,9 @@
 .ft-sheet fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
 .ft-sheet legend { margin-bottom: calc(2 * var(--px)); }
 .ft-sheet summary { cursor: pointer; padding: calc(2 * var(--px)) 0; font: 700 var(--fs-body)/1.1 var(--font-heading); }
-.ft-sheet__history { padding: 0 calc(2 * var(--px)); background: repeating-linear-gradient(transparent 0 calc(6 * var(--px) - 1px), var(--c-parchment-shadow) calc(6 * var(--px) - 1px) calc(6 * var(--px))); }
+.ft-sheet__history { padding: 0 calc(2 * var(--px)); }
+/* Ruled lines follow each row (not a fixed-pitch background) so they never cut through text when the font or wrapping changes. */
+.ft-sheet__history ul { list-style: none; margin: 0; padding: 0; } .ft-sheet__history li, .ft-sheet__history p { margin: 0; padding: calc(1 * var(--px)) 0; border-bottom: 1px solid var(--c-parchment-shadow); line-height: 1.35; }
 .ft-sheet footer { margin-top: calc(3 * var(--px)); font-size: var(--fs-label); }
 .ft-sheet small, .ft-notice small { font-size: var(--fs-label); }
 .ft-sheet li { margin-bottom: var(--px); }
