@@ -63,6 +63,13 @@ export function fallbackScenario(input: PersonalizedInput): ScenarioProposal {
     overrides.debts = debt > 0 ? [{ name: 'Your debt', kind: apr > 0.15 ? 'credit_card' : 'personal_loan', balance: debt, apr, minimumPayment: Math.max(25, Math.round(debt * 0.02)) }] : [];
   } else defaultsApplied.push('debts');
   if (input.dependents !== undefined) overrides.dependents = clampNum(input.dependents, 0, 8);
+  // Car: the numbers section wins; otherwise a plain mention in the letter ("I drive to work" ⇒ owned).
+  if (input.car !== undefined) {
+    const monthlyCost = clampNum(input.car.monthlyCost, 0, 5000);
+    overrides.car = input.car.owned ? { owned: true, ...(input.car.valueBand ? { valueBand: input.car.valueBand } : {}), ...(monthlyCost !== undefined ? { monthlyCost } : {}) } : { owned: false };
+  } else if (/\b(no car|without a car|don'?t (own|have) a car|car-free|take the bus|by bike|bike everywhere)\b/.test(t)) overrides.car = { owned: false };
+  else if (/\b(my car|drive to work|i drive|car payment|car loan|car insurance|gas money|commute by car|own a car)\b/.test(t)) overrides.car = { owned: true };
+  else defaultsApplied.push('car');
   defaultsApplied.push('essentialsMonthly', 'discretionaryMonthly', 'insurance', 'investments');
 
   return {

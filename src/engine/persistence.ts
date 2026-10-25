@@ -5,6 +5,7 @@
 import type { GameConfig, GameState } from '@/types/domain';
 import { netWorthOf } from './accounting';
 import { validateAllocation, validateAssumptions, validateConfig } from './validation';
+import { normalizeCar } from './car';
 
 export const SAVE_SCHEMA_VERSION = 1 as const;
 export const SAVE_STORAGE_KEY = 'financial-town:save:v1';
@@ -35,6 +36,8 @@ export function parseSave(raw: string | null | undefined): ParsedSave {
   if (save.schemaVersion !== SAVE_SCHEMA_VERSION) return { ok: false, error: `Unsupported save schema ${String(save.schemaVersion)}` };
   if (!save.config || !save.state) return { ok: false, error: 'Save is missing config or state' };
   try {
+    // Saves from before car ownership: infer the car from any auto loan (archetype defaults carry the same bands).
+    if (save.config.initialState && save.config.initialState.car === undefined && Array.isArray(save.config.initialState.debts)) save.config.initialState.car = normalizeCar(undefined, save.config.initialState.debts);
     const cv = validateConfig(save.config);
     if (!cv.ok) return { ok: false, error: `Saved config invalid: ${cv.message}` };
     const s = save.state;
@@ -50,6 +53,10 @@ export function parseSave(raw: string | null | undefined): ParsedSave {
     if (![s.marketState, s.policy, s.household, s.employment, s.assumptions, s.insurance, s.taxProfile].every(isObj) || !isObj(s.marketState.index) || !isObj(s.marketState.lastMonthlyReturns)) return { ok: false, error: 'Saved state is missing required sections' };
     if (!Number.isInteger(s.durationMonths) || s.durationMonths < 1 || s.monthIndex > s.durationMonths) return { ok: false, error: 'Saved duration invalid' };
     if (s.lifeEvents === undefined) s.lifeEvents = []; // saves from before life events existed
+    if (s.car === undefined) { // saves from before car ownership existed
+      s.car = normalizeCar(undefined, s.debts);
+      if (!s.car.owned && s.insurance.auto !== null) { s.insurance = { ...s.insurance, auto: null }; s.policy = { ...s.policy, insurancePlanIds: { ...s.policy.insurancePlanIds, auto: null } }; }
+    } else if (s.car === null || typeof s.car !== 'object' || typeof s.car.owned !== 'boolean') return { ok: false, error: 'Saved car invalid' };
     else if (!Array.isArray(s.lifeEvents) || !s.lifeEvents.every((e) => isNum(e.amountSigned) && Number.isInteger(e.monthIndex))) return { ok: false, error: 'Saved life events invalid' };
     const av = validateAssumptions(s.assumptions);
     if (!av.ok) return { ok: false, error: `Saved assumptions invalid: ${av.message}` };

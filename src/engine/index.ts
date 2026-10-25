@@ -6,6 +6,7 @@ export { runMonteCarlo, compareStrategies, compareWithBaseline, hasPolicyDecisio
 export { previewMonth, previewHorizon, type MonthPreview, type PreviewOverrides, type MonthSnapshot } from './preview';
 export { netWorthOf, investmentsTotal, debtTotal, monthLabel, monthlyRate, round2, uiId } from './accounting';
 export { settleClaim, applyEffect, describeEffect, activePlan, hasCar } from './events';
+export { carBand, carRunningCost, premiumFor, normalizeCar, describeCar, bandFromMonthlyCost, bandFromLoanBalance, NO_CAR } from './car';
 export { validateAllocation, validateEffect, validateConfig, validatePlanId } from './validation';
 export { makeRng, monthRng, hashSeed, pathSeed, type Rng } from './rng';
 export * from './selectors';

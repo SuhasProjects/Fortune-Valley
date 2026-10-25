@@ -38,6 +38,12 @@ Response (200):
 ```
 Then `scenarioToConfig(proposal, seed, source)` builds a validated `GameConfig`.
 
+Car: `input.car` and `overrides.car` are `{ owned, valueBand?: cheap|mid|nice, monthlyCost? }`. The prompt tells the model to infer
+ownership from the letter ("I drive to work" ⇒ `owned: true`; "I take the bus everywhere" ⇒ `false`) and to omit the field (listing
+`car` in `defaultsApplied`) when the text says nothing. The mapper picks the band from `valueBand`, else from `monthlyCost`
+(≤ $220 cheap, ≤ $320 mid, else nice), else the archetype's; an `auto_loan` in `debts` always means a car. The offline fallback
+(`fallbackScenario`) applies the same keyword rules.
+
 ## 2. opportunity — StateSummary → Type B event or null
 
 Request: `{ "kind": "opportunity", "summary": <StateSummary from summarizeForAi(state, focus, archetype)> }`

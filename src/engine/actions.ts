@@ -5,7 +5,8 @@
 import type { ActionErrorCode, ActionResult, GameAction, GameState, TimelineEntry } from '@/types/domain';
 import { makeId, netWorthOf, post, round2 } from './accounting';
 import { applyEffect, describeEffect } from './events';
-import { isFiniteNonNeg, validateAllocation, validatePlanId, validateNarrativeEvent } from './validation';
+import { isFiniteNonNeg, validateAllocation, validateCar, validatePlanId, validateNarrativeEvent } from './validation';
+import { describeCar, carRunningCost } from './car';
 import { BOUNDS } from '@/config/defaults';
 
 const reject = (state: GameState, code: ActionErrorCode, message: string): ActionResult => ({ ok: false, code, message, state });
@@ -61,10 +62,23 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
       logPolicy(s, action, 'choice', `Housing → ${action.housingKind} at $${action.housingMonthly.toLocaleString()}/mo`);
       return { ok: true, state: s };
     }
+    case 'set_car': {
+      const car = { owned: action.owned, valueBand: action.valueBand };
+      const v = validateCar(car, s.debts);
+      if (!v.ok) return reject(input, 'invalid_amount', v.message);
+      s.car = car;
+      if (!car.owned && s.insurance.auto !== null) { // no car → nothing to insure; the plan is dropped with it
+        s.insurance = { ...s.insurance, auto: null };
+        s.policy = { ...s.policy, insurancePlanIds: { ...s.policy.insurancePlanIds, auto: null } };
+      }
+      logPolicy(s, action, 'choice', car.owned ? `Car → ${describeCar(car)}, about $${carRunningCost(car.valueBand).toLocaleString()}/mo to run` : 'Car → none (auto cover dropped)');
+      return { ok: true, state: s };
+    }
     case 'set_insurance': {
       const v = validatePlanId(s.assumptions, action.line, action.planId);
       if (!v.ok) return reject(input, 'unknown_plan', v.message);
-      applyEffect(s, { template: 'change_insurance', line: action.line, planId: action.planId });
+      const err = applyEffect(s, { template: 'change_insurance', line: action.line, planId: action.planId });
+      if (err) return reject(input, 'invalid_status', err);
       const plan = s.assumptions.insurancePlans.find((p) => p.id === action.planId);
       logPolicy(s, action, 'policy_change', `${action.line} insurance → ${plan ? plan.name : 'no coverage'}`);
       return { ok: true, state: s };

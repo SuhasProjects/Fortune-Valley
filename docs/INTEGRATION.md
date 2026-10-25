@@ -222,7 +222,7 @@ Inputs come from `FinishPayload` (`src/stores/useGameStore.ts`):
   - Bank: `transfer`, `make_extra_payment`, `set_extra_debt_payment`, `set_contributions` (savings part), `set_min_cash_buffer`.
   - Market: `set_allocation` (weights sum to 1), `set_contributions` (investment part).
   - Office: read-only salary, withholding, employment status; Type B job offers appear here.
-  - Home: `set_budget` (discretionary), `set_housing`.
+  - Home: `set_budget` (discretionary), `set_housing`, `set_car(owned, valueBand)` (Car section; see *Car rule* below).
   - Health House: `set_insurance(line, planId|null)` from `state.assumptions.insurancePlans`; claims in `state.realizedShocks`.
 - **Flow**: notifications = `state.notifications`; timeline = `state.timeline` (every entry has `netWorthAfter`); events =
   `state.activeEvents` (Type A are acknowledgements, Type B are decisions; `expiresAtMonth` inclusive). Dispatch
@@ -234,7 +234,15 @@ Inputs come from `FinishPayload` (`src/stores/useGameStore.ts`):
 
 ## Actions (discriminated union)
 
-`advance_month · set_allocation · set_budget · set_housing · set_insurance · set_contributions · set_extra_debt_payment · set_min_cash_buffer · make_extra_payment · transfer · apply_event_option · dismiss_event · enqueue_event · mark_notifications_read · pause · resume · finish`
+`advance_month · set_allocation · set_budget · set_housing · set_car · set_insurance · set_contributions · set_extra_debt_payment · set_min_cash_buffer · make_extra_payment · transfer · apply_event_option · dismiss_event · enqueue_event · mark_notifications_read · pause · resume · finish`
+
+**Car rule** (`src/engine/car.ts`): `state.car = { owned, valueBand: none|cheap|mid|nice }` (cheap ≈ $3–8k, mid ≈ $10–20k, nice ≈ $25k+;
+archetypes: student none, entry worker cheap, professional and family mid). `hasCar(state)` is `car.owned`; an `auto_loan` with a
+balance forces it on (`set_car` to "no car" is refused while the loan is open). Owning a car bills `CAR_BANDS[band].runningCost`
+monthly as the `car_costs` ledger line (cheap $180 / mid $260 / nice $380), lets the auto shock happen (median × 0.8 / 1 / 1.5)
+and unlocks auto cover (premium × 0.85 / 1 / 1.3). No car: no `car_costs`, no auto shock, no auto premium ever billed, and choosing
+an auto plan is refused (`planId: null` always allowed); dropping the car drops the auto plan. No resale value is tracked, so
+toggling the car never moves cash. Old saves/configs without `car` infer it from any auto loan on load.
 
 Error codes: `invalid_allocation · invalid_amount · insufficient_funds · unknown_debt · unknown_plan · unknown_event · unknown_option · event_expired · invalid_status · invalid_effect · duplicate_event · game_finished`. On error the returned `state` is the untouched input.
 

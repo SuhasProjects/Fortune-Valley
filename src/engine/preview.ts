@@ -4,7 +4,7 @@
  * returns happen) and compare to the month without overrides. Pure; never
  * touches the real state or logs anything. Owner: Agent 1.
  */
-import type { GameState, Household, Policy } from '@/types/domain';
+import type { CarState, GameState, Household, Policy } from '@/types/domain';
 import { advanceMonth } from './advanceMonth';
 import { applyAction } from './actions';
 import { investmentsTotal, netWorthOf, round2 } from './accounting';
@@ -13,6 +13,7 @@ export interface PreviewOverrides {
   policy?: Partial<Policy>;
   household?: Partial<Pick<Household, 'discretionaryMonthly' | 'housingMonthly'>>;
   insurance?: Partial<GameState['insurance']>;
+  car?: CarState;
 }
 
 export interface MonthSnapshot { cash: number; savings: number; investments: number; debt: number; netWorth: number; shortfall: boolean }
@@ -54,6 +55,7 @@ export function previewMonth(state: GameState, overrides: PreviewOverrides): Mon
   if (p.minCashBuffer !== undefined) tryAction('cash buffer', { type: 'set_min_cash_buffer', amount: p.minCashBuffer });
   if (overrides.household?.discretionaryMonthly !== undefined) tryAction('budget', { type: 'set_budget', discretionaryMonthly: overrides.household.discretionaryMonthly });
   if (overrides.household?.housingMonthly !== undefined) tryAction('housing', { type: 'set_housing', housingMonthly: overrides.household.housingMonthly, housingKind: s.household.housingKind });
+  if (overrides.car) tryAction('car', { type: 'set_car', owned: overrides.car.owned, valueBand: overrides.car.valueBand });
   for (const line of ['health', 'auto', 'renters'] as const) {
     const v = overrides.insurance?.[line];
     if (v !== undefined) tryAction(`${line} insurance`, { type: 'set_insurance', line, planId: v });
@@ -90,6 +92,10 @@ export function previewHorizon(state: GameState, overrides: PreviewOverrides, mo
       const p = overrides.policy ?? {};
       s.policy = { ...s.policy, ...p, targetAllocation: p.targetAllocation ?? s.policy.targetAllocation };
       if (overrides.household) s.household = { ...s.household, ...overrides.household };
+      if (overrides.car) {
+        s.car = { ...overrides.car };
+        if (!s.car.owned) { s.insurance = { ...s.insurance, auto: null }; s.policy.insurancePlanIds = { ...s.policy.insurancePlanIds, auto: null }; }
+      }
       if (overrides.insurance) {
         s.insurance = { ...s.insurance, ...overrides.insurance };
         s.policy.insurancePlanIds = { ...s.policy.insurancePlanIds, ...overrides.insurance };

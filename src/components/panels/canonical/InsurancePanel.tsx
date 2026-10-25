@@ -1,6 +1,6 @@
 import { Button } from '../../../ui';
 import { useEffect, useId, useState } from 'react';
-import { hasCar, settleClaim } from '../../../engine';
+import { carBand, hasCar, premiumFor, settleClaim } from '../../../engine';
 import type { InsurancePlan } from '../../../types/domain';
 import { PanelShell } from '../PanelShell';
 import { PolicyPreview } from '../PolicyPreview';
@@ -21,8 +21,10 @@ export function InsurancePanel({ state, dispatch }: PanelProps) {
   const candidate = choices.find(plan => plan.id === draftId); const task = useAction(dispatch); const id = useId();
   const disabled = !editable(state) || task.pending;
 
-  // Auto cover: only lives with a car (an auto loan, paid off or not) see it; the engine skips car shocks for the rest.
+  // Auto cover: only lives with a car (Your Home → Car) see it; the engine skips car shocks and never bills auto premiums for the rest.
   const car = hasCar(state);
+  const band = carBand(state);
+  const autoPremium = (plan: InsurancePlan | null) => plan ? premiumFor(plan, band) : 0;
   const autoPlans = state.assumptions.insurancePlans.filter(plan => plan.line === 'auto').sort((a, b) => a.monthlyPremium - b.monthlyPremium);
   const autoCurrent = autoPlans.find(plan => plan.id === state.insurance.auto) ?? null;
   const [autoDraft, setAutoDraft] = useState(state.insurance.auto ?? NO_AUTO);
@@ -34,7 +36,8 @@ export function InsurancePanel({ state, dispatch }: PanelProps) {
   const autoDisabled = !editable(state) || autoTask.pending;
 
   const overrides = { insurance: { health: candidate?.id ?? state.insurance.health, ...(car && autoValid ? { auto: autoCandidate?.id ?? null } : {}) } };
-  const premiumAfter = (candidate?.monthlyPremium ?? current?.monthlyPremium ?? 0) + (car ? (autoValid ? autoCandidate?.monthlyPremium ?? 0 : autoCurrent?.monthlyPremium ?? 0) : 0);
+  const premiumAfter = (candidate?.monthlyPremium ?? current?.monthlyPremium ?? 0) + (car ? (autoValid ? autoPremium(autoCandidate) : autoPremium(autoCurrent)) : 0);
+  const strayAuto = !car && state.insurance.auto !== null; // older save or config: a plan on file with no car (never billed)
   const autoCards: { key: string; plan: InsurancePlan | null; title: string; name: string; covers: string }[] = car ? [
     ...autoPlans.map(plan => ({
       key: plan.id, plan,
@@ -48,7 +51,7 @@ export function InsurancePanel({ state, dispatch }: PanelProps) {
   return <PanelShell title="Insurance" status={<>
     <p>{current?.name ?? 'No health coverage'}</p>
     {current && <dl><div><dt>Per month</dt><dd>{money(current.monthlyPremium)}</dd></div><div><dt>Deductible</dt><dd>{money(current.deductible)}</dd></div></dl>}
-    {car && <p>Auto · {autoCurrent ? `${autoCurrent.name} · ${money(autoCurrent.monthlyPremium)} / month` : 'No auto coverage'}</p>}
+    {car ? <p>Auto · {autoCurrent ? `${autoCurrent.name} · ${money(autoPremium(autoCurrent))} / month` : 'No auto coverage'}</p> : <p>No car on file; add one at Your Home.</p>}
   </>} decision={choices.length ? <>
     <form onSubmit={event => { event.preventDefault(); if (!disabled && candidate) void task.send({ type: 'set_insurance', line: 'health', planId: candidate.id }); }}>
       <fieldset disabled={disabled}><legend>Health coverage</legend><div className="ft-plan-cards" role="group" aria-label="Illustrative health choices for a $5,000 medical bill">{choices.map((plan, index) => <label className="ft-plan-card" data-selected={draftId === plan.id} key={plan.id} htmlFor={`${id}-${plan.id}`}>
@@ -62,10 +65,14 @@ export function InsurancePanel({ state, dispatch }: PanelProps) {
       <fieldset disabled={autoDisabled}><legend>Auto insurance</legend><div className="ft-plan-cards ft-plan-cards--auto" role="group" aria-label={`Illustrative auto choices for a ${money(AUTO_EXAMPLE)} repair bill`}>{autoCards.map(card => <label className="ft-plan-card" data-selected={autoDraft === card.key} key={card.key} htmlFor={`${autoId}-${card.key}`}>
         <input type="radio" name={autoId} id={`${autoId}-${card.key}`} aria-label={`${card.title} ? ${card.name}`} checked={autoDraft === card.key} onChange={() => setAutoDraft(card.key)} />
         <strong>{card.title}</strong><span>{card.name}</span>
-        <dl><div><dt>Per month</dt><dd>{money(card.plan?.monthlyPremium ?? 0)}</dd></div><div><dt>Deductible</dt><dd>{card.plan ? money(card.plan.deductible) : '—'}</dd></div><div><dt>You pay on a $6k repair</dt><dd>{money(settleClaim(AUTO_EXAMPLE, card.plan).outOfPocket)}</dd></div></dl>
+        <dl><div><dt>Per month</dt><dd>{money(autoPremium(card.plan))}</dd></div><div><dt>Deductible</dt><dd>{card.plan ? money(card.plan.deductible) : '—'}</dd></div><div><dt>You pay on a $6k repair</dt><dd>{money(settleClaim(AUTO_EXAMPLE, card.plan).outOfPocket)}</dd></div></dl>
         <small>{card.covers}</small>
       </label>)}</div></fieldset>
       <Button type="submit" variant="primary" disabled={autoDisabled || !autoChanged}>Save auto plan</Button>{autoTask.feedback}
     </form>}
-  </> : <p>No plan choices available.</p>} consequence={<><p>After Save · {candidate || (car && autoValid) ? `${money(-premiumAfter)} / month in premiums` : 'Choose a plan'}</p><PolicyPreview state={state} overrides={overrides} compact /></>} help={<><ul><li>The $5k example is a medical bill{car ? '; the $6k example is a car repair after an accident' : ''}.</li><li>Coverage changes the bill, never accident likelihood.</li>{car && <li>Liability-only cover pays for damage to others, so your own repair bill stays with you.</li>}<li>New cover applies to future claims. No refunds for past premiums.</li></ul><PolicyPreview state={state} overrides={overrides} /></>} details={<><ul>{choices.map(plan => <li key={plan.id}>{plan.name} · {percent(plan.coinsurance)} coinsurance · payout cap {plan.coverageCap === null ? 'none' : money(plan.coverageCap)} · out-of-pocket max {plan.outOfPocketMax === null ? 'none' : money(plan.outOfPocketMax)}</li>)}{car && autoPlans.map(plan => <li key={plan.id}>{plan.name} · deductible {money(plan.deductible)} · payout cap {plan.coverageCap === null ? 'none' : money(plan.coverageCap)}</li>)}</ul>{!car && <p>This life has no car, so car accidents never happen and no auto cover is offered.</p>}<LedgerHistory state={state} categories={['insurance_premium', 'insurance_claim', 'shock_cost']} /></>} />;
+    {strayAuto && <form className="ft-auto-form" onSubmit={event => { event.preventDefault(); if (!autoDisabled) void autoTask.send({ type: 'set_insurance', line: 'auto', planId: null }); }}>
+      <p>An auto plan is on file but you have no car, so it is never billed.</p>
+      <Button type="submit" disabled={autoDisabled}>Set auto plan to none</Button>{autoTask.feedback}
+    </form>}
+  </> : <p>No plan choices available.</p>} consequence={<><p>After Save · {candidate || (car && autoValid) ? `${money(-premiumAfter)} / month in premiums` : 'Choose a plan'}</p><PolicyPreview state={state} overrides={overrides} compact /></>} help={<><ul><li>The $5k example is a medical bill{car ? '; the $6k example is a car repair after an accident' : ''}.</li><li>Coverage changes the bill, never accident likelihood.</li>{car && <li>Liability-only cover pays for damage to others, so your own repair bill stays with you.</li>}<li>New cover applies to future claims. No refunds for past premiums.</li></ul><PolicyPreview state={state} overrides={overrides} /></>} details={<><ul>{choices.map(plan => <li key={plan.id}>{plan.name} · {percent(plan.coinsurance)} coinsurance · payout cap {plan.coverageCap === null ? 'none' : money(plan.coverageCap)} · out-of-pocket max {plan.outOfPocketMax === null ? 'none' : money(plan.outOfPocketMax)}</li>)}{car && autoPlans.map(plan => <li key={plan.id}>{plan.name} · deductible {money(plan.deductible)} · payout cap {plan.coverageCap === null ? 'none' : money(plan.coverageCap)}</li>)}</ul>{!car && <p>This life has no car, so car accidents never happen and no auto cover is offered. Add a car at Your Home to unlock it.</p>}<LedgerHistory state={state} categories={['insurance_premium', 'insurance_claim', 'shock_cost']} /></>} />;
 }

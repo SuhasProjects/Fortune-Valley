@@ -17,7 +17,8 @@ export function PolicyPreview({ state, draftPolicy, overrides, invalid = false, 
     || (p.minCashBuffer !== undefined && p.minCashBuffer !== state.policy.minCashBuffer)
     || (p.targetAllocation && (['stock', 'bond', 'etf'] as const).some(asset => p.targetAllocation![asset] !== state.policy.targetAllocation[asset]))
   )) || Boolean(changes.household && Object.entries(changes.household).some(([key, value]) => state.household[key as keyof typeof state.household] !== value))
-    || Boolean(changes.insurance && Object.entries(changes.insurance).some(([line, plan]) => state.insurance[line as keyof typeof state.insurance] !== plan));
+    || Boolean(changes.insurance && Object.entries(changes.insurance).some(([line, plan]) => state.insurance[line as keyof typeof state.insurance] !== plan))
+    || Boolean(changes.car && (changes.car.owned !== state.car.owned || changes.car.valueBand !== state.car.valueBand));
   const signature = JSON.stringify(changes);
   const result = useMemo(() => changed && !invalid ? previewHorizon(state, changes, 12) : null, [state, signature, changed, invalid]);
   if (compact && (!changed || invalid)) return null;
