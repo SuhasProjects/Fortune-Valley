@@ -74,10 +74,15 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   // Any window, menu or coach panel holds the clock (useGameClock also holds it while the tab is hidden); a Type B
   // offer holds it through `blocked` below until the player chooses.
   const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || store.coachOpen || menu || confirm)
+  // /demo: from month 3 the coach nudges the player toward the Health House's two plans. The tip holds the auto-advance
+  // clock and stays up until the Health House opens (or the plan has already changed), so a presenter can talk over it.
+  const [demoTipDone, setDemoTipDone] = useState(false)
+  const demoTip = isDemoMode() && !demoTipDone && game.monthIndex >= 3 && game.insurance.health === 'health_plus' && tipStep < 0
+  useEffect(() => { if (demoTip && panel === 'hospital') setDemoTipDone(true) }, [demoTip, panel])
   const clock = useGameClock({
     enabled: settings.autoAdvanceSeconds > 0,
     intervalMs: Math.max(1, settings.autoAdvanceSeconds) * 1_000,
-    blocked: game.activeEvents.length > 0 || modalOpen || finishing,
+    blocked: game.activeEvents.length > 0 || modalOpen || finishing || demoTip,
   })
 
   const openPause = useCallback(() => {
@@ -187,9 +192,6 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   }
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
   const tip = tipStep >= 0 ? tips[tipStep] : null
-  // /demo: at month 3 the coach nudges the player toward the Health House's two plans.
-  const [demoTipDone, setDemoTipDone] = useState(false)
-  const demoTip = isDemoMode() && !demoTipDone && game.monthIndex === 3 && !tip
 
   return <main aria-label="Fortune Valley town">
     <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>

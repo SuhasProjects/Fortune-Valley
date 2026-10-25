@@ -19,7 +19,7 @@ export interface AppProps {
 }
 export default function App(props: AppProps) {
   const store = useGameStore()
-  useEffect(() => { store.refreshSavedGame(); isDemoMode() /* /demo or ?demo=1 arms the scripted run for this tab */ }, [store.refreshSavedGame])
+  useEffect(() => { store.refreshSavedGame(); if (isDemoMode() /* /demo or ?demo=1 arms the scripted run for this tab */ && !store.game) store.resumeDemoSession() }, [store.refreshSavedGame])
   const dev = new URLSearchParams(window.location.search).get('dev')
   if (dev === 'engine') return <Suspense fallback={loading}><EngineHarness/></Suspense>
   if (dev === 'ui') return <Suspense fallback={loading}><UiGallery/></Suspense>

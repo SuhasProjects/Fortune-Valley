@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, hasCar, monthLabel, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
 import { describeShock, explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
-import { demoConfig, isDemoMode } from '@/demo/demoMode';
+import { demoConfig, isDemoMode, readDemoSession, writeDemoSession } from '@/demo/demoMode';
 
 /** One flavour request per shock or life-event notification, keyed by scenario + notification id; survives store resets within a session. */
 const flavourRequested = new Set<string>();
@@ -107,6 +107,8 @@ export interface GameStore {
   saveGame(): boolean;
   /** Restore the saved run; returns false (and clears a corrupt save) when nothing valid is stored. */
   loadSavedGame(): boolean;
+  /** After a reload of a /demo tab, picks the in-tab game back up (never the Continue slot). */
+  resumeDemoSession(): boolean;
   clearSavedGame(): void;
   /** Re-read storage to refresh `savedGame` (call once on app start). */
   refreshSavedGame(): void;
@@ -325,6 +327,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => ({ config: structuredClone(config), game: structuredClone(state), finishPayload: null, openBuildingId: null, timelineOpen: false, historyOpen: false, lastActionError: null, aiStatus: 'idle', coachOpen: false, coachHistory: [], coachLoading: false, requestVersion: s.requestVersion + 1, savedGame: { savedAt: parsed.save.savedAt, title: config.title, monthIndex: state.monthIndex } }));
     return true;
   },
+  resumeDemoSession: () => {
+    if (!isDemoMode()) return false;
+    let parsed: ReturnType<typeof parseSave>;
+    try { parsed = parseSave(readDemoSession()); } catch { return false; }
+    if (!parsed.ok) return false;
+    const { config, state } = parsed.save;
+    set((s) => ({ config: structuredClone(config), game: structuredClone(state), finishPayload: null, openBuildingId: null, timelineOpen: false, historyOpen: false, lastActionError: null, aiStatus: 'idle', coachOpen: false, coachHistory: [], coachLoading: false, requestVersion: s.requestVersion + 1 }));
+    return true;
+  },
   clearSavedGame: () => {
     try { get().storage?.removeItem(SAVE_STORAGE_KEY); } catch { /* ignore */ }
     set({ savedGame: null });
@@ -357,6 +368,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 }));
+
+// A /demo tab mirrors its game into sessionStorage so an accidental reload resumes it; the Continue slot stays untouched.
+useGameStore.subscribe((s, prev) => {
+  if (s.game === prev.game || !isDemoMode()) return;
+  writeDemoSession(s.game && s.config ? serializeSave(s.config, s.game) : null);
+});
 
 export const selectNetWorth = (s: GameStore): number => (s.game ? netWorthOf(s.game) : 0);
 export const selectDebtTotal = (s: GameStore): number => (s.game ? s.game.debts.reduce((a, d) => a + d.balance, 0) : 0);

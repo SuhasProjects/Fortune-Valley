@@ -39,6 +39,26 @@ export function isDemoMode(): boolean {
   }
 }
 
+/** The in-tab demo game, kept only for an accidental reload of the same tab (the Continue slot in localStorage is never touched). */
+export const DEMO_SESSION_KEY = 'fv-demo-game';
+
+export function writeDemoSession(raw: string | null): void {
+  const st = storage();
+  try { if (raw === null) st?.removeItem(DEMO_SESSION_KEY); else st?.setItem(DEMO_SESSION_KEY, raw); } catch { /* quota or unavailable */ }
+}
+
+/** The game to resume after a reload of the demo tab; a fresh navigation to /demo (typed, link, back) starts over instead. */
+export function readDemoSession(): string | null {
+  if (typeof window === 'undefined') return null;
+  const st = storage();
+  try {
+    const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
+    const raw = st?.getItem(DEMO_SESSION_KEY) ?? null;
+    if (nav && nav.type !== 'reload') { st?.removeItem(DEMO_SESSION_KEY); return null; }
+    return raw;
+  } catch { return null; }
+}
+
 /** The happenings of the demo, in story order. Amounts are gross; the active health plan decides who pays the hospital. */
 export const DEMO_SCRIPT: RunScript = {
   exclusive: 'played',
