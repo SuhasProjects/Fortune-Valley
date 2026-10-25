@@ -35,8 +35,8 @@ export type WhatIfLineResult = Extract<AiResponse, { kind: 'whatif' }>;
 export type RecapResult = Extract<AiResponse, { kind: 'recap' }>;
 export type CoachResult = Extract<AiResponse, { kind: 'coach' }>;
 
-/** On the /demo route the Sage, the letter and offers stay offline so a recording is deterministic; scenes and the ending still use the model. */
-const DEMO_OFFLINE_KINDS: ReadonlySet<AiRequest['kind']> = new Set(['coach', 'scenario', 'opportunity']);
+/** On the /demo route every kind stays offline, so toasts, the Sage and the ending show their final wording at once. */
+const DEMO_OFFLINE_KINDS: ReadonlySet<AiRequest['kind']> = new Set(['coach', 'scenario', 'opportunity', 'flavour', 'recap', 'whatif', 'explain']);
 
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;

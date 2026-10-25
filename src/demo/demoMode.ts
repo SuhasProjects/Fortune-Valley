@@ -9,6 +9,8 @@ import { archetypeConfig } from '@/config/archetypes';
 
 export const DEMO_STORAGE_KEY = 'fv-demo';
 export const DEMO_SEED = 20261025;
+/** The recording runs one year; the real game keeps its own default. */
+export const DEMO_DURATION_MONTHS = 12;
 
 const storage = (): Storage | null => {
   try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch { return null; }
@@ -36,20 +38,20 @@ export const DEMO_SCRIPT: RunScript = {
   // What the 1,000 simulated futures roll instead of the scripted hospital bills: ordinary health luck, most bills
   // modest, the odd huge one (where the plans differ most). The played run, with its two big bills, lands unlucky.
   simulationShocks: [
-    { kind: 'medical', label: 'Medical emergency', monthlyIncidence: 0.085, costMedian: 1600, costSigma: 1.5, costMin: 100, costMax: 60000, coveredBy: 'health' },
+    { kind: 'medical', label: 'Medical emergency', monthlyIncidence: 0.12, costMedian: 1500, costSigma: 1.8, costMin: 100, costMax: 60000, coveredBy: 'health' },
   ],
   events: [
-    { monthIndex: 6, kind: 'life', amountSigned: -250, label: 'college textbooks', headline: 'Textbook bill lands', scene: 'The reading list for your evening course came with three required textbooks. The campus shop took $250 for the lot.' },
+    { monthIndex: 5, kind: 'shock', shockKind: 'medical', grossCost: 20000, variant: 'er_night', headline: 'Night in the ER', scene: 'Chest pain after dinner put you in an ambulance and through a night of scans and tests. The hospital billed {amount}; what you owe depends on your plan.' },
+    { monthIndex: 6, kind: 'life', amountSigned: -180, label: 'college textbooks', headline: 'Textbook bill lands', scene: 'The reading list for your evening course came with three required textbooks. The campus shop took $180 for the lot.' },
     { monthIndex: 8, kind: 'life', amountSigned: 200, label: 'birthday gift from your grandma', headline: 'Grandma remembers', scene: 'A card in your grandmother\'s handwriting arrived two days before your birthday with $200 folded inside.' },
-    { monthIndex: 12, kind: 'shock', shockKind: 'medical', grossCost: 20000, variant: 'er_night' },
-    { monthIndex: 16, kind: 'life', amountSigned: 50, label: 'credit card cashback', headline: 'Cashback credited', scene: 'The card company posted $50 of cashback to your account, the reward for a year of on-time payments.' },
-    { monthIndex: 22, kind: 'shock', shockKind: 'medical', grossCost: 12000, variant: 'er_night' },
+    { monthIndex: 9, kind: 'life', amountSigned: -150, label: 'parking ticket', headline: 'Ticket on the windshield', scene: 'You borrowed a friend\'s car for a weekend errand and misread the sign. The city wants $150 for the privilege.' },
+    { monthIndex: 11, kind: 'life', amountSigned: 150, label: 'credit card cashback', headline: 'Cashback credited', scene: 'The card company posted $150 of cashback to your account, the reward for a year of on-time payments.' },
   ],
 };
 
 /** The scripted run: a graduate on $30k with ~$50k of debt, no car, rent $340, starting on the $340 Plus Health plan. */
 export function demoConfig(): GameConfig {
-  const cfg = archetypeConfig('entry_worker', DEMO_SEED);
+  const cfg = archetypeConfig('entry_worker', DEMO_SEED, { durationMonths: DEMO_DURATION_MONTHS });
   const st = cfg.initialState;
   st.cash = 700;
   st.savings = 400;
@@ -68,7 +70,7 @@ export function demoConfig(): GameConfig {
     ...cfg,
     scenarioId: 'demo:overloaded-graduate',
     title: 'The Overloaded Graduate',
-    description: 'Fresh out of college with $50,000 of loans, a $30,000 lab job, no car and a $340 room: every dollar has a job, and one bad month could undo a year.',
+    description: 'Fresh out of college with $50,000 of loans, a $30,000 lab job, no car and a $340 room: every dollar has a job, and one bad month could undo the year.',
     mode: 'personalized',
     narrativeFocus: ['insurance', 'debt_payoff', 'emergency_fund'],
     script: structuredClone(DEMO_SCRIPT),

@@ -505,7 +505,7 @@ export interface InitialState {
 /** A scripted happening for a demo or lesson run: lands exactly on `monthIndex` instead of a random roll. */
 export type ScriptedEvent =
   | { monthIndex: number; kind: 'life'; amountSigned: number; label: string; headline?: string; scene?: string }
-  | { monthIndex: number; kind: 'shock'; shockKind: Exclude<ShockKind, 'life' | 'job_loss'>; grossCost: number; variant?: string };
+  | { monthIndex: number; kind: 'shock'; shockKind: Exclude<ShockKind, 'life' | 'job_loss'>; grossCost: number; variant?: string; headline?: string; scene?: string };
 /**
  * Run script: events placed by hand. `exclusive: true` silences the random shock, job-loss, life-event and offer rolls
  * everywhere; `'played'` silences them only in the played run: Monte Carlo and what-if paths keep the scripted life

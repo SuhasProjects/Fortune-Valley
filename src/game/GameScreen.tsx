@@ -187,9 +187,9 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   }
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
   const tip = tipStep >= 0 ? tips[tipStep] : null
-  // /demo: the month after the textbook bill, the coach nudges the player toward the Health House's two plans.
+  // /demo: at month 3 the coach nudges the player toward the Health House's two plans.
   const [demoTipDone, setDemoTipDone] = useState(false)
-  const demoTip = isDemoMode() && !demoTipDone && game.monthIndex === 7 && !tip
+  const demoTip = isDemoMode() && !demoTipDone && game.monthIndex === 3 && !tip
 
   return <main aria-label="Fortune Valley town">
     <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
@@ -202,7 +202,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
       {demoTip && <CoachTip step={4} label="Coach tip">
-        <strong>That bill stung</strong><p>Money is tight, and your health plan is the biggest bill you can change. The Health House has two plans; have a look.</p>
+        <strong>Premiums are eating your paycheck</strong><p>Your health plan is the biggest bill you can change. The Health House has two plans; worth a look?</p>
         <Button size="sm" variant="primary" onClick={() => { setDemoTipDone(true); store.openBuilding('hospital') }}>Open Health House</Button>
       </CoachTip>}
       {tip && <CoachTip step={tipStep}>

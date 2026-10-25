@@ -199,15 +199,18 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const exclusive = s.script?.exclusive === true || (played && (!lean || opts.asPlayed === true));
   const simulated = played && lean && opts.asPlayed !== true;
   const shockEvents = exclusive ? [] : rollShocks(s, rng.shocks, lean, simulated ? s.script?.simulationShocks ?? s.assumptions.shocks : s.assumptions.shocks);
+  const scriptedScene = new Map<string, ShockFlavour>();
   for (const e of scripted) {
     if (e.kind !== 'shock' || simulated) continue; // simulated futures replace the scripted bills with their own luck
     const ev = applyScriptedShock(s, e, lean, shockEvents.length);
-    if (ev) shockEvents.push(ev);
+    if (!ev) continue;
+    shockEvents.push(ev);
+    if (e.scene) scriptedScene.set(ev.id, { headline: e.headline ?? ev.title, scene: e.scene.replace('{amount}', `$${ev.shock!.grossCost.toLocaleString()}`), source: 'fallback' });
   }
   for (const ev of shockEvents) {
     s.activeEvents.push(ev);
     const sh = ev.shock!;
-    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id, variant: sh.variant });
+    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id, variant: sh.variant, flavour: scriptedScene.get(ev.id) });
     timeline.push({ type: 'shock', description: `${ev.title}: cost $${sh.grossCost.toLocaleString()}, insurer paid $${sh.insurerPaid.toLocaleString()}, out of pocket $${sh.outOfPocket.toLocaleString()}`, eventId: ev.id });
   }
   if (!exclusive && rollEmployment(s, rng.employment)) {
