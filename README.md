@@ -65,6 +65,13 @@ those changes. Agent 3's panel stress suite has its own config: `npx playwright 
 | `/?dev=ui` | UI kit gallery (`src/ui/dev/UiGallery.tsx`): every `src/ui` component in every state |
 | `/src/ui/dev/index.html?scale=4` | Standalone gallery page used by `tests/hud.browser.ts` (scales 3, 4, 6) |
 
+## AI gateway
+
+Copy `.env.example` → `.env` and set `AI_API_KEY` (server-side only; never `VITE_`). `npm run dev` serves `POST /api/ai` through a Vite middleware; on Vercel the same handler runs as `api/ai.ts`. Without a key the app uses clearly labeled offline fallbacks. The example uses Luminal's DeepSeek V4.1 Flash endpoint. `AI_ENABLED=false` forces fallback; `VITE_AI_OFFLINE=true` skips the network entirely in the browser.
+
+Any OpenAI-compatible endpoint works too: set `AI_PROVIDER=openai_compatible`, `AI_BASE_URL`, `AI_MODEL` and `AI_API_KEY`; `AI_AUTH_HEADER=api-key` switches from a bearer token to an `Api-Key` header. Output is still Zod-verified and the engine re-validates every effect.
+
+
 ## Deploy
 
 - **Vercel.** `vercel.json` gives `api/ai.ts` a 30 s max duration; everything else is a static Vite build. Point the
