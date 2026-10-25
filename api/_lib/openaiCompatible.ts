@@ -79,6 +79,7 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
         const r = candidate === undefined ? null : schema.safeParse(candidate);
         if (r?.success) return { parsed: r.data, stopReason: finish };
         const issues = r ? r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ') : 'response was not valid JSON';
+        if (process.env.AI_DEBUG) console.error(`[ai] attempt ${attempt + 1} did not validate: ${issues.slice(0, 800)}\n[ai] raw: ${text.slice(0, 1500)}`);
         messages.push({ role: 'assistant', content: text.slice(0, 4000) }, { role: 'user', content: `That did not validate (${issues.slice(0, 600)}). Return only a corrected JSON object.` });
       }
       return { parsed: null, stopReason: 'schema_mismatch' };

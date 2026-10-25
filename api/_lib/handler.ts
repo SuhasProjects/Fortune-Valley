@@ -18,6 +18,8 @@ import { allowRequest, MAX_BODY_BYTES } from './rateLimit.js';
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
 export interface HandlerEnv {
   AI_API_KEY?: string;
+  /** Luminal's own variable name; used when AI_API_KEY is unset and implies the Luminal OpenAI-compatible defaults. */
+  LUMINAL_API_KEY?: string;
   AI_MODEL?: string;
   AI_ENABLED?: string;
   AI_TIMEOUT_MS?: string;
@@ -54,7 +56,16 @@ export function makeAnthropicClient(env: HandlerEnv): ModelClient {
   };
 }
 
-export function makeClientFromEnv(env: HandlerEnv): ModelClient | { error: HandlerResult } {
+export const LUMINAL_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.luminal.cloud', AI_MODEL: 'deepseek-ai/DeepSeek-V4.1-Flash' } as const;
+
+/** Resolve the key and provider: AI_* wins; a bare LUMINAL_API_KEY selects the Luminal defaults. */
+export function resolveEnv(env: HandlerEnv): HandlerEnv {
+  if (env.AI_API_KEY || !env.LUMINAL_API_KEY) return env;
+  return { ...LUMINAL_DEFAULTS, ...Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== '')), AI_API_KEY: env.LUMINAL_API_KEY };
+}
+
+export function makeClientFromEnv(rawEnv: HandlerEnv): ModelClient | { error: HandlerResult } {
+  const env = resolveEnv(rawEnv);
   if (!env.AI_API_KEY) return { error: err(503, 'disabled', 'AI_API_KEY is not configured') };
   if ((env.AI_PROVIDER ?? 'anthropic') === 'openai_compatible') {
     if (!env.AI_BASE_URL) return { error: err(503, 'disabled', 'AI_BASE_URL is required for AI_PROVIDER=openai_compatible') };
