@@ -473,6 +473,20 @@ describe('provider defaults from bare keys', async () => {
     const env = resolveEnv({ GEMINI_API_KEY: 'g', LUMINAL_API_KEY: 'l' });
     expect(env).toMatchObject({ ...GEMINI_DEFAULTS, AI_API_KEY: 'g' });
   });
+  it('a Luminal key beside the Gemini key makes Luminal the fallback for quota, outage and timeout errors only', async () => {
+    const { withFallback } = await import('../../api/_lib/handler');
+    const { UpstreamError } = await import('../../api/_lib/openaiCompatible');
+    const calls: string[] = [];
+    const failing = (status: number): ModelClient => ({ async parse() { calls.push(`primary:${status}`); throw new UpstreamError(status, 'nope'); } });
+    const luminal: ModelClient = { async parse({ schema }) { calls.push('luminal'); const r = schema.safeParse({ text: 'from luminal' }); return { parsed: r.success ? r.data : null, stopReason: 'stop' }; } };
+    const schema = (await import('zod')).z.object({ text: (await import('zod')).z.string() });
+    for (const status of [429, 503, 504, 404]) {
+      const r = await withFallback(failing(status), luminal).parse({ system: '', user: '', schema, maxTokens: 10 });
+      expect(r.parsed).toEqual({ text: 'from luminal' });
+    }
+    await expect(withFallback(failing(401), luminal).parse({ system: '', user: '', schema, maxTokens: 10 })).rejects.toBeInstanceOf(UpstreamError);
+    expect(calls.filter((c) => c === 'luminal')).toHaveLength(4);
+  });
   it('LUMINAL_API_KEY alone selects the Luminal defaults; explicit AI_* still wins', () => {
     expect(resolveEnv({ LUMINAL_API_KEY: 'l' })).toMatchObject({ ...LUMINAL_DEFAULTS, AI_API_KEY: 'l' });
     expect(resolveEnv({ GEMINI_API_KEY: 'g', AI_MODEL: 'gemini-2.5-pro' }).AI_MODEL).toBe('gemini-2.5-pro');

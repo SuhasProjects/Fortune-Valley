@@ -82,8 +82,7 @@ export function resolveEnv(env: HandlerEnv): HandlerEnv {
   return env;
 }
 
-export function makeClientFromEnv(rawEnv: HandlerEnv): ModelClient | { error: HandlerResult } {
-  const env = resolveEnv(rawEnv);
+function makeSingleClient(env: HandlerEnv): ModelClient | { error: HandlerResult } {
   if (!env.AI_API_KEY) return { error: err(503, 'disabled', 'AI_API_KEY is not configured') };
   if ((env.AI_PROVIDER ?? 'anthropic') === 'openai_compatible') {
     if (!env.AI_BASE_URL) return { error: err(503, 'disabled', 'AI_BASE_URL is required for AI_PROVIDER=openai_compatible') };
@@ -91,6 +90,38 @@ export function makeClientFromEnv(rawEnv: HandlerEnv): ModelClient | { error: Ha
     return makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: env.AI_API_KEY, model: env.AI_MODEL, authHeader: env.AI_AUTH_HEADER === 'api-key' ? 'api-key' : 'bearer', timeoutMs: Number(env.AI_TIMEOUT_MS) || 25_000 });
   }
   return makeAnthropicClient(env);
+}
+
+/** Upstream failures worth retrying on a second provider: quota, server trouble, timeouts, a retired model. */
+const FALLBACK_STATUSES = new Set([404, 408, 429, 500, 502, 503, 504, 529]);
+
+/**
+ * Primary client with a Luminal fallback: when the primary is not Luminal and LUMINAL_API_KEY is set, a quota / outage /
+ * timeout error on the primary re-runs the same call on Luminal's DeepSeek endpoint. Auth errors and schema problems are
+ * not retried (they would fail the same way or are the primary's own fault).
+ */
+export function withFallback(primary: ModelClient, fallback: ModelClient): ModelClient {
+  return {
+    async parse(args) {
+      try {
+        return await primary.parse(args);
+      } catch (e) {
+        if (!(e instanceof UpstreamError) || !FALLBACK_STATUSES.has(e.status)) throw e;
+        console.error(`[ai] primary failed with ${e.status}; retrying on the fallback provider`);
+        return fallback.parse(args);
+      }
+    },
+  };
+}
+
+export function makeClientFromEnv(rawEnv: HandlerEnv): ModelClient | { error: HandlerResult } {
+  const env = resolveEnv(rawEnv);
+  const primary = makeSingleClient(env);
+  if ('error' in primary) return primary;
+  const luminal = rawEnv.LUMINAL_API_KEY;
+  if (!luminal || env.AI_BASE_URL === LUMINAL_DEFAULTS.AI_BASE_URL) return primary;
+  const fallback = makeSingleClient({ ...LUMINAL_DEFAULTS, AI_API_KEY: luminal, AI_TIMEOUT_MS: env.AI_TIMEOUT_MS });
+  return 'error' in fallback ? primary : withFallback(primary, fallback);
 }
 
 export interface RequestMeta { clientKey?: string }

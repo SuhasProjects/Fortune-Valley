@@ -9,7 +9,7 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 | Variable | Meaning |
 |---|---|
 | `GEMINI_API_KEY` | Google AI Studio key. Selects Gemini's OpenAI-compatible endpoint (`gemini-3.5-flash-lite`). Wins over every other key, including `AI_API_KEY`. |
-| `LUMINAL_API_KEY` | On its own selects Luminal's DeepSeek endpoint. |
+| `LUMINAL_API_KEY` | On its own selects Luminal's DeepSeek endpoint. Beside `GEMINI_API_KEY` it becomes the fallback: a 404/429/5xx/timeout from Gemini re-runs the same call on Luminal before the browser falls back to offline text. |
 | `AI_API_KEY` | Generic provider key, used only when `GEMINI_API_KEY` is absent; needs explicit `AI_PROVIDER`/`AI_BASE_URL`/`AI_MODEL`. Never `VITE_`-prefixed. No key at all → 503 `disabled`. |
 | `AI_PROVIDER` | `anthropic` (default) or `openai_compatible`. |
 | `AI_MODEL` | Anthropic default `claude-opus-5-5`; required for `openai_compatible`. |
