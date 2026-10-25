@@ -16,7 +16,7 @@ const replay = (r: HandlerResult): typeof fetch => (async () => new Response(JSO
 const env = { AI_API_KEY: 'k' };
 const shock: ShockFlavourInput = { kind: 'auto', amount: 1800, monthLabel: '2026-11', archetype: 'entry_worker', housingKind: 'rent', hasCar: true, employment: 'employed' };
 const body = (s: ShockFlavourInput = shock) => JSON.stringify({ kind: 'flavour', shock: s });
-const KINDS: ShockKind[] = ['medical', 'auto', 'home', 'job_loss'];
+const KINDS: Exclude<ShockKind, 'life'>[] = ['medical', 'auto', 'home', 'job_loss'];
 
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
 const sentences = (s: string) => s.split(/(?<=[.?])\s+/).filter((x) => x.trim().length > 0);
@@ -62,6 +62,27 @@ describe('flavour kind: gateway', () => {
     expect(res.warnings.length).toBeGreaterThan(0);
     const offline = await describeShock(shock, 'N_7', { offline: true });
     expect(offline).toMatchObject({ source: 'fallback', headline: res.headline, scene: res.scene });
+  });
+
+  it('accepts life events with a signed amount (gift > 0, cost < 0), prompts gift vs cost, and falls back to the life table', async () => {
+    const gift: ShockFlavourInput = { ...shock, kind: 'life', amount: 120, hasCar: false };
+    const cost: ShockFlavourInput = { ...shock, kind: 'life', amount: -45, archetype: 'college_student' };
+    expect(requestSchema.safeParse({ kind: 'flavour', shock: gift }).success).toBe(true);
+    expect(requestSchema.safeParse({ kind: 'flavour', shock: cost }).success).toBe(true);
+    expect(requestSchema.safeParse({ kind: 'flavour', shock: { ...shock, amount: -45 } }).success).toBe(false); // insured shocks stay non-negative
+    expect(user({ kind: 'flavour', shock: gift })).toMatch(/Life event: gift[^\n]*\nAmount: \$120/);
+    expect(user({ kind: 'flavour', shock: cost })).toMatch(/Life event: cost[^\n]*\nAmount: \$45/);
+    expect(user({ kind: 'flavour', shock: cost })).not.toContain('-$');
+    expect(system).toMatch(/life event/i);
+    const r = await handleAiRequest(body(gift), env, fake({ headline: 'Grandfather sends a cheque', scene: 'Your grandfather mailed a birthday card with a cheque inside. You deposited the $120 on Monday.' }));
+    expect(r.status).toBe(200);
+    const res = await describeShock(gift, 'N_g', { fetchImpl: replay(r) });
+    expect(res).toMatchObject({ source: 'ai', headline: 'Grandfather sends a cheque' });
+    const offline = await describeShock(cost, 'N_c', { offline: true });
+    expect(offline.source).toBe('fallback');
+    expect(offline.scene).toContain('$45');
+    expect(offline.scene).toMatch(/\b(you|your)\b/i);
+    lintScene(offline.scene, offline.headline);
   });
 
   it('prompt quotes the amount once as given and asks for no amount on job loss', () => {

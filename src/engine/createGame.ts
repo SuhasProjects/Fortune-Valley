@@ -34,6 +34,7 @@ export function createGame(config: GameConfig): GameState {
     netWorthHistory: [],
     shortfallMonths: [],
     realizedShocks: [],
+    lifeEvents: [],
   };
   const nw = netWorthOf(state);
   state.netWorthHistory.push(nw);

@@ -43,3 +43,41 @@ describe('shock flavour toast', () => {
     expect(useGameStore.getState().game).toBe(before)
   })
 })
+
+const giftNote: GameNotification = { id: 'N_s_5_2', monthIndex: 5, kind: 'positive', summary: 'A small windfall: $120', details: 'Someone sent you $120; it went straight into your cash.', relatedBuilding: 'home', amountSigned: 120, shockKind: 'life', eventId: 'EVL_s_5_0', read: false }
+const costNote: GameNotification = { id: 'N_s_6_2', monthIndex: 6, kind: 'negative', summary: 'A small unplanned cost: $45', details: 'Life happened and $45 left your cash; no insurance covers this kind of thing.', relatedBuilding: 'home', amountSigned: -45, shockKind: 'life', eventId: 'EVL_s_6_0', read: false }
+
+describe('life event toast', () => {
+  it('shows the amount green for a gift and red for a cost, then swaps in the headline and scene', () => {
+    const { container, rerender } = render(<ToastStack notifications={[giftNote, costNote]} onDismiss={() => {}} onViewAll={() => {}}/>)
+    const money = [...container.querySelectorAll('.fv-money')]
+    const gift = money.find(m => m.textContent?.includes('120'))!
+    const cost = money.find(m => m.textContent?.includes('45'))!
+    expect(gift.className).toContain('fv-money--positive') // green
+    expect(cost.className).toContain('fv-money--negative') // red
+    rerender(<ToastStack notifications={[{ ...giftNote, flavour: { headline: 'Grandfather sends a cheque', scene: 'Your grandfather mailed a card with a cheque inside. You deposited the $120 on Monday.', source: 'fallback' } }]} onDismiss={() => {}} onViewAll={() => {}}/>)
+    expect(container.querySelector('.notice strong')?.textContent).toBe('Grandfather sends a cheque')
+    expect(container.querySelector('.fv-toast__scene')?.textContent).toContain('$120')
+    expect(container.querySelector('.fv-money')?.className).toContain('fv-money--positive')
+  })
+
+  it('store requests a scene for a life event too (signed amount, offline table, mirrored onto the timeline)', async () => {
+    const store = useGameStore.getState()
+    store.resetGame()
+    store.startGame(scenarios[1]!)
+    const game = useGameStore.getState().game!
+    useGameStore.setState({ game: { ...game, notifications: [...game.notifications, giftNote, costNote], timeline: [...game.timeline, { id: 'T_g', monthIndex: 5, type: 'shock', description: 'Small gift: $120 received', eventId: 'EVL_s_5_0', netWorthAfter: 0 }] } })
+    await useGameStore.getState().requestShockFlavour('N_s_5_2')
+    await useGameStore.getState().requestShockFlavour('N_s_6_2')
+    const after = useGameStore.getState().game!
+    const gift = after.notifications.find(n => n.id === 'N_s_5_2')!
+    expect(gift.flavour?.source).toBe('fallback')
+    expect(gift.flavour?.scene).toContain('$120')
+    expect(gift.amountSigned).toBe(120)
+    expect(after.timeline.find(t => t.eventId === 'EVL_s_5_0')?.flavour).toEqual(gift.flavour)
+    const cost = after.notifications.find(n => n.id === 'N_s_6_2')!
+    expect(cost.flavour?.scene).toContain('$45')
+    expect(cost.flavour?.scene).not.toContain('-$')
+    expect(cost.flavour?.headline).not.toBe(gift.flavour?.headline)
+  })
+})

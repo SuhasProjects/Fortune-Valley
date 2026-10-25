@@ -148,6 +148,8 @@ export function validateAssumptions(a: Assumptions): Validation {
     shockKinds.add(shock.kind);
     if (!probability(shock.monthlyIncidence) || !bounded(shock.costSigma, 3) || ![shock.costMedian, shock.costMin, shock.costMax].every(n => bounded(n, BOUNDS.cashMax)) || shock.costMin > shock.costMax) return fail('Invalid shock probability or severity');
   }
+  const le = a.lifeEvents;
+  if (le !== undefined && (!probability(le.monthlyIncidence) || ![le.amountMin, le.amountMax, le.netCap].every(n => bounded(n, BOUNDS.cashMax)) || le.amountMin > le.amountMax)) return fail('Invalid life event assumptions');
   const e = a.employment;
   if (!probability(e.jobLossMonthlyIncidence) || !probability(e.unemploymentReplacementRate) || !bounded(e.unemploymentBenefitMonthlyCap, BOUNDS.monthlySpendMax) || !bounded(e.annualRaiseRate, 1) || !Number.isInteger(e.unemploymentDurationMonthsMin) || !Number.isInteger(e.unemploymentDurationMonthsMax) || e.unemploymentDurationMonthsMin < 1 || e.unemploymentDurationMonthsMax < e.unemploymentDurationMonthsMin || e.unemploymentDurationMonthsMax > 240) return fail('Invalid employment assumptions');
   return ok;
