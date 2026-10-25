@@ -20,7 +20,7 @@ textarea.fv-field-control { min-height: calc(24 * var(--px)); resize: vertical; 
 .fv-slider-wrap { position: relative; display: block; min-width: 0; }
 .fv-slider-wrap .fv-slider { position: relative; z-index: 1; display: block; }
 /* Filled portion: runs from the track's left edge to the thumb centre (thumb is 5 px wide, track border 2 px). */
-.fv-slider__fill { position: absolute; left: calc(2 * var(--px)); top: calc(5 * var(--px)); height: calc(2 * var(--px)); width: calc((100% - 9 * var(--px)) * var(--fv-fraction, 0) + 2.5 * var(--px)); background: var(--c-grass-deep); z-index: 2; pointer-events: none; }
+.fv-slider__fill { position: absolute; left: calc(2 * var(--px)); top: calc(3 * var(--px)); height: calc(2 * var(--px)); width: calc((100% - 9 * var(--px)) * var(--fv-fraction, 0) + 2.5 * var(--px)); background: var(--c-grass-deep); z-index: 2; pointer-events: none; }
 .fv-slider:disabled ~ .fv-slider__fill { opacity: 0.65; }
 .fv-slider__ticks { position: relative; display: block; height: calc(6 * var(--px)); margin: 0 calc(4.5 * var(--px)); font-size: var(--fs-label); line-height: 1; color: var(--c-outline); }
 .fv-slider__tick { position: absolute; top: 0; left: calc(100% * var(--fv-fraction, 0)); transform: translateX(-50%); padding-top: calc(2 * var(--px)); white-space: nowrap; }
