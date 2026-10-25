@@ -30,9 +30,16 @@ const stripFences = (s: string): string => {
   return first >= 0 && last > first ? t.slice(first, last + 1) : t;
 };
 
-/** Accepts an origin (`https://flash.luminal.cloud`) or a base already ending in `/v1`, as many provider dashboards print it. */
-export const chatCompletionsUrl = (baseUrl: string): string =>
-  `${baseUrl.trim().replace(/\/+$/, '').replace(/\/v1(\/chat\/completions)?$/, '')}/v1/chat/completions`;
+/**
+ * Accepts an origin (`https://flash.luminal.cloud`), a base already ending in `/v1`, or a full OpenAI-compatible prefix
+ * such as Gemini's `https://generativelanguage.googleapis.com/v1beta/openai` (anything whose last segment is not a bare origin).
+ */
+export const chatCompletionsUrl = (baseUrl: string): string => {
+  const base = baseUrl.trim().replace(/\/+$/, '').replace(/\/chat\/completions$/, '');
+  if (/\/v1$/.test(base)) return `${base}/chat/completions`;
+  if (/^https?:\/\/[^/]+$/.test(base)) return `${base}/v1/chat/completions`;
+  return `${base}/chat/completions`;
+};
 
 export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelClient {
   const f = o.fetchImpl ?? fetch;

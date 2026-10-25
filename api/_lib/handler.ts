@@ -20,6 +20,8 @@ export interface HandlerEnv {
   AI_API_KEY?: string;
   /** Luminal's own variable name; used when AI_API_KEY is unset and implies the Luminal OpenAI-compatible defaults. */
   LUMINAL_API_KEY?: string;
+  /** Google AI Studio key; used when AI_API_KEY is unset and implies the Gemini OpenAI-compatible defaults (wins over LUMINAL_API_KEY). */
+  GEMINI_API_KEY?: string;
   AI_MODEL?: string;
   AI_ENABLED?: string;
   AI_TIMEOUT_MS?: string;
@@ -58,10 +60,15 @@ export function makeAnthropicClient(env: HandlerEnv): ModelClient {
 
 export const LUMINAL_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.luminal.cloud', AI_MODEL: 'deepseek-ai/DeepSeek-V4.1-Flash' } as const;
 
-/** Resolve the key and provider: AI_* wins; a bare LUMINAL_API_KEY selects the Luminal defaults. */
+export const GEMINI_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-2.5-flash' } as const;
+
+/** Resolve the key and provider: AI_* wins; a bare GEMINI_API_KEY selects the Gemini defaults, else a bare LUMINAL_API_KEY the Luminal defaults. */
 export function resolveEnv(env: HandlerEnv): HandlerEnv {
-  if (env.AI_API_KEY || !env.LUMINAL_API_KEY) return env;
-  return { ...LUMINAL_DEFAULTS, ...Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== '')), AI_API_KEY: env.LUMINAL_API_KEY };
+  if (env.AI_API_KEY) return env;
+  const set = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ''));
+  if (env.GEMINI_API_KEY) return { ...GEMINI_DEFAULTS, ...set, AI_API_KEY: env.GEMINI_API_KEY };
+  if (env.LUMINAL_API_KEY) return { ...LUMINAL_DEFAULTS, ...set, AI_API_KEY: env.LUMINAL_API_KEY };
+  return env;
 }
 
 export function makeClientFromEnv(rawEnv: HandlerEnv): ModelClient | { error: HandlerResult } {

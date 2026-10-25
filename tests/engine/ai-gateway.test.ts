@@ -126,18 +126,18 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
     expect((await explainOutcome(summary(), 'why', undefined, { fetchImpl: replay(r) })).source).toBe('fallback');
   });
 
-  it('.env.example (Luminal DeepSeek) drives the real client factory: URL, model and bearer header', async () => {
+  it('.env.example (Gemini) drives the real client factory: URL, model and bearer header', async () => {
     const example = Object.fromEntries(readFileSync('.env.example', 'utf8').split('\n').filter((l) => /^[A-Z_]+=/.test(l)).map((l) => { const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).trim()]; }));
-    expect(example).toMatchObject({ AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.luminal.cloud', AI_MODEL: 'deepseek-ai/DeepSeek-V4.1-Flash', AI_API_KEY: '' });
+    expect(example).toMatchObject({ AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-2.5-flash', AI_API_KEY: '', GEMINI_API_KEY: '' });
     expect((await handleAiRequest(scenarioReq, example)).body).toMatchObject({ code: 'disabled' });
     const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
     vi.stubGlobal('fetch', impl);
     try {
-      const r = await handleAiRequest(scenarioReq, { ...example, AI_API_KEY: 'test-key' });
+      const r = await handleAiRequest(scenarioReq, { ...example, GEMINI_API_KEY: 'test-key' });
       expect(r.status).toBe(200);
-      expect(calls[0]!.url).toBe('https://flash.luminal.cloud/v1/chat/completions');
+      expect(calls[0]!.url).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
       expect(calls[0]!.headers.Authorization).toBe('Bearer test-key');
-      expect(calls[0]!.body.model).toBe('deepseek-ai/DeepSeek-V4.1-Flash');
+      expect(calls[0]!.body.model).toBe('gemini-2.5-flash');
       expect(calls[0]!.body.response_format).toEqual({ type: 'json_object' });
     } finally {
       vi.unstubAllGlobals();
@@ -444,5 +444,25 @@ describe('prompts and schema for the reveal + director', () => {
     const { client } = capture({ text: 'x'.repeat(1300) });
     const r = await handleAiRequest(JSON.stringify({ kind: 'explain', summary: summary(), question: 'why', monteCarlo: mc }), { AI_API_KEY: 'k' }, client);
     expect(r.body).toMatchObject({ code: 'schema_mismatch' });
+  });
+});
+
+describe('provider defaults from bare keys', async () => {
+  const { resolveEnv, GEMINI_DEFAULTS, LUMINAL_DEFAULTS } = await import('../../api/_lib/handler');
+  const { chatCompletionsUrl } = await import('../../api/_lib/openaiCompatible');
+  it('GEMINI_API_KEY alone selects the Gemini OpenAI-compatible defaults and wins over LUMINAL_API_KEY', () => {
+    const env = resolveEnv({ GEMINI_API_KEY: 'g', LUMINAL_API_KEY: 'l' });
+    expect(env).toMatchObject({ ...GEMINI_DEFAULTS, AI_API_KEY: 'g' });
+  });
+  it('LUMINAL_API_KEY alone selects the Luminal defaults; explicit AI_* still wins', () => {
+    expect(resolveEnv({ LUMINAL_API_KEY: 'l' })).toMatchObject({ ...LUMINAL_DEFAULTS, AI_API_KEY: 'l' });
+    expect(resolveEnv({ GEMINI_API_KEY: 'g', AI_MODEL: 'gemini-2.5-pro' }).AI_MODEL).toBe('gemini-2.5-pro');
+    expect(resolveEnv({ AI_API_KEY: 'k', GEMINI_API_KEY: 'g' })).toEqual({ AI_API_KEY: 'k', GEMINI_API_KEY: 'g' });
+  });
+  it('builds the chat completions URL for origins, /v1 bases and full prefixes like Gemini', () => {
+    expect(chatCompletionsUrl('https://flash.luminal.cloud')).toBe('https://flash.luminal.cloud/v1/chat/completions');
+    expect(chatCompletionsUrl('https://flash.luminal.cloud/v1/')).toBe('https://flash.luminal.cloud/v1/chat/completions');
+    expect(chatCompletionsUrl(GEMINI_DEFAULTS.AI_BASE_URL)).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+    expect(chatCompletionsUrl('https://x.test/v1/chat/completions')).toBe('https://x.test/v1/chat/completions');
   });
 });

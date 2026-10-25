@@ -8,10 +8,12 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 
 | Variable | Meaning |
 |---|---|
-| `AI_API_KEY` | Provider key (never `VITE_`-prefixed). Missing → 503 `disabled`. |
+| `GEMINI_API_KEY` | Google AI Studio key. On its own it selects Gemini's OpenAI-compatible endpoint (`gemini-2.5-flash`). Wins over `LUMINAL_API_KEY`. |
+| `LUMINAL_API_KEY` | On its own selects Luminal's DeepSeek endpoint. |
+| `AI_API_KEY` | Generic provider key; with it set, `AI_PROVIDER`/`AI_BASE_URL`/`AI_MODEL` must be given explicitly. Never `VITE_`-prefixed. No key at all → 503 `disabled`. |
 | `AI_PROVIDER` | `anthropic` (default) or `openai_compatible`. |
 | `AI_MODEL` | Anthropic default `claude-opus-5-5`; required for `openai_compatible`. |
-| `AI_BASE_URL` | `openai_compatible` only: the provider origin, e.g. `https://flash.luminal.cloud`. The gateway appends `/v1/chat/completions`; a trailing `/` or `/v1` is tolerated. |
+| `AI_BASE_URL` | `openai_compatible` only: an origin (`https://flash.luminal.cloud` → `/v1/chat/completions` appended), a `/v1` base, or a full prefix such as `https://generativelanguage.googleapis.com/v1beta/openai` (→ `/chat/completions` appended). |
 | `AI_AUTH_HEADER` | `bearer` (default) or `api-key` for `openai_compatible`. |
 | `AI_TIMEOUT_MS` | Upstream timeout, default 25000 (→ 504 `timeout`). Keep below Vercel's 30 s `maxDuration` in `vercel.json`. |
 | `AI_ENABLED` | `false` forces 503 `disabled`. |
@@ -19,7 +21,7 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 
 Where they come from: under `npm run dev`, `server/aiDevMiddleware.ts` reads `.env` / `.env.local` / `.env.development*` from the project root (`loadEnv`, all prefixes) and merges `process.env` on top, so `cp .env.example .env` + a key is enough; Vite itself never copies `.env` into `process.env`. On Vercel, `api/ai.ts` reads `process.env`, so set the same names as project environment variables. Nothing is ever read from `import.meta.env` on the server, and no `AI_*` value reaches the client bundle.
 
-Current default (`.env.example`): Luminal's DeepSeek endpoint, which is an OpenAI-compatible chat-completions API → `AI_PROVIDER=openai_compatible`, `AI_BASE_URL=https://flash.luminal.cloud`, `AI_MODEL=deepseek-ai/DeepSeek-V4.1-Flash`. `tests/engine/ai-gateway.test.ts` parses `.env.example` and asserts the resulting request URL, model and `Authorization: Bearer` header, so changing the example without the code (or vice versa) fails the unit tests.
+Current default (`.env.example`): Google Gemini through its OpenAI-compatible chat-completions API → `AI_PROVIDER=openai_compatible`, `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL=gemini-2.5-flash`; just `GEMINI_API_KEY=…` is enough. Luminal's DeepSeek endpoint stays available via `LUMINAL_API_KEY`. `tests/engine/ai-gateway.test.ts` parses `.env.example` and asserts the resulting request URL, model and `Authorization: Bearer` header, so changing the example without the code (or vice versa) fails the unit tests.
 
 ## 1. scenario — personalized prompt → ScenarioProposal
 
