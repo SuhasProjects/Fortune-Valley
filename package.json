@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "lint": "tsc -p tsconfig.json --noEmit",
     "art:palette": "node scripts/art/palette.mjs",
-    "art": "node scripts/art/roads.mjs && node scripts/art/compile.mjs",
+    "art": "node scripts/art/water.mjs && node scripts/art/roads.mjs && node scripts/art/compile.mjs",
     "art:extract": "node scripts/art/extract.mjs",
     "art:preview": "node scripts/art/preview.mjs",
     "art:clean": "node scripts/art/clean.mjs",
