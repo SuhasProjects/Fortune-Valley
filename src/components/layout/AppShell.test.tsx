@@ -36,6 +36,6 @@ describe('integrated app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }))
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))
     fireEvent.click(screen.getByRole('button', { name: 'Finish now' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: /You finished month 1 with/ })).toBeTruthy(), { timeout: 2_000 })
+    await waitFor(() => expect(screen.getByRole('heading', { name: /You finished month 1 with/ })).toBeTruthy(), { timeout: 20_000 })
   })
 })

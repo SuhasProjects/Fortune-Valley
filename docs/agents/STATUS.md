@@ -18,7 +18,8 @@ Updated 2026-10-24 (late). Read this, then only the files your brief names. Ever
   (`tests/title.browser.ts` picker-overlap test, `tests/reveal.browser.ts` no-decisions test, `tests/town.browser.ts` on the
   mobile project); integrating. **Do not touch those files or `src/engine/**`, `src/game/world/**`, `src/game/art/**`,
   `scripts/art/**`, `art-src/world/**`, `art-src/title/**`.**
-- Subagents: none running right now (six finished: agent2/4/5-finish, ai-content, engine-hardening, world-ring, qa-pass-1).
+- CI (`.github/workflows/ci.yml`) was red on `main` for hours because `AppShell.test` gave `finishGame` only 2 s on slow runners; fixed. Check https://github.com/SuhasProjects/financegamething/actions before assuming `main` is broken.
+- Subagents: an AI-wiring subagent is integrating human Agent 5's Luminal/DeepSeek config (branch `ai-wiring`). Otherwise none running (six finished: agent2/4/5-finish, ai-content, engine-hardening, world-ring, qa-pass-1).
 - Humans: Agent 3 pushes `agent3-windows`; Agent 4 (human) pushed `agent4-human` (deploy audit `docs/DEPLOY.md`, manual QA
   `docs/QA.md`, extra sprites). Both merged.
 
@@ -97,7 +98,9 @@ Defects:
 Acceptance: `npm test` (incl. panels tests) green; `tests/hud.browser.ts`, `tests/town.browser.ts`, panels stress suite
 green on both projects; screenshots show the header on top of every window.
 
-## Brief P — Performance, bundle and accessibility (branch `perf-a11y`, port 5193)
+## Brief P — DONE by the main agent (on `main`: deps removed, lazy ending, a11y test). Skip.
+
+### (old) Brief P — Performance, bundle and accessibility (branch `perf-a11y`, port 5193)
 
 Goal: faster load, smaller bundle, keyboard-complete, no console errors.
 

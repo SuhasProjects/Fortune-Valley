@@ -56,7 +56,8 @@ export function validateEffect(assumptions: Assumptions, e: EventEffect | undefi
       if (!isFiniteNonNeg(e.discretionaryMonthly) || e.discretionaryMonthly > BOUNDS.monthlySpendMax) return fail('budget_choice: amount out of bounds');
       return ok;
     case 'loan_choice':
-      if (!isFiniteNonNeg(e.principal) || e.principal <= 0 || e.principal > BOUNDS.loanPrincipalMax) return fail('loan_choice: principal out of bounds');
+      // Matches the gateway schema (api/_lib/schemas.ts): at least $1.
+      if (!isFiniteNonNeg(e.principal) || e.principal < 1 || e.principal > BOUNDS.loanPrincipalMax) return fail('loan_choice: principal out of bounds');
       if (!isFiniteNonNeg(e.apr) || e.apr > BOUNDS.aprMax) return fail('loan_choice: APR out of bounds');
       if (!Number.isInteger(e.termMonths) || e.termMonths < BOUNDS.loanTermMonthsMin || e.termMonths > BOUNDS.loanTermMonthsMax) return fail('loan_choice: term out of bounds');
       if (typeof e.name !== 'string' || e.name.length === 0 || e.name.length > 60) return fail('loan_choice: bad name');
