@@ -79,7 +79,7 @@ write('art-src/title/scene/hills.txt', mountains({ seed: 37, h: 44, base: 22, am
   const ellipse = (ex, ey, rx, ry, key) => { for (let y = ey - ry - 1; y <= ey + ry + 1; y++) for (let x = ex - rx - 1; x <= ex + rx + 1; x++) { if (((x - ex) / rx) ** 2 + ((y - ey) / ry) ** 2 <= 1 && y >= 0 && x >= 0 && y < MAP_H && x < W) rows[y][x] = key; } };
   ellipse(120, 224, 30, 12, 'w'); ellipse(120, 224, 27, 9, 'u');
   // Two tilled plots above the market; the furrow texture itself comes from ground.mjs ('f').
-  for (let y = 151; y < 169; y++) for (let x = 312; x < 392; x++) if (x < 348 || x > 352) rows[y][x] = 'f';
+  for (let y = 153; y < 171; y++) for (let x = 312; x < 392; x++) if (x < 348 || x > 352) rows[y][x] = 'f';
   write('art-src/title/ground-mask.txt', rows, { kind: 'mask' });
 }
 
