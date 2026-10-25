@@ -34,6 +34,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
     initialState: base({
       cash: 800,
       savings: 300,
+      investments: { stock: 0, bond: 0, etf: 5000 }, // a small index-fund balance (a gift / summer-job money) so "invest differently" has something to move
       employment: { status: 'employed', title: 'Part-time barista', grossAnnualSalary: 22000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 22000 },
       household: { housingKind: 'dorm', housingMonthly: 550, essentialsMonthly: 400, discretionaryMonthly: 180, dependents: 0 },
       debts: [
@@ -41,7 +42,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
         { id: 'student_1', name: 'Student loan', kind: 'student_loan', balance: 14000, apr: 0.055, minimumPayment: 0 },
       ],
       insurance: { health: 'health_basic', auto: null, renters: null },
-      policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 50, investmentContributionPerMonth: 0, extraDebtPaymentPerMonth: 25, insurancePlanIds: { health: 'health_basic', auto: null, renters: null }, minCashBuffer: 150 },
+      policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 50, investmentContributionPerMonth: 150, extraDebtPaymentPerMonth: 25, insurancePlanIds: { health: 'health_basic', auto: null, renters: null }, minCashBuffer: 150 },
     }),
   },
   entry_worker: {
@@ -52,6 +53,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
     initialState: base({
       cash: 2200,
       savings: 1500,
+      investments: { stock: 0, bond: 0, etf: 5000 }, // first-job 401(k) match already sitting in an index fund
       employment: { status: 'employed', title: 'Junior analyst', grossAnnualSalary: 58000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 58000 },
       household: { housingKind: 'rent', housingMonthly: 1350, essentialsMonthly: 900, discretionaryMonthly: 450, dependents: 0 },
       debts: [
@@ -60,7 +62,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
       ],
       insurance: { health: 'health_basic', auto: 'auto_liability', renters: null },
       car: { owned: true, valueBand: 'cheap' },
-      policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 250, investmentContributionPerMonth: 150, insurancePlanIds: { health: 'health_basic', auto: 'auto_liability', renters: null } },
+      policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 250, investmentContributionPerMonth: 250, insurancePlanIds: { health: 'health_basic', auto: 'auto_liability', renters: null } },
     }),
   },
   professional: {

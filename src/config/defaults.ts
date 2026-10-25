@@ -41,15 +41,16 @@ export const DEFAULT_ASSUMPTIONS: Assumptions = {
   /**
    * Monthly lognormal (GBM) step per asset: `expectedAnnualReturn` is the ARITHMETIC mean return (the drift is
    * `ln(1+r)/12 − σ²/12/2`, so the monthly mean is (1+r)^(1/12) and the median sits below it, as for a real index).
-   * Rounded long-run nominal figures, in the spirit of US data 1926–2024 (Ibbotson/SBBI, Damodaran's NYU history
-   * tables, Bloomberg US Aggregate): large-cap stocks ~10%/yr at ~17% vol, a concentrated tech basket
-   * ~12%/yr at ~35% vol (single names carry idiosyncratic risk), aggregate bonds ~4.5%/yr at ~6% vol; stock–index
-   * correlation ~0.75, stock–bond ~0.1 (ETF–bond follows from the construction). Teaching defaults, not forecasts.
+   * Game-first teaching numbers, moderately STRETCHED so the three classes read apart on a 36-month chart:
+   * long-run US history (Ibbotson/SBBI, Damodaran, Bloomberg US Aggregate) is nearer 10%/17% vol for large caps,
+   * ~12%/35% for a concentrated tech basket and ~4.5%/6% for aggregate bonds. Here the tech basket is 13%/40%,
+   * the index ETF 10%/18% and the bond fund 4.5%/6%; correlations stock–ETF 0.75, stock–bond 0.1 are historical-ish.
+   * Not forecasts.
    */
   assets: {
-    stock: { label: 'Tech stock basket', expectedAnnualReturn: 0.12, annualVolatility: 0.35 },
+    stock: { label: 'Tech stock basket', expectedAnnualReturn: 0.13, annualVolatility: 0.4 },
     bond: { label: 'Bond fund', expectedAnnualReturn: 0.045, annualVolatility: 0.06 },
-    etf: { label: 'S&P 500 index ETF', expectedAnnualReturn: 0.10, annualVolatility: 0.17 },
+    etf: { label: 'S&P 500 index ETF', expectedAnnualReturn: 0.10, annualVolatility: 0.18 },
   },
   correlation: { stockEtf: 0.75, stockBond: 0.1 },
   savingsApy: 0.04,

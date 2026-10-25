@@ -111,13 +111,16 @@ describe('policy & actions', () => {
     const s1 = advanceMonth(s);
     expect(s1.investments.stock).toBe(0);
     expect(s1.investments.bond).toBe(0);
-    expect(s1.investments.etf).toBeGreaterThan(190);
+    const held = s.investments.etf; // set_allocation rebalanced the starting holdings into the ETF
+    expect(held).toBe(s.investments.stock + s.investments.bond + s.investments.etf);
+    expect(s1.investments.etf).toBeGreaterThan(held + 190);
     const etfReturn = s1.ledger.find((l) => l.account === 'etf' && l.category === 'investment_return');
     expect(etfReturn).toBeTruthy();
-    expect(s1.investments.etf).toBeCloseTo(200 + (etfReturn?.amountSigned ?? 0), 1);
+    expect(s1.investments.etf).toBeCloseTo(held + 200 + (etfReturn?.amountSigned ?? 0), 1);
   });
   it('insufficient cash → contributions trimmed, then documented funding order; money is never invented', () => {
     let s = start('college_student', 2);
+    s.investments = { stock: 0, bond: 0, etf: 0 }; // nothing to sell, so the shortfall must reach the borrow step
     s = applyAction(s, { type: 'set_contributions', savingsContributionPerMonth: 5000, investmentContributionPerMonth: 5000 }).state;
     s = applyAction(s, { type: 'set_budget', discretionaryMonthly: 3000 }).state;
     const s1 = advanceMonth(s);

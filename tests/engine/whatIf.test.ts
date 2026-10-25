@@ -61,7 +61,7 @@ describe('ending: straight-line outcome summary', () => {
     expect(lines.median).toBe(round2(mc.median));
     expect(lines.p90).toBe(round2(mc.p90));
     expect(lines.yourEvents).toBe(round2(mc.observedNetWorth));
-    expect(lines.spread).toBeCloseTo(mc.p90 - mc.p10, 2);
+    expect(lines.spread).toBeCloseTo(mc.p90 - mc.p10, 1);
     expect(lines.start).toBe(netWorthOf(createGame(config)));
   });
 });

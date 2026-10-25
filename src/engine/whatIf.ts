@@ -259,7 +259,8 @@ function hypotheticals(config: GameConfig): Hypothetical[] {
   }));
   const same = (a: Allocation) => (['stock', 'bond', 'etf'] as const).every((k) => Math.abs(a[k] - p.targetAllocation[k]) < 1e-9);
   add('allocation', 'Invest differently', ([
-    ['all-etf', 'Put everything in the diversified ETF', { stock: 0, bond: 0, etf: 1 }],
+    ['all-stock', 'Put everything in the tech stock basket', { stock: 1, bond: 0, etf: 0 }],
+    ['all-etf', 'Put everything in the S&P 500 index ETF', { stock: 0, bond: 0, etf: 1 }],
     ['60-40', 'Use a 60% ETF / 40% bonds mix', { stock: 0, bond: 0.4, etf: 0.6 }],
     ['all-bonds', 'Put everything in bonds', { stock: 0, bond: 1, etf: 0 }],
   ] as [string, string, Allocation][]).map(([id, label, allocation]) => [id, label, same(allocation) ? null : at0({ type: 'set_allocation', allocation })]));
