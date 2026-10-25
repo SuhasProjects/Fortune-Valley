@@ -128,7 +128,7 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
 
   it('.env.example (Gemini) drives the real client factory: URL, model and bearer header', async () => {
     const example = Object.fromEntries(readFileSync('.env.example', 'utf8').split('\n').filter((l) => /^[A-Z_]+=/.test(l)).map((l) => { const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).trim()]; }));
-    expect(example).toMatchObject({ AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-3.8-flash', AI_API_KEY: '', GEMINI_API_KEY: '' });
+    expect(example).toMatchObject({ AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-3.5-flash', AI_API_KEY: '', GEMINI_API_KEY: '' });
     expect((await handleAiRequest(scenarioReq, example)).body).toMatchObject({ code: 'disabled' });
     const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
     vi.stubGlobal('fetch', impl);
@@ -137,7 +137,7 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
       expect(r.status).toBe(200);
       expect(calls[0]!.url).toBe('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
       expect(calls[0]!.headers.Authorization).toBe('Bearer test-key');
-      expect(calls[0]!.body.model).toBe('gemini-3.8-flash');
+      expect(calls[0]!.body.model).toBe('gemini-3.5-flash');
       expect(calls[0]!.body.response_format).toEqual({ type: 'json_object' });
     } finally {
       vi.unstubAllGlobals();

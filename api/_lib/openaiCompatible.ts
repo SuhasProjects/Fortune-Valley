@@ -45,6 +45,10 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
   const f = o.fetchImpl ?? fetch;
   const url = chatCompletionsUrl(o.baseUrl);
   const headers: Record<string, string> = { 'content-type': 'application/json' };
+  // Gemini's OpenAI-compatible endpoint spends the output budget on hidden "thinking" unless told not to; our outputs are
+  // small structured JSON, so turn it off there (other providers would reject the unknown field).
+  const gemini = /generativelanguage\.googleapis\.com/.test(url);
+  const providerExtras = gemini ? { extra_body: { google: { thinking_config: { thinking_budget: 0 } } } } : {};
   if (o.authHeader === 'api-key') headers['Api-Key'] = o.apiKey; else headers['Authorization'] = `Bearer ${o.apiKey}`;
 
   /** Some OpenAI-compatible servers reject `response_format`; remember that and stop sending it. */
@@ -54,7 +58,7 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), o.timeoutMs ?? 25_000);
     try {
-      const send = (withFormat: boolean) => f(url, { method: 'POST', headers, signal: ctrl.signal, body: JSON.stringify({ model: o.model, max_tokens: maxTokens, temperature: 0.2, ...(withFormat ? { response_format: { type: 'json_object' } } : {}), messages }) });
+      const send = (withFormat: boolean) => f(url, { method: 'POST', headers, signal: ctrl.signal, body: JSON.stringify({ model: o.model, max_tokens: maxTokens, temperature: 0.2, ...providerExtras, ...(withFormat ? { response_format: { type: 'json_object' } } : {}), messages }) });
       let res = await send(supportsResponseFormat);
       let body = (await res.json().catch(() => null)) as { choices?: { message?: { content?: string | null }; finish_reason?: string | null }[]; error?: { message?: string } | string } | null;
       if (res.status === 400 && supportsResponseFormat && /response_format|json_object/i.test(JSON.stringify(body ?? ''))) {
