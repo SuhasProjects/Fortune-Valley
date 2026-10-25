@@ -1,40 +1,125 @@
-# Where the numbers come from
+# Sources and Assumptions
 
-Fortune Valley is a teaching simulation, not a forecast. Every probability, return, rate and cost in
-`src/config/defaults.ts` is an **illustrative assumption**: a round number chosen so the lesson reads clearly on a
-12–36 month chart. None of them was scraped from a website or fitted to data. Where a number is anchored to a
-public reference, the reference and how we moved away from it are listed below so anyone can check or retune it.
+Fortune Valley is a teaching simulation, not a forecast. Every return, rate, cost and probability in the game is an
+illustrative assumption chosen so a lesson reads clearly on a 12 to 36 month chart. Where a number is anchored to a
+published figure, this page says what the figure is, where it comes from, and how far the game moves away from it.
+Nothing here is financial advice.
 
-| Assumption (file) | Value in the game | Anchor / reference | Notes |
+All assumptions live in `src/config/defaults.ts` and `src/config/archetypes.ts`.
+
+---
+
+## 1. Investment returns and volatility
+
+The market model is geometric Brownian motion: each month every asset class takes a lognormal step with a fixed drift
+and volatility, and the three classes are correlated. This is the standard textbook model for asset prices (Hull).
+
+| Asset class | Game value (return / volatility) | Long-run historical figure | Why it differs |
 |---|---|---|---|
-| Tech stock basket return / volatility (`assets.stock`) | 13% / 40% | Damodaran, *Historical Returns on Stocks, Bonds and Bills* (NYU Stern): https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html | Large-cap US stocks have averaged roughly 10%/yr with ~17–20% volatility since 1928; a single concentrated tech basket is more like 12%/35%. Stretched to 13%/40% so one stock visibly differs from an index fund. |
-| S&P 500 index ETF return / volatility (`assets.etf`) | 10% / 18% | Same Damodaran dataset (S&P 500 arithmetic average, standard deviation) | Close to the long-run nominal average; volatility rounded up slightly. |
-| Bond fund return / volatility (`assets.bond`) | 4.5% / 6% | Damodaran dataset (10-year Treasury / Baa corporate series); Bloomberg US Aggregate Bond Index long-run figures | Aggregate bond funds have returned roughly 4–5%/yr nominal with ~5–6% volatility. |
-| Correlations stock–ETF 0.75, stock–bond 0.1 (`correlation`) | 0.75 / 0.1 | Same Damodaran series (stock/bond correlation is low and unstable) | Single-stock vs index correlation is high but not 1; bonds roughly uncorrelated. |
-| Monthly return model | Geometric Brownian motion, lognormal monthly step, drift `ln(1+r)/12 − σ²/24` | Standard GBM (Black–Scholes assumption); see Hull, *Options, Futures and Other Derivatives*, ch. on stochastic processes | `expectedAnnualReturn` is the arithmetic mean; the median path sits below it, as for a real index. |
-| Savings APY (`savingsApy`) | 4% | FDIC national deposit rates and rate caps: https://www.fdic.gov/national-rates-and-rate-caps | High-yield savings accounts paid ~4–5% in 2024; national average is far lower. 4% chosen as a “good account”. |
-| Credit-card APR (archetypes) | 20–25% | Federal Reserve G.19 Consumer Credit (average card APR): https://www.federalreserve.gov/releases/g19/current/ | Average assessed card APR was ~22–23% in 2024. |
-| Student-loan APR (archetypes) | ~5.5–7% | Federal Student Aid interest rates: https://studentaid.gov/understand-aid/types/loans/interest-rates | Undergraduate direct loans 2024–25: 6.53%. |
-| Overdraft / emergency credit APR (`overdraftApr`) | 24% | Same G.19 card APR; emergency credit priced like a card | Illustrative. |
-| Federal tax brackets, standard deduction (`tax`) | 10/12/22/24/32%, $14,600 deduction | IRS tax-year 2024 inflation adjustments: https://www.irs.gov/newsroom/irs-provides-tax-inflation-adjustments-for-tax-year-2024 | Real 2024 single-filer brackets up to 24%; the 35% and 37% brackets collapsed into a flat 32% top. No state tax, credits or filing logic. |
-| Payroll rate (`payrollRate`) | 7.65% | Social Security + Medicare employee share (6.2% + 1.45%): https://www.ssa.gov/oact/cola/cbb.html | Exact statutory employee rate; no wage-base cap modelled. |
-| Health plans (`insurancePlans`) | Basic $180/mo, $4,000 deductible, 30% coinsurance, $8,000 OOP max; Plus $340/mo, $1,000 deductible, 20%, $4,000 OOP max; Family $620/mo | KFF 2024 Employer Health Benefits Survey: https://www.kff.org/health-costs/report/2024-employer-health-benefits-survey/ ; HealthCare.gov out-of-pocket maximum: https://www.healthcare.gov/glossary/out-of-pocket-maximum-limit/ | Worker contribution for single coverage averaged ~$114/mo (employer-sponsored); marketplace premiums without subsidy are far higher. Deductibles and OOP maxes are within real ranges (2024 legal OOP max $9,450). Premiums stretched apart so the trade-off is visible. |
-| Auto insurance (`insurancePlans`) | Liability $70/mo; full coverage $145/mo, $1,000 deductible | AAA *Your Driving Costs 2024*: https://newsroom.aaa.com/2024/09/your-driving-costs-2024/ | AAA puts average full-coverage insurance near $1,700–1,800/yr; running costs per car band (`CAR_VALUE_BANDS`) are rounded from the same report’s fuel + maintenance figures. |
-| Renters insurance | $18/mo, $500 deductible, $20k cap | Typical US renters policy (~$15–20/mo) per insurer rate guides | Illustrative. |
-| Medical emergency incidence (`shocks.medical`) | 4%/month, median $2,500, lognormal σ 0.9, cap $60k | Federal Reserve SHED (Economic Well-Being of U.S. Households), unexpected-expense and medical-debt chapters: https://www.federalreserve.gov/publications/report-economic-well-being-us-households.htm | SHED reports ~1 in 4 adults skipped medical care over cost and ~1 in 6 had an unexpected major expense in a year. 4%/month (~39% per year) is deliberately high so a 36-month run usually sees one. |
-| Car repair / accident incidence (`shocks.auto`) | 3.5%/month, median $1,200 | AAA driving-costs report (maintenance/repair) and insurer claim-frequency statistics | Illustrative; only rolls when the household owns a car. |
-| Theft / apartment damage (`shocks.home`) | 1.5%/month, median $1,500 | Illustrative | Low frequency, renters-insurance teaching case. |
-| Job loss (`jobLossMonthlyIncidence`) | 0.9%/month (~10%/yr) | BLS JOLTS layoffs and discharges (~1.0–1.2% of employment per month): https://www.bls.gov/jlt/ ; BLS Employment Situation: https://www.bls.gov/news.release/empsit.toc.htm | Rounded to one decimal; re-employment handled by scripted offers. |
-| Unemployment benefit cap | $2,200/month | State UI maximums (most states $400–$700/week) | Illustrative mid-range. |
-| Life events (`DEFAULT_LIFE_EVENTS`) | 45%/month chance of a small gift or cost, $20–$300, net ≈ 0 | BLS Consumer Expenditure Survey for small irregular outlays: https://www.bls.gov/cex/ | Amounts chosen so gifts and costs roughly cancel; purely flavour. |
-| Rent, incomes, debts per story (`src/config/archetypes.ts`) | e.g. student $30k/yr, $340 room; professional $40k invested | Rounded from BLS Occupational Employment and Wages and typical rents; not location-specific | Fictional households. |
-| Monte Carlo path count | 1,000 futures | Convention; percentile error at 1,000 paths is a few hundred dollars on these scales | Seeded per path (`src/engine/rng.ts`) so what-ifs share the same luck. |
+| S&P 500 index ETF | 10% / 18% | About 10% / 19% for the S&P 500, 1928 to 2024 (Damodaran) | Essentially historical. |
+| Tech stock basket | 13% / 40% | About 12% / 35% for a concentrated large-cap tech basket | Stretched slightly so a single stock reads apart from an index fund. |
+| Bond fund | 4.5% / 6% | About 4.5% / 6% for the US aggregate bond market (Damodaran, Bloomberg US Aggregate) | Essentially historical. |
+| Correlations | stock to ETF 0.75, stock to bond 0.10 | High stock-to-index, near-zero stock-to-bond (Damodaran) | Rounded. |
 
-Some of the government pages above (bls.gov, ssa.gov, aaa.com) refuse automated requests and return 403 to scripts;
-they open normally in a browser.
+## 2. Interest rates and taxes
 
-## Demo mode
+| Item | Game value | Published figure | Source |
+|---|---|---|---|
+| Savings account APY | 4.0% | High-yield accounts paid 4 to 5% in 2024; the national average is well under 1% | FDIC |
+| Credit card APR | 20 to 25% | Average assessed APR about 22 to 23% in 2024 | Federal Reserve G.19 |
+| Student loan APR | 5.5 to 7% | 6.53% for undergraduate Direct Loans, 2024 to 2025 | Federal Student Aid |
+| Emergency credit APR | 24% | Priced like a credit card | Federal Reserve G.19 |
+| Federal income tax | 10, 12, 22, 24, 32% brackets; $14,600 standard deduction | 2024 single-filer brackets and deduction | IRS |
+| Payroll tax | 7.65% | 6.2% Social Security plus 1.45% Medicare, employee share | Social Security Administration |
 
-`/demo` (src/demo/demoMode.ts) replaces the random rolls with a fixed script (one $20,000 ER visit and four small
-events) and uses its own stretched Monte Carlo assumptions so the insurance lesson is unmistakable on camera. Those
-numbers are fabricated for the presentation and are not derived from any source.
+Simplifications: the 35% and 37% brackets are collapsed into a flat 32% top bracket; there is no state tax, no tax
+credits and no wage-base cap on payroll tax.
+
+## 3. Insurance
+
+| Plan | Game value | Published comparison | Source |
+|---|---|---|---|
+| Basic Health (high deductible) | $180/month, $4,000 deductible, 30% coinsurance, $8,000 out-of-pocket max | Worker share of single coverage averaged about $114/month in employer plans; unsubsidised marketplace plans cost far more | KFF |
+| Plus Health (low deductible) | $340/month, $1,000 deductible, 20% coinsurance, $4,000 out-of-pocket max | Same survey; 2024 legal out-of-pocket maximum is $9,450 | KFF; HealthCare.gov |
+| Family Health | $620/month, $2,500 deductible | Family coverage worker share averaged about $525/month | KFF |
+| Auto, liability only | $70/month | AAA puts average full-coverage insurance near $1,700 to $1,800 per year | AAA |
+| Auto, full coverage | $145/month, $1,000 deductible | Same | AAA |
+| Renters | $18/month, $500 deductible, $20,000 cap | Typical US renters policy, $15 to $20 per month | Insurer rate guides |
+
+The two health plans are pushed apart on purpose so the premium-versus-deductible trade-off is visible in one run.
+
+## 4. Unexpected events
+
+| Event | Game value | What the data says | Source |
+|---|---|---|---|
+| Medical emergency | 4% chance per month; median cost $2,500, lognormal spread, capped at $60,000 | Roughly one in six adults reports a major unexpected expense in a year; one in four skipped medical care over cost | Federal Reserve SHED |
+| Car repair or accident | 3.5% per month; median $1,200. Only when the household owns a car | Maintenance and repair costs by vehicle class | AAA |
+| Theft or apartment damage | 1.5% per month; median $1,500 | Illustrative | — |
+| Job loss | 0.9% per month (about 10% per year) | Layoffs and discharges run about 1.0 to 1.2% of employment per month | BLS JOLTS |
+| Unemployment benefit | Capped at $2,200/month | Most state maximums fall between $400 and $700 per week | State UI programs |
+| Small life events (gifts and costs) | 45% chance per month, $20 to $300, net about zero over a run | Small irregular outlays | BLS Consumer Expenditure Survey |
+
+The medical shock rate is deliberately high (about 39% per year) so that a 36-month run usually shows at least one bill.
+
+## 5. Households
+
+Each starting story (student, new graduate, entry-level worker, parent, professional) uses rounded incomes, rents,
+debts and balances that sit inside typical ranges from BLS wage data and rental listings. They are fictional people,
+not averages of any dataset.
+
+## 6. Monte Carlo
+
+Every ending is replayed across 1,000 futures. Each future has its own random seed for markets, shocks, employment and
+life events, so a what-if comparison reuses exactly the same luck. At 1,000 paths the sampling error on the 10th and
+90th percentiles is a few hundred dollars at the scales shown.
+
+## 7. Demo mode
+
+The `/demo` route replaces every random roll with a fixed script (one $20,000 emergency-room visit and four small
+events) and uses its own stretched Monte Carlo settings so the insurance lesson is unmistakable on camera. Those
+numbers are invented for the presentation and are not drawn from any source.
+
+---
+
+## Works Cited (MLA)
+
+AAA. *Your Driving Costs 2024*. American Automobile Association, Sept. 2024,
+https://newsroom.aaa.com/2024/09/your-driving-costs-2024/.
+
+Board of Governors of the Federal Reserve System. *Consumer Credit – G.19*. Federal Reserve, 2024,
+https://www.federalreserve.gov/releases/g19/current/.
+
+Board of Governors of the Federal Reserve System. *Economic Well-Being of U.S. Households (SHED)*. Federal Reserve,
+2024, https://www.federalreserve.gov/publications/report-economic-well-being-us-households.htm.
+
+Damodaran, Aswath. *Historical Returns on Stocks, Bonds and Bills: 1928–2024*. NYU Stern School of Business, 2025,
+https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html.
+
+Federal Deposit Insurance Corporation. *National Rates and Rate Caps*. FDIC, 2024,
+https://www.fdic.gov/national-rates-and-rate-caps.
+
+Federal Student Aid. *Interest Rates and Fees for Federal Student Loans*. U.S. Department of Education, 2024,
+https://studentaid.gov/understand-aid/types/loans/interest-rates.
+
+HealthCare.gov. "Out-of-Pocket Maximum/Limit." *HealthCare.gov Glossary*, Centers for Medicare and Medicaid Services,
+https://www.healthcare.gov/glossary/out-of-pocket-maximum-limit/.
+
+Hull, John C. *Options, Futures, and Other Derivatives*. 11th ed., Pearson, 2021.
+
+Internal Revenue Service. "IRS Provides Tax Inflation Adjustments for Tax Year 2024." *IRS Newsroom*, 9 Nov. 2023,
+https://www.irs.gov/newsroom/irs-provides-tax-inflation-adjustments-for-tax-year-2024.
+
+KFF. *2024 Employer Health Benefits Survey*. Kaiser Family Foundation, Oct. 2024,
+https://www.kff.org/health-costs/report/2024-employer-health-benefits-survey/.
+
+Social Security Administration. "Contribution and Benefit Base." *SSA Office of the Chief Actuary*,
+https://www.ssa.gov/oact/cola/cbb.html.
+
+U.S. Bureau of Labor Statistics. *Consumer Expenditure Surveys*. U.S. Department of Labor,
+https://www.bls.gov/cex/.
+
+U.S. Bureau of Labor Statistics. *Job Openings and Labor Turnover Survey (JOLTS)*. U.S. Department of Labor,
+https://www.bls.gov/jlt/.
+
+U.S. Bureau of Labor Statistics. *The Employment Situation*. U.S. Department of Labor,
+https://www.bls.gov/news.release/empsit.toc.htm.
