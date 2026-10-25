@@ -1,20 +1,12 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FinishPayload } from '@/stores/useGameStore'
-import { Icon, Inset, Select } from '@/ui'
+import { Dropdown, Inset } from '@/ui'
 import { endingApi, type ChartLines, type DecisionChoice, type WhatIfResult } from './ending-contract'
 import { OutcomeChart, sharedYDomain } from './OutcomeChart'
 import { ChangeStrip } from './ChangeStrip'
 
 /** Engine ids starting with `hyp:` are hypothetical "from the start" decisions available even without a policy log. */
 const isHypothetical = (decision: DecisionChoice) => decision.id.startsWith('hyp:')
-
-/** The kit `Select` has no option groups; this mirrors its markup so real and hypothetical decisions can be grouped. */
-function GroupedSelect({ label, value, groups, onChange }: { label: string; value: string; groups: { label: string; options: { value: string; label: string }[] }[]; onChange: (value: string) => void }) {
-  const id = useId()
-  return <div className="fv-field"><label htmlFor={id}>{label}</label><div className="fv-select-wrap"><select id={id} className="fv-field-control" value={value} onChange={event => onChange(event.target.value)}>
-    {groups.map(group => <optgroup key={group.label} label={group.label}>{group.options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</optgroup>)}
-  </select><Icon name="arrow-right" compact/></div></div>
-}
 
 export function WhatIfSection({ payload, original }: { payload: FinishPayload; original: ChartLines }) {
   const decisions = useMemo(() => endingApi.listDecisions?.(payload.config, payload.policyLog) ?? [], [payload.config, payload.policyLog])
@@ -59,11 +51,11 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
     <h2 id="fv-what-if-title">What if you’d chosen differently?</h2>
     {decisions.length === 0 ? <Inset><p className="fv-what-if-empty">You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p></Inset>
       : <>
-        <p className="fv-what-if-lead">Change one decision. The same 1,000 futures run again with the same luck, so the difference is the decision alone.</p>
+        <p className="fv-what-if-lead">Change one decision and the same 1,000 futures run again with the same luck, so any difference comes from that decision alone.</p>
         <div className="fv-what-if-fields">
-          {groups.length > 1 ? <GroupedSelect label="Pick a decision" value={selection.decision} groups={groups} onChange={pickDecision}/>
-            : <Select label="Pick a decision" value={selection.decision} options={decisions.map(toOption)} onChange={pickDecision}/>}
-          <Select label="Instead…" value={selection.alternative} options={(selected?.alternatives ?? []).map(alternative => ({ value: alternative.id, label: alternative.label }))} onChange={value => setSelection(previous => ({ ...previous, alternative: value }))}/>
+          {groups.length > 1 ? <Dropdown label="Pick a decision" value={selection.decision} groups={groups} onChange={pickDecision}/>
+            : <Dropdown label="Pick a decision" value={selection.decision} options={decisions.map(toOption)} onChange={pickDecision}/>}
+          <Dropdown label="Instead…" value={selection.alternative} options={(selected?.alternatives ?? []).map(alternative => ({ value: alternative.id, label: alternative.label }))} onChange={value => setSelection(previous => ({ ...previous, alternative: value }))}/>
         </div>
         <div className="fv-comparison-charts"><OutcomeChart lines={result?.original ?? original} yDomain={domain} title="What you did"/>
           <div aria-busy={pending} className="fv-changed-chart">{result ? <OutcomeChart lines={result.changed} yDomain={domain} title={`If you had: ${result.alternativeLabel}`} highlightLabel="Your exact events, with this change"/> : error ? <p role="alert">{error}</p> : <p role="status"><img className="fv-computing-coin" src="/art/title/favicon.png" alt=""/>Re-running 1,000 futures…</p>}</div></div>

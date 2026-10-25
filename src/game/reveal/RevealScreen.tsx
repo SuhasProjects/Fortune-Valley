@@ -27,8 +27,7 @@ export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload;
       <Board className="fv-reveal-ledger" padding="lg">
         <header className="fv-reveal-heading"><Plaque>Your Next Chapter</Plaque>
           <h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1>
-          <p>8 in 10 of your {paths} futures ended between <strong>{usd(mc.p10)}</strong> and <strong>{usd(mc.p90)}</strong>.</p>
-          <small>A range of possibilities, not a grade or a forecast.</small></header>
+          <p>8 in 10 of your {paths} futures ended between <strong>{usd(mc.p10)}</strong> and <strong>{usd(mc.p90)}</strong>.</p></header>
         <section className="fv-reveal-futures" aria-label="Your simulated futures"><h2>Same strategy, {paths} futures</h2><OutcomeChart lines={lines} yDomain={sharedYDomain(lines)} title={`Your ${paths} futures`}/></section>
         <WhatIfSection payload={payload} original={lines}/>
         <section className="fv-reveal-explanation" aria-labelledby="fv-why"><h2 id="fv-why">Why?</h2>
