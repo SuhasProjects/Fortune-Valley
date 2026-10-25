@@ -2,7 +2,8 @@ import type { CSSProperties } from 'react'
 import { Sprite } from '../art/Sprite'
 import { SPRITES, type SpriteName } from '../art/manifest'
 import { useStageScale } from '../stage/GameStage'
-import { EDGE_TILE, MAP_H, MAP_W, mapWindow } from '../stage/scale'
+import { MAP_H, MAP_W, mapWindow } from '../stage/scale'
+import { EdgeBorder } from '../world/EdgeBorder'
 import { useReducedMotion } from '../world/useReducedMotion'
 import './title-scene.css'
 
@@ -58,17 +59,24 @@ const PROPS: Placed[] = [
   tree(0, 232), tree(452, 196), tree(20, 196), tree(176, 208),
 ]
 
+/** Pines and bushes over the two hills joins (x 0 and 480) and on into the mirrored meadow, so neither join reads as a line. */
+const JOIN_PROPS: Placed[] = [
+  pine(-12, 116), pine(4, 122), tree(-30, 124), bush(-6, 150), pine(-44, 118), pine(-60, 128), bush(-26, 152),
+  pine(470, 120), pine(486, 114), tree(452, 128), bush(478, 152), pine(508, 124), pine(526, 118), bush(500, 148),
+]
+
 export function TitleScene({ dusk = false }: { dusk?: boolean }) {
   const stage = useStageScale()
   const { px } = stage
   const still = useReducedMotion()
   // Centred on the map. Windows that show past it (tall or ultrawide, scale.ts) get the sky layers mirrored on either
-  // side (a mirrored copy meets its original without a seam) and the world's grass-and-pines tile below the hills.
+  // side (a mirrored copy meets its original without a step; a few pines stand over the join) and the world's
+  // varied grass-and-pine border tiles below the hills (EdgeBorder).
   const { left, top, wide, tall } = mapWindow(stage.width, stage.height, stage)
   const at = (x: number, y: number, z: number): CSSProperties => ({ left: x * px, top: y * px, zIndex: z })
   const sides = wide ? [-MAP_W, MAP_W] : []
   return <div className={`fv-scene${still ? ' fv-still' : ''}`} aria-hidden="true" data-dusk={dusk || undefined}>
-    {(wide || tall) && <div className="fv-scene__edge" style={{ top: top + MEADOW_TOP * px, backgroundImage: `url(${SPRITES['world/edge-tile'].src})`, backgroundSize: `${EDGE_TILE * px}px ${EDGE_TILE * px}px`, backgroundPosition: `${left}px ${top}px` }}/>}
+    {(wide || tall) && <EdgeBorder left={left} top={top} px={px} width={stage.width} height={stage.height} fromRow={MEADOW_TOP} edges={{ top: false, bottom: tall, left: wide, right: wide }} bare={{ bottom: [[226, 250]] }} dusk={dusk}/>}
     <div className="fv-scene__map" style={{ width: MAP_W * px, height: MAP_H * px, left, top }}>
       <Sprite name="title/ground" className="fv-scene__layer" style={at(0, 0, 0)}/>
       <Sprite name="title/water" animate className="fv-scene__layer" style={at(0, 0, 1)}/>
@@ -77,6 +85,7 @@ export function TitleScene({ dusk = false }: { dusk?: boolean }) {
       <div className="fv-scene__haze" style={{ ...at(wide ? -MAP_W : 0, 100, 12), width: wide ? 3 * MAP_W * px : undefined }}/>
       <div className="fv-scene__haze fv-scene__haze--reverse" style={{ ...at(wide ? -MAP_W : 0, 126, 14), width: wide ? 3 * MAP_W * px : undefined }}/>
       {PROPS.map((p, i) => <Sprite key={i} name={p.sprite} animate={p.animate} className="fv-scene__prop" style={at(p.x, p.y, 20 + p.y + SPRITES[p.sprite].h)}/>)}
+      {wide && JOIN_PROPS.map((p, i) => <Sprite key={`join${i}`} name={p.sprite} animate={p.animate} className="fv-scene__prop" style={at(p.x, p.y, 20 + p.y + SPRITES[p.sprite].h)}/>)}
       {dusk && <div className="fv-scene__dusk"/>}
     </div>
   </div>

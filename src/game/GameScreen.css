@@ -26,6 +26,9 @@
 .fv-stage[aria-label='Fortune Valley town'] .fv-modal > .fv-window {
   max-height: calc(100dvh - var(--ui-top, 0px) - var(--ui-bottom, 0px) - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
 }
+/* Compact boards (GameStage data-ui): zoom 1-2 on a tall or ultrawide window. The HUD is one 15-art-px row of values
+   (labels stay for screen readers) and the control bar one 17-art-px row without the countdown caption. */
+.fv-stage[data-ui='compact'] > .fv-ui > * { --hud-bottom: calc(15 * var(--px)); --bar-top: calc(22 * var(--px)); }
 /* Windows taller than the map (portrait monitors, narrow windows: the map is centred with the pine border above and
    below): the gap between HUD and bar is too short to read in at those zooms, so windows take the whole viewport. */
 .fv-stage[data-fit='tall'] .fv-modal, .fv-stage[data-fit='both'] .fv-modal {
