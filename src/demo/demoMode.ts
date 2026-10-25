@@ -38,7 +38,7 @@ export const DEMO_SCRIPT: RunScript = {
     { monthIndex: 8, kind: 'life', amountSigned: 200, label: 'birthday gift from your grandma', headline: 'Grandma remembers', scene: 'A card in your grandmother\'s handwriting arrived two days before your birthday with $200 folded inside.' },
     { monthIndex: 12, kind: 'shock', shockKind: 'medical', grossCost: 12000, variant: 'er_night' },
     { monthIndex: 16, kind: 'life', amountSigned: 50, label: 'credit card cashback', headline: 'Cashback credited', scene: 'The card company posted $50 of cashback to your account, the reward for a year of on-time payments.' },
-    { monthIndex: 18, kind: 'shock', shockKind: 'medical', grossCost: 10000, variant: 'er_night' },
+    { monthIndex: 22, kind: 'shock', shockKind: 'medical', grossCost: 10000, variant: 'er_night' },
   ],
 };
 
@@ -49,14 +49,17 @@ export function demoConfig(): GameConfig {
   st.cash = 900;
   st.savings = 400;
   st.employment = { status: 'employed', title: 'Junior lab technician', grossAnnualSalary: 30000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 30000 };
-  st.household = { housingKind: 'rent', housingMonthly: 340, essentialsMonthly: 620, discretionaryMonthly: 180, dependents: 0 };
+  st.household = { housingKind: 'rent', housingMonthly: 340, essentialsMonthly: 560, discretionaryMonthly: 160, dependents: 0 };
   st.debts = [
     { id: 'debt_1', name: 'Student loan', kind: 'student_loan', balance: 38000, apr: 0.06, minimumPayment: 380 },
     { id: 'debt_2', name: 'Credit card', kind: 'credit_card', balance: 12000, apr: 0.249, minimumPayment: 300 },
   ];
   st.car = { owned: false, valueBand: 'none' };
   st.insurance = { health: 'health_plus', auto: null, renters: null };
-  st.policy = { ...st.policy, savingsContributionPerMonth: 50, investmentContributionPerMonth: 0, extraDebtPaymentPerMonth: 0, insurancePlanIds: { health: 'health_plus', auto: null, renters: null }, minCashBuffer: 200 };
+  st.policy = { ...st.policy, savingsContributionPerMonth: 0, investmentContributionPerMonth: 0, extraDebtPaymentPerMonth: 0, insurancePlanIds: { health: 'health_plus', auto: null, renters: null }, minCashBuffer: 0 };
+  // Nothing but the script moves: no raises, no job loss, no random shocks or life events (exclusive script above).
+  cfg.assumptions.employment = { ...cfg.assumptions.employment, annualRaiseRate: 0, jobLossMonthlyIncidence: 0 };
+  cfg.assumptions.shocks = cfg.assumptions.shocks.map((a) => ({ ...a, monthlyIncidence: 0 }));
   return {
     ...cfg,
     scenarioId: 'demo:overloaded-graduate',

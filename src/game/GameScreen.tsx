@@ -22,6 +22,7 @@ import { useGameClock } from '../hooks/useGameClock'
 import { Board, Button, Modal, Tag } from '../ui'
 import './flow/flow.css'
 import './GameScreen.css'
+import { isDemoMode } from '@/demo/demoMode'
 
 type Menu = 'pause' | 'options' | 'guide' | null
 type Confirm = 'restart' | 'delete-save' | 'finish' | null
@@ -39,10 +40,10 @@ export interface GameScreenProps { panels?: Partial<Record<BuildingId, ReactNode
  * One of the three opening tips. Windows taller than the map leave a strip of pine border under the control bar; when
  * that strip has room for a tip (70 UI art px) the tip docks there instead of over the town (flow.css `data-dock`).
  */
-function CoachTip({ step, children }: { step: number; children: ReactNode }) {
+function CoachTip({ step, label, children }: { step: number; label?: string; children: ReactNode }) {
   const stage = useStageScale()
   const below = uiBox(stage.width, stage.height, stage).bottom >= 70 * Math.max(2, stage.px)
-  return <Board as="aside" className={`fv-coach-tip fv-coach-tip--${step}`} data-dock={below ? 'below' : undefined} aria-label={`Tip ${step + 1} of 3`}>{children}</Board>
+  return <Board as="aside" className={`fv-coach-tip fv-coach-tip--${step}`} data-dock={below ? 'below' : undefined} aria-label={label ?? `Tip ${step + 1} of 3`}>{children}</Board>
 }
 
 /** The town screen: Agent 1's stage and world, Agent 2's HUD, Agent 3's building panels, and the flow layer. */
@@ -186,6 +187,9 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   }
   const eventBuildings = [...new Set(game.activeEvents.map(event => event.buildingTarget))]
   const tip = tipStep >= 0 ? tips[tipStep] : null
+  // /demo: the month after the textbook bill, the coach nudges the player toward the Health House's two plans.
+  const [demoTipDone, setDemoTipDone] = useState(false)
+  const demoTip = isDemoMode() && !demoTipDone && game.monthIndex === 7 && !tip
 
   return <main aria-label="Fortune Valley town">
     <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
@@ -197,6 +201,10 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       <HudFooter/>
       <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
+      {demoTip && <CoachTip step={4} label="Coach tip">
+        <strong>That bill stung</strong><p>Money is tight, and your health plan is the biggest bill you can change. The Health House has two plans; have a look.</p>
+        <Button size="sm" variant="primary" onClick={() => { setDemoTipDone(true); store.openBuilding('hospital') }}>Open Health House</Button>
+      </CoachTip>}
       {tip && <CoachTip step={tipStep}>
         <strong>{tip[0]}</strong><p>{tip[1]}</p>
         <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === tips.length - 1 ? 'Got it' : 'Next tip'}</Button>

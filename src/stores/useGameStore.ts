@@ -256,6 +256,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
         insurance: INSURANCE_PLANS.filter((p) => Object.values(game.insurance).includes(p.id)).map((p) => ({ line: p.line, name: p.name, monthlyPremium: p.monthlyPremium, deductible: p.deductible, coinsurance: p.coinsurance })),
       };
       const result = await askCoach(summary, q, history.slice(-4), get().openBuildingId, facts);
+      // On /demo the offline Sage answers instantly; a short "thinking" pause keeps the chat readable on a recording.
+      if (isDemoMode()) await new Promise((resolve) => setTimeout(resolve, 1500 + Math.random() * 1000));
       if (get().requestVersion !== requestVersion) return null;
       const turn: CoachTurn = { role: 'coach', text: result.text, source: result.source };
       set((s) => ({ coachHistory: [...s.coachHistory, turn], coachLoading: false, aiStatus: result.source === 'ai' ? 'online' : 'offline' }));

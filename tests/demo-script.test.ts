@@ -45,8 +45,13 @@ describe('scripted events', () => {
       [8, 200, 'scripted:birthday gift from your grandma'],
       [16, 50, 'scripted:credit card cashback'],
     ]);
-    expect(s.realizedShocks.map((r) => [r.monthIndex, r.shock.kind, r.shock.grossCost])).toEqual([[12, 'medical', 12000], [18, 'medical', 10000]]);
+    expect(s.realizedShocks.map((r) => [r.monthIndex, r.shock.kind, r.shock.grossCost])).toEqual([[12, 'medical', 12000], [22, 'medical', 10000]]);
     expect(s.employment.status).toBe('employed');
+    expect(s.employment.grossAnnualSalary).toBe(30000); // no raises in the demo
+    // Every notice of the run is one of the five scripted happenings; nothing random, no raise, no offer.
+    const unscripted = s.notifications.filter((n) => !n.shockKind);
+    expect(unscripted.map((n) => n.summary)).toEqual([]);
+    expect(s.notifications).toHaveLength(5);
     expect(s.notifications.filter((n) => n.shockKind === 'job_loss')).toHaveLength(0);
     // The hospital claim settled with the Plus plan the run starts on.
     const er = s.realizedShocks[0]!.shock;
