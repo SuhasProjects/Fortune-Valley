@@ -16,7 +16,7 @@ import { BOUNDS } from '@/config/defaults';
 import { round2 } from './accounting';
 import { advanceMonth } from './advanceMonth';
 import { createGame } from './createGame';
-import { describeEffect } from './events';
+import { describeEffect, hasCar } from './events';
 import { hasPolicyDecisions, replayEntry, replayPath, runPaths, summarize } from './monteCarlo';
 
 export function outcomeLines(mc: MonteCarloResult, startNetWorth: number): OutcomeLines {
@@ -252,6 +252,14 @@ function hypotheticals(config: GameConfig): Hypothetical[] {
   const current = s.insurance.health ?? null;
   add('insurance', 'Pick a different health plan', config.assumptions.insurancePlans.filter((plan) => plan.line === 'health' && plan.id !== current)
     .map((plan) => [`plan:${plan.id}`, `Choose ${plan.name}`, at0({ type: 'set_insurance', line: 'health', planId: plan.id })]));
+  if (hasCar(s)) {
+    const auto = s.insurance.auto ?? null;
+    add('auto', 'Insure the car differently', [
+      ...config.assumptions.insurancePlans.filter((plan) => plan.line === 'auto' && plan.id !== auto)
+        .map((plan): [string, string, PolicyLogEntry | null] => [`plan:${plan.id}`, `Choose ${plan.name}`, at0({ type: 'set_insurance', line: 'auto', planId: plan.id })]),
+      ['plan:none', 'Go without auto coverage', auto === null ? null : at0({ type: 'set_insurance', line: 'auto', planId: null })],
+    ]);
+  }
   return out;
 }
 

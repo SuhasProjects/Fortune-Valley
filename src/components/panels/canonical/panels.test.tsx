@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { applyAction, createGame, previewHorizon, selectPaySummary, settleClaim } from '../../../engine';
 import { scenarios } from '../../../data/scenarios';
 import { BOUNDS } from '../../../config/defaults';
@@ -108,12 +108,41 @@ describe('Insurance, Home and Office', () => {
   it('offers exactly two health choices and calls set_insurance', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="hospital" state={state} dispatch={dispatch} />);
-    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(within(screen.getByRole('group', { name: /health choices/ })).getAllByRole('radio')).toHaveLength(2);
     fireEvent.click(screen.getByLabelText(/High premium \/ low deductible/));
     fireEvent.click(screen.getByRole('button', { name: 'Save health plan' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_insurance', line: 'health', planId: 'health_plus' }));
     fireEvent.click(screen.getByRole('button', { name: 'Help for Insurance' }));
     expect(screen.getByText(/never accident likelihood/)).toBeTruthy();
+  });
+  it('offers none / liability / full auto cover to a life with a car and calls set_insurance for auto', async () => {
+    const state = initial(); const dispatch = dispatchFor(state);
+    expect(state.insurance.auto).toBe('auto_liability');
+    render(<BuildingPanel building="hospital" state={state} dispatch={dispatch} />);
+    const group = screen.getByRole('group', { name: /auto choices/ });
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+    expect((within(group).getByLabelText(/Liability only/) as HTMLInputElement).checked).toBe(true);
+    expect(within(group).getByText(/Covers damage to others/)).toBeTruthy();
+    const save = screen.getByRole('button', { name: 'Save auto plan' }) as HTMLButtonElement; expect(save.disabled).toBe(true);
+    fireEvent.click(within(group).getByLabelText(/Full coverage/));
+    fireEvent.click(save);
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_insurance', line: 'auto', planId: 'auto_full' }));
+    const next = dispatch.mock.results[0]!.value; expect(next.ok).toBe(true);
+    expect(next.state.insurance.auto).toBe('auto_full'); expect(next.state.policyLog.at(-1)!.action).toEqual({ type: 'set_insurance', line: 'auto', planId: 'auto_full' });
+  });
+  it('lets a driver drop auto cover, and hides the auto section for a life without a car', async () => {
+    const state = initial(); const dispatch = dispatchFor(state);
+    render(<BuildingPanel building="hospital" state={state} dispatch={dispatch} />);
+    fireEvent.click(screen.getByLabelText(/No cover/)); fireEvent.click(screen.getByRole('button', { name: 'Save auto plan' }));
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_insurance', line: 'auto', planId: null }));
+    cleanup();
+    const student = applyAction(createGame(scenarios[0]!), { type: 'resume' }).state;
+    expect(student.debts.some(debt => debt.kind === 'auto_loan')).toBe(false);
+    render(<BuildingPanel building="hospital" state={student} dispatch={dispatchFor(student)} />);
+    expect(screen.queryByRole('group', { name: /auto choices/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save auto plan' })).toBeNull();
+    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getByText(/no car, so car accidents never happen/)).toBeTruthy();
   });
   it('uses one budget slider within the engine bounds', async () => {
     const state = initial(); const dispatch = dispatchFor(state);

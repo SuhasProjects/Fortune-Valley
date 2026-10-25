@@ -43,8 +43,17 @@ Office job offers (Type B with an `offer_job` option) are handled inside OfficeP
   and payroll tax.
 - `canonical/HomePanel.tsx`: status Housing/Essentials/Budget; decision: range slider `aria-label="Monthly discretionary budget (USD)"`
   + `<output>` + `Save budget` → `set_budget`; consequence: PolicyPreview with `household` override.
-- `canonical/InsurancePanel.tsx`: current health plan; decision: two plans in a radio table "You pay on $5k" via
-  `settleClaim`; `Save health plan` → `set_insurance`; consequence: PolicyPreview with `insurance` override.
+- `canonical/InsurancePanel.tsx`: current health plan (+ auto plan when the life has a car); decision: two health plans
+  in a radio table "You pay on $5k" via `settleClaim`; `Save health plan` → `set_insurance` (line `health`); below it an
+  **Auto insurance** form with three cards (Liability only / Full coverage / No cover) showing premium, deductible,
+  "You pay on a $6k repair" and a one-line "what it covers"; `Save auto plan` → `set_insurance` (line `auto`,
+  `planId` or `null`). Both go through the engine's normal policy log, so the ending's what-if can flip them
+  (`whatIf.ts` `replacementsFor` gives "Keep X" / other plans; `hypotheticals` adds "Insure the car differently").
+  Consequence: PolicyPreview with an `insurance` override that carries both drafts.
+  **Car rule** (`hasCar` in `src/engine/events.ts`): a life has a car iff `state.debts` holds an `auto_loan` debt,
+  paid off or not (debts stay in the list after payoff, only overdrafts are dropped). Car-less lives (College Student)
+  never see the auto section, and `rollShocks` skips the auto shock for them after consuming its two draws, so every
+  other shock lands on the same month regardless. Window subtitle (`landmarks.ts` hint): "Health & auto insurance".
 - `canonical/MarketPanel.tsx`: status holdings; decision: three % inputs in `role="group"` named `Stocks allocation`,
   `Bonds allocation`, `Equity ETF allocation`, each showing `Last month · x%` and `Annual assumption · …`; total line;
   `Save allocation` → `set_allocation` (validated by engine `validateAllocation`); `<details>` "Monthly investing" with
