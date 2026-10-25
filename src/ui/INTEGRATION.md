@@ -37,6 +37,11 @@ dialog behavior. The modal names itself by its title, contains keyboard focus,
 closes on Escape/backdrop click, restores focus and locks body scrolling.
 The close button is named `Close panel`. Number fields forward native input props,
 including caller-provided `aria-label`. Select/Slider/Toggle callbacks receive values.
+`Slider scale="log"` spreads a money range geometrically (position 0 is `min`, then `$10` up to
+`max`), snaps to nice steps that grow with magnitude ($5 under $100 ... $250 above $10k), moves one
+step per arrow key and five per PageUp/PageDown, and reports the real dollar value through
+`aria-valuenow` / `aria-valuetext`. Pair it with a number field via `labelHidden` for exact entry;
+`logScale`, `snapNice`, `niceStep` and `stepNice` are exported for tests.
 
 `PixelArt.tsx` is gone and `world.css` / `pixel-tokens.css` only keep the legacy classes and
 `--ft-*` tokens that panels, flow and charts still reference. Remove the rest when those migrate.
