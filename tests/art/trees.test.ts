@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { paletteMap, parseGrid, pngBytes, renderSheet } from '../../scripts/art/grid.mjs'
 import { SPRITES } from '../../src/game/art/manifest'
 
-it.skip('keeps the complete tree canopy inside both frames and preserves the rooted sway' /* the wider canopy spaced the title tree line out; the original 20-px sprite is back by request */, () => {
+it('keeps the complete tree canopy inside both frames and preserves the rooted sway', () => {
   const { colors } = JSON.parse(readFileSync('art-src/palette.json', 'utf8'))
   const palette = paletteMap(colors)
   const parsed = parseGrid(readFileSync('art-src/world/props/tree-round.txt', 'utf8'), palette)
@@ -20,11 +20,11 @@ it.skip('keeps the complete tree canopy inside both frames and preserves the roo
   }
   // The canopy moves one pixel; the lower branches and trunk stay planted.
   for (let y = 0; y < parsed.meta.h; y++) {
-    expect(sway.rows[y]).toEqual(y >= 1 && y <= 13 ? ['.', ...rest.rows[y]!.slice(0, -1)] : rest.rows[y])
+    expect(sway.rows[y]).toEqual(y >= 1 && y <= 16 ? ['.', ...rest.rows[y]!.slice(0, -1)] : rest.rows[y])
   }
   // The restored right silhouette tapers instead of ending at the old crop line.
   const right = (y: number) => rest.rows[y]!.join('').replace(/\.+$/, '').length - 1
-  expect(right(9)).toBeGreaterThan(21)
+  expect(right(9)).toBeLessThan(parsed.meta.w - 2)
   expect(right(4)).toBeLessThan(right(9))
   expect(right(16)).toBeLessThan(right(9))
   expect(Buffer.from(pngBytes(renderSheet(parsed.frames, palette)))).toEqual(readFileSync('public/art/world/props/tree-round.png'))
