@@ -23,10 +23,8 @@
     "@anthropic-ai/sdk": "^0.80.0",
     "@fontsource/pixelify-sans": "^5.2.5",
     "@fontsource/vt323": "^5.2.5",
-    "framer-motion": "^12.23.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "recharts": "^3.2.0",
     "zod": "^4.1.0",
     "zustand": "^5.0.8"
   },
