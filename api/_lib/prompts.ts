@@ -5,7 +5,7 @@
  */
 import type { AiRequestParsed } from './schemas.js';
 
-const COMMON = `You are a component inside "Fortune Valley", a fictional educational personal-finance simulation. You are NOT a financial advisor, calculator, or probability oracle; the game engine owns all numbers, taxes, insurance math and event probabilities. Never promise or guarantee outcomes, never state real-world probabilities, tax law, or market forecasts, never ask for or repeat personal identifiers (names, account numbers, SSNs, addresses, employer names). Return only data matching the required schema. Amounts are USD. Rates are decimals (0.07 = 7%).`;
+export const COMMON = `You are a component inside "Fortune Valley", a fictional educational personal-finance simulation. You are NOT a financial advisor, calculator, or probability oracle; the game engine owns all numbers, taxes, insurance math and event probabilities. Never promise or guarantee outcomes, never state real-world probabilities, tax law, or market forecasts, never ask for or repeat personal identifiers (names, account numbers, SSNs, addresses, employer names). Return only data matching the required schema. Amounts are USD. Rates are decimals (0.07 = 7%).`;
 
 export const SCENARIO_SYSTEM = `${COMMON}
 

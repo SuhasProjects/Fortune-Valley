@@ -17,6 +17,9 @@ test('played results show four engine endings, offline explanation, and return t
   await page.getByRole('button', {name:/Finish & reveal/}).click()
   await expectReveal(page)
   await expect(page.getByRole('heading', {name:/You finished month 2 with/})).toBeVisible()
+  // Recap under the headline: the offline template (3 sentences) shows at once while /api/ai is down.
+  await expect(page.getByText('Recap', {exact:true})).toBeVisible()
+  expect(((await page.locator('.fv-reveal-recap-text').textContent()) ?? '').match(/\.(\s|$)/g)).toHaveLength(3)
   // Desktop labels the line ends inside the SVG; phones list them under the plot. Both are buttons in the figure.
   await expect(page.getByRole('group', {name:'Your 1,000 futures: four ending net worth lines'})).toBeVisible()
   const chart = page.getByRole('figure', {name:'Your 1,000 futures'})

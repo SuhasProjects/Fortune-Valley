@@ -79,3 +79,8 @@
   .fv-reveal-futures .fv-outcome-chart { max-width:none; }
   .fv-ask-row { flex-wrap:wrap; }
 }
+
+/* Recap under the headline: three plain sentences, tag above. */
+.fv-reveal-recap { margin:calc(2 * var(--px)) auto calc(3 * var(--px)); max-width:72ch; text-align:center; }
+.fv-reveal-recap .fv-tag { font-size:calc(4.5 * var(--px)); }
+.fv-reveal-recap-text { margin:calc(1.5 * var(--px)) 0 0; font-size:calc(5.5 * var(--px)); line-height:1.4; }

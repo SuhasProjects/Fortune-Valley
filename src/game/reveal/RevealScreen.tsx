@@ -8,6 +8,7 @@ import { TownWorld } from '@/game/world/TownWorld'
 import { originalLines } from './ending-contract'
 import { OutcomeChart, sharedYDomain } from './OutcomeChart'
 import { WhatIfSection } from './WhatIfSection'
+import { RecapLine } from './RecapLine'
 import './reveal.css'
 
 export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload; onPlayAgain: () => void }) {
@@ -26,7 +27,8 @@ export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload;
     <div className="fv-reveal-ui" data-reduce-motion={readReduceMotion()}>
       <Board className="fv-reveal-ledger" padding="lg">
         <header className="fv-reveal-heading"><Plaque>Your Next Chapter</Plaque>
-          <h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1></header>
+          <h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1>
+          <RecapLine state={payload.finalState}/></header>
         <section className="fv-reveal-futures" aria-label="Your simulated futures"><h2>Same strategy, {paths} futures</h2><OutcomeChart lines={lines} yDomain={sharedYDomain(lines)} title={`Your ${paths} futures`} hideTitle/></section>
         <WhatIfSection payload={payload} original={lines}/>
         <section className="fv-reveal-explanation" aria-labelledby="fv-why"><h2 id="fv-why">Why?</h2>

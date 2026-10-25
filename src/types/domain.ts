@@ -568,7 +568,9 @@ export interface PersonalizedInput {
 export type AiRequest =
   | { kind: 'scenario'; input: PersonalizedInput }
   | { kind: 'opportunity'; summary: StateSummary }
-  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> };
+  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> }
+  | { kind: 'whatif'; comparison: { decisionLabel: string; alternativeLabel: string; original: { p10: number; median: number; p90: number; yourEvents: number }; changed: { p10: number; median: number; p90: number; yourEvents: number }; delta: { p10: number; median: number; p90: number; yourEvents: number; spread: number }; startNetWorth: number; months: number } }
+  | { kind: 'recap'; recap: { months: number; startNetWorth: number; endNetWorth: number; timeline: { month: number; label: string; event: string; amount?: number }[] } };
 
 /** The scenario the AI maps a prompt onto. Engine turns it into a GameConfig. */
 export interface ScenarioProposal {
@@ -604,7 +606,9 @@ export interface OpportunityProposal {
 export type AiResponse =
   | { kind: 'scenario'; source: 'ai' | 'fallback'; proposal: ScenarioProposal; warnings: string[] }
   | { kind: 'opportunity'; source: 'ai' | 'fallback'; proposal: OpportunityProposal | null; warnings: string[] }
-  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
+  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] }
+  | { kind: 'whatif'; source: 'ai' | 'fallback'; text: string; warnings: string[] }
+  | { kind: 'recap'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
 
 export interface AiErrorResponse {
   error: string;

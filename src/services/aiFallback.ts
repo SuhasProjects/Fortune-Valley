@@ -7,6 +7,7 @@
  * summary, rounded for display, or a fixed illustrative offer bounded by BOUNDS.
  */
 import type { ArchetypeId, BuildingId, EventEffect, OpportunityProposal, PersonalizedInput, ScenarioProposal, StateSummary } from '@/types/domain';
+import type { AiRequest } from '@/types/domain';
 import { hashSeed } from '@/engine/rng';
 import { BOUNDS } from '@/config/defaults';
 
@@ -605,4 +606,57 @@ export function fallbackExplanation(s: StateSummary, mc?: Mc, question?: string)
   const levers = leverSentences(topic, s, mc);
   const asked = topic !== 'general' && (question ?? '').trim().length > 0;
   return [...(asked ? [...levers, ...happened] : [...happened, ...levers]), whatIfSentence(topic, s), DISCLAIMER].join(' ');
+}
+
+// ── whatif: one caveman-logic sentence from the signs of the deltas ──────────
+/** Offline line for the what-if strip: cause → effect in small words, one sentence, ≤ 18 words, no numbers. */
+export function fallbackWhatIf(c: Extract<AiRequest, { kind: 'whatif' }>['comparison']): string {
+  const median = Math.round(c.delta.median), spread = Math.round(c.delta.spread);
+  const up = median > 0, down = median < 0, tighter = spread < 0, wider = spread > 0;
+  if (up && tighter) return 'This choice puts a little more aside each month, so the ending grows and bad months hurt less.';
+  if (up && wider) return 'This choice chases more growth, so the typical ending climbs but a bad run falls further.';
+  if (down && tighter) return 'This choice costs a bit every month, so the ending is lower but bad months hurt less.';
+  if (down && wider) return 'This choice leaves less cushion each month, so the ending drops and bad luck bites harder.';
+  if (up) return 'This choice adds a little every month, so the ending grows while risk stays the same.';
+  if (down) return 'This choice costs a little every month, so the ending shrinks while risk stays the same.';
+  if (tighter) return 'This choice does not change the typical ending, but it keeps bad months from hurting as much.';
+  if (wider) return 'This choice does not change the typical ending, but it lets bad months hurt more.';
+  return 'This choice barely touches the money each month, so the endings come out about the same.';
+}
+
+// ── recap: three news-wire sentences from the condensed timeline ─────────────
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const monthWords = (label: string): string => { const [y, m] = label.split('-').map(Number); return y && m ? `${MONTHS[m - 1]} ${y}` : label; };
+const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+/** "Set savings to $300 and …" → "set savings"; `Chose "Lease renewal: Stay"` → `took the offer "Lease renewal"`. */
+const shortDecision = (event: string): string => {
+  const chosen = event.match(/^Chose "([^":]+)/);
+  if (chosen) return `took the offer "${chosen[1]!.trim()}"`;
+  return lower(event.split(/ to | of | a month/)[0]!);
+};
+type Line = Extract<AiRequest, { kind: 'recap' }>['recap']['timeline'][number];
+/** "a job loss in May 2026 cut pay to benefits" / "a medical bill in November 2026 cost $6,221 out of pocket". */
+const shockClause = (l: Line): string => {
+  const when = monthWords(l.label);
+  if (l.event.startsWith('Job loss')) return `a job loss in ${when} cut pay to benefits`;
+  if (l.event.startsWith('Cash ran short')) return `cash ran short for bills in ${when}`;
+  const what = lower(l.event.split(' of ')[0]!);
+  return `a ${what} in ${when} cost ${fmtUsd(l.amount ?? 0)} out of pocket`;
+};
+/** Offline recap: setup, then the hard months, then the ending, all from the timeline the AI would see. 3 sentences, ≤ 60 words. */
+export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap']): string {
+  const decisions = r.timeline.filter((l) => l.event.startsWith('Set ') || l.event.startsWith('Chose '));
+  const shocks = r.timeline.filter((l) => /^(Job loss|Medical bill|Car repair|Home repair|Cash ran short)/.test(l.event));
+  const first = decisions[0];
+  const one = first
+    ? `The run opened at ${fmtUsd(r.startNetWorth)}, and in ${monthWords(first.label)} the player ${shortDecision(first.event)}.`
+    : `The run opened at ${fmtUsd(r.startNetWorth)} with the default plan left unchanged.`;
+  const named = shocks.slice(0, 2).map(shockClause);
+  const rest = shocks.length - named.length;
+  const two = shocks.length === 0
+    ? `No shock landed in ${r.months} months; pay came in and bills went out on schedule.`
+    : `${named.length === 2 ? `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}, and ${named[1]}` : `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}`}${rest > 0 ? `; ${rest === 1 ? 'one more hard month' : `${rest} more hard months`} followed` : ''}.`;
+  const diff = Math.round(r.endNetWorth - r.startNetWorth);
+  const three = `After ${r.months} months the run ended at ${fmtUsd(r.endNetWorth)}, ${diff === 0 ? 'level with' : `${fmtUsd(Math.abs(diff))} ${diff > 0 ? 'above' : 'below'}`} the start.`;
+  return `${one} ${two} ${three}`;
 }

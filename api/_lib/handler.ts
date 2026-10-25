@@ -14,6 +14,7 @@ import { EXPLAIN_SYSTEM, OPPORTUNITY_SYSTEM, SCENARIO_SYSTEM, buildExplainUser, 
 import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, ScenarioProposalSchema } from './schemas.js';
 import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible.js';
 import { allowRequest, MAX_BODY_BYTES } from './rateLimit.js';
+import { recap, runKind, whatif } from './kinds/index.js';
 
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
 export interface HandlerEnv {
@@ -114,6 +115,8 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
       if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the opportunity schema');
       return { status: 200, body: { kind: 'opportunity', source: 'ai', proposal: r.parsed.proposal, warnings: [] } };
     }
+    if (req.kind === 'whatif') { const k = await runKind(model, whatif, req); return k.ok ? { status: 200, body: { kind: 'whatif', source: 'ai', text: k.parsed.text, warnings: [] } } : err(502, k.code, k.error); }
+    if (req.kind === 'recap') { const k = await runKind(model, recap, req); return k.ok ? { status: 200, body: { kind: 'recap', source: 'ai', text: k.parsed.text, warnings: [] } } : err(502, k.code, k.error); }
     const r = await model.parse({ system: EXPLAIN_SYSTEM, user: buildExplainUser(req), schema: ExplainOutputSchema, maxTokens: 800 });
     if (r.stopReason === 'refusal') return err(502, 'upstream_error', 'Model declined the request');
     if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the explain schema');
