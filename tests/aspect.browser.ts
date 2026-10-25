@@ -63,12 +63,7 @@ for (const [width, height, px] of SIZES) {
       expect(Math.abs(box.x + box.width / 2 - width / 2), `${name} centred`).toBeLessThanOrEqual(2)
     }
     await expectInsideViewport(page, 'title')
-    const titleCorners = await corners(page, width, height, px)
-    for (const [i, c] of titleCorners.entries()) {
-      // Top corners are sky (the sky's own blue above the map, mirrored sky beside it); bottom corners are meadow border.
-      if (i < 2) expect(c.sky, `title corner ${i} is sky`).toBe(true)
-      else expect(c.colours, `title corner ${i} is not a flat colour`).toBeGreaterThanOrEqual(3)
-    }
+    // The title keeps its original scene (no border tiling there, by request); only the town gets the border below.
 
     // Town: every building on screen, the HUD on the map's top edge and the bar on its bottom edge, the border tiled.
     await startStory(page, 'College Student')
