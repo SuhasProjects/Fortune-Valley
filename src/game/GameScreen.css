@@ -5,19 +5,22 @@
 .fv-stage[aria-label='Fortune Valley town'] > .fv-ui { --ui-px: max(2px, var(--px)); }
 
 /* Shared geometry every overlay positions against, in UI art px:
-   --hud-bottom  distance from the viewport top to the HUD's bottom edge (2 inset + 15 board)
-   --bar-top     distance from the viewport bottom to the control bar's top edge (5 inset + 18 board) */
+   --hud-bottom  distance from the viewport top to the HUD's bottom edge (0 inset + 16 board), one art px above
+                 the Town Office roof at 1280x720
+   --bar-top     distance from the viewport bottom to the control bar's top edge (5 inset + 20 board) */
 .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
   --px: var(--ui-px);
-  --hud-bottom: calc(17 * var(--px));
-  --bar-top: calc(23 * var(--px));
+  --hud-bottom: calc(16 * var(--px));
+  --bar-top: calc(25 * var(--px));
 }
 
 /* Phones: the HUD is two rows (brand + date / four values) and the control bar two rows; see hud.css. */
 @media (max-width: 639px) {
   .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
-    --hud-bottom: calc(48 * var(--px));
+    --hud-bottom: calc(47 * var(--px));
     --bar-top: calc(49 * var(--px));
+    /* UI zoom is 2 on phones, which would make the art-px font tokens 9-16 px; floor them at readable sizes. */
+    --fs-label: 11px; --fs-body: 14px; --fs-value: 15px; --fs-heading: 18px;
   }
 }
 

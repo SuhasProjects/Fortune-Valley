@@ -1,17 +1,18 @@
-/* Top HUD: a full-width parchment board, 15 art px tall, inset 2 art px. Columns have fixed flex bases so a value
-   changing digits never moves its neighbours. The frame's 4-art-px border leaves a 7-art-px content box; the two
-   text rows (6 + 5 art px) overflow it symmetrically and stay inside the 2-art-px painted edge. */
-.fv-hud { position: absolute; top: calc(2 * var(--px)); left: calc(2 * var(--px)); right: calc(2 * var(--px)); z-index: var(--z-hud); height: calc(15 * var(--px)); display: flex; gap: var(--px); align-items: center; padding: 0 var(--px); white-space: nowrap; }
-.fv-hud__brand { flex: 0 0 calc(58 * var(--px)); display: flex; align-items: center; min-width: 0; gap: calc(2 * var(--px)); }
+/* Top HUD: a full-width parchment board, 16 art px tall, flush with the top edge so its bottom (16 art px) clears the
+   Town Office roof at 1280x720. Columns have fixed flex bases so a value changing digits never moves its neighbours.
+   The frame's 4-art-px border leaves an 8-art-px content box; the two text rows (5 + 6.5 art px) overflow it
+   symmetrically and stay inside the 2-art-px painted edge. */
+.fv-hud { position: absolute; top: 0; left: calc(2 * var(--px)); right: calc(2 * var(--px)); z-index: var(--z-hud); height: calc(16 * var(--px)); display: flex; gap: var(--px); align-items: center; padding: 0 var(--px); white-space: nowrap; }
+.fv-hud__brand { flex: 0 0 calc(64 * var(--px)); display: flex; align-items: center; min-width: 0; gap: calc(2 * var(--px)); }
 .fv-hud__brand-icon { background: var(--c-wood); border: var(--px) solid var(--c-outline); box-shadow: inset var(--px) var(--px) 0 var(--c-wood-light); display: flex; padding: var(--px); }
 .fv-hud__brand > div { min-width: 0; }
 .fv-hud__brand strong { display: block; overflow: hidden; text-overflow: ellipsis; font: 700 var(--fs-body)/1 var(--font-heading); color: var(--c-ink); }
 .fv-hud__brand span:not(.fv-hud__brand-icon), .fv-hud__date span { display: block; font-size: var(--fs-label); line-height: 1; margin-top: var(--px); overflow: hidden; text-overflow: ellipsis; }
 .fv-hud__date { flex: 0 0 calc(36 * var(--px)); min-width: 0; }
 .fv-hud__date strong { display: flex; align-items: center; gap: var(--px); font: var(--fs-value)/1 var(--font-body); color: var(--c-ink); }
-.fv-hud__stat { flex: 1 0 calc(32 * var(--px)); min-width: 0; }
+.fv-hud__stat { flex: 1 0 calc(30 * var(--px)); min-width: 0; }
 .fv-hud dl { margin: 0; }
-.fv-hud dt { display: flex; align-items: center; gap: var(--px); height: calc(6 * var(--px)); font-size: var(--fs-label); line-height: 1; color: color-mix(in srgb, var(--c-outline) 75%, transparent); }
+.fv-hud dt { display: flex; align-items: center; gap: var(--px); height: calc(5 * var(--px)); font-size: var(--fs-label); line-height: 1; color: color-mix(in srgb, var(--c-outline) 75%, transparent); }
 .fv-hud dd { position: relative; margin: 0; min-width: 9ch; font-size: var(--fs-value); line-height: 1; font-variant-numeric: tabular-nums; }
 .fv-hud > .fv-button { margin-left: var(--px); }
 /* Value tick: two-step nudge + colour flash, with a floating signed delta (three steps, 6 art px). */
@@ -22,22 +23,29 @@
 @keyframes fv-delta { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(calc(-6 * var(--px))); } }
 /* Bottom control bar: centred parchment board 5 art px above the bottom edge. */
 .fv-control-bar { position: absolute; bottom: calc(5 * var(--px)); left: 50%; transform: translateX(-50%); z-index: var(--z-hud); display: flex; align-items: center; gap: calc(2 * var(--px)); max-width: calc(100% - 4 * var(--px)); padding: 0 var(--px); white-space: nowrap; }
-.fv-countdown { min-width: calc(26 * var(--px)); text-align: center; color: var(--c-outline); } .fv-countdown span { display: block; font-size: var(--fs-label); line-height: 1; } .fv-countdown strong { display: block; margin-top: calc(0.5 * var(--px)); font: 700 var(--fs-heading)/1 var(--font-heading); font-variant-numeric: tabular-nums; color: var(--c-ink); }
+.fv-countdown { min-width: calc(26 * var(--px)); text-align: center; color: var(--c-outline); } .fv-countdown span { display: block; font-size: var(--fs-label); line-height: 1; } .fv-countdown strong { display: block; margin-top: calc(0.5 * var(--px)); font: 700 var(--fs-value)/1 var(--font-heading); font-variant-numeric: tabular-nums; color: var(--c-ink); }
 .fv-control-bar > .fv-divider--vertical { align-self: stretch; margin: calc(-1 * var(--px)) 0; }
-.fv-status-tag { position: absolute; z-index: var(--z-hud); top: calc(19 * var(--px)); left: calc(3 * var(--px)); }
+.fv-status-tag { position: absolute; z-index: var(--z-hud); top: calc(18 * var(--px)); left: calc(3 * var(--px)); }
+/* The status tag is a small, quiet label (one size under --fs-label) tucked top-left under the HUD. */
+.fv-status-tag .fv-tag { font-size: calc(4 * var(--px)); line-height: 1; min-height: calc(6 * var(--px)); }
 .fv-status-dot { display: inline-block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); animation: fv-pulse 900ms steps(2) infinite; }
 @keyframes fv-pulse { 50% { background: var(--c-paper); } }
-/* Footer: two tiny corner lines with a short `k` rule above each, like the reference's bottom corners. */
-.fv-hud-footer { position: absolute; bottom: var(--px); left: calc(3 * var(--px)); right: calc(3 * var(--px)); z-index: var(--z-hud); display: flex; justify-content: space-between; gap: var(--px); font: var(--fs-label)/1 var(--font-body); color: color-mix(in srgb, var(--c-outline) 60%, transparent); pointer-events: none; }
+/* Footer: one tiny disclaimer line in the bottom-left corner with a short rule above it. */
+.fv-hud-footer { position: absolute; bottom: var(--px); left: calc(3 * var(--px)); right: calc(3 * var(--px)); z-index: var(--z-hud); display: flex; justify-content: flex-start; gap: var(--px); font: var(--fs-label)/1 var(--font-body); color: color-mix(in srgb, var(--c-outline) 60%, transparent); pointer-events: none; }
 .fv-hud-footer span { position: relative; padding-top: var(--px); }
 .fv-hud-footer span::before { content: ''; position: absolute; top: 0; width: calc(8 * var(--px)); height: var(--px); background: color-mix(in srgb, var(--c-outline) 60%, transparent); }
-.fv-hud-footer span:first-child::before { left: 0; } .fv-hud-footer span:last-child::before { right: 0; }
+.fv-hud-footer span::before { left: 0; }
+/* Pause / play glyphs: 5x7 art px drawn from box shadows so they stay crisp at every zoom. */
+.fv-glyph { position: relative; display: inline-block; flex: none; width: calc(5 * var(--px)); height: calc(7 * var(--px)); }
+.fv-glyph::before { content: ''; position: absolute; left: 0; top: 0; width: var(--px); height: var(--px); background: currentColor; }
+.fv-glyph--pause::before { box-shadow: var(--px) 0, 0 var(--px), var(--px) var(--px), 0 calc(2 * var(--px)), var(--px) calc(2 * var(--px)), 0 calc(3 * var(--px)), var(--px) calc(3 * var(--px)), 0 calc(4 * var(--px)), var(--px) calc(4 * var(--px)), 0 calc(5 * var(--px)), var(--px) calc(5 * var(--px)), 0 calc(6 * var(--px)), var(--px) calc(6 * var(--px)), calc(3 * var(--px)) 0, calc(4 * var(--px)) 0, calc(3 * var(--px)) var(--px), calc(4 * var(--px)) var(--px), calc(3 * var(--px)) calc(2 * var(--px)), calc(4 * var(--px)) calc(2 * var(--px)), calc(3 * var(--px)) calc(3 * var(--px)), calc(4 * var(--px)) calc(3 * var(--px)), calc(3 * var(--px)) calc(4 * var(--px)), calc(4 * var(--px)) calc(4 * var(--px)), calc(3 * var(--px)) calc(5 * var(--px)), calc(4 * var(--px)) calc(5 * var(--px)), calc(3 * var(--px)) calc(6 * var(--px)), calc(4 * var(--px)) calc(6 * var(--px)); }
+.fv-glyph--play::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), 0 calc(5 * var(--px)), 0 calc(6 * var(--px)), var(--px) var(--px), var(--px) calc(2 * var(--px)), var(--px) calc(3 * var(--px)), var(--px) calc(4 * var(--px)), var(--px) calc(5 * var(--px)), calc(2 * var(--px)) var(--px), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) calc(3 * var(--px)), calc(2 * var(--px)) calc(4 * var(--px)), calc(2 * var(--px)) calc(5 * var(--px)), calc(3 * var(--px)) calc(2 * var(--px)), calc(3 * var(--px)) calc(3 * var(--px)), calc(3 * var(--px)) calc(4 * var(--px)), calc(4 * var(--px)) calc(3 * var(--px)); }
 [data-reduce-motion='true'] .fv-status-dot, [data-reduce-motion='true'].fv-value-tick { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-value-tick, .fv-status-dot { animation: none; } .fv-value-delta { display: none; } }
 /* Phones (< 640 px wide, stage zoom 1, UI zoom floored at 2 by GameScreen.css). Keep in step with --hud-bottom
-   (2 + 46) and --bar-top (16 + 33) there. HUD: row 1 brand · date · Timeline, row 2 the four values. */
+   (0 + 47) and --bar-top (16 + 33) there. HUD: row 1 brand · date · Timeline, row 2 the four values. */
 @media (max-width: 639px) {
-  .fv-hud { height: calc(46 * var(--px)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--px) calc(2 * var(--px)); padding: 0 var(--px); }
+  .fv-hud { height: calc(47 * var(--px)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--px) calc(2 * var(--px)); padding: 0 var(--px); }
   .fv-hud > .fv-divider { display: none; }
   .fv-hud__brand { grid-area: 1 / 1 / 2 / 3; }
   .fv-hud__brand-icon { display: none; }
@@ -54,7 +62,7 @@
   /* The disclaimer stays (wrapped, centred, tagline dropped) and the bar sits above it. */
   .fv-control-bar { bottom: calc(16 * var(--px)); }
   .fv-hud-footer { justify-content: center; text-align: center; white-space: normal; }
-  .fv-hud-footer span:last-child { display: none; }
-  .fv-hud-footer span:first-child::before { left: calc(50% - 4 * var(--px)); }
+  .fv-hud-footer span::before { left: calc(50% - 4 * var(--px)); }
+  .fv-status-tag .fv-tag { font-size: 10px; }
 }
 

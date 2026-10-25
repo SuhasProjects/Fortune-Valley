@@ -222,7 +222,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       {finishing && <div className="fv-finish-overlay" role="status" aria-live="assertive">
         <Board padding="lg" className="fv-finish-card" data-reduce-motion={settings.reduceMotion || undefined}>
           <h2>Counting 1,000 possible futures…</h2>
-          <p>Same choices, different luck. Hold on.</p>
+          <p>Same choices with different luck, so hold on a moment.</p>
           <span className="fv-counter" aria-hidden="true"><i/><i/><i/><i/><i/></span>
         </Board>
       </div>}

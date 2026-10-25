@@ -5,7 +5,7 @@
 .fv-window__header .fv-plaque { position: static; inset: auto; display: inline-block; pointer-events: auto; }
 .fv-window__body { display: flex; flex: 1; min-height: 0; overflow: hidden; background: var(--c-parchment); padding: calc(3 * var(--px)); }
 .fv-window__body > .fv-scroll-area { flex: 1; min-height: 0; }
-.fv-modal { position: fixed; inset: 0; margin: auto; border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100dvh; overflow: visible; z-index: var(--z-overlay); font: var(--fs-body)/1.15 var(--font-body); color: var(--c-outline); }
+.fv-modal { position: fixed; inset: 0; margin: auto; border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100dvh; overflow: visible; z-index: var(--z-overlay); font: var(--fs-body)/1.25 var(--font-body); color: var(--c-outline); }
 .fv-modal[open] { animation: fv-window-open 120ms steps(2); }
 .fv-modal::backdrop { background: color-mix(in srgb, var(--c-ink) 45%, transparent); }
 @keyframes fv-window-open { from { transform: translateY(calc(2 * var(--px))); } to { transform: translateY(0); } }

@@ -35,10 +35,10 @@ export function useAction(dispatch: PanelDispatch) {
     locked.current = true; setPending(true); setMessage(undefined);
     try {
       const result = await dispatch(action);
-      if (mounted.current) setMessage(result?.ok ? { error: false, text: 'Saved.' } : { error: true, text: result && !result.ok ? result.message : "Couldn't save. Try again." });
+      if (mounted.current) setMessage(result?.ok ? { error: false, text: 'Saved.' } : { error: true, text: result && !result.ok ? result.message : "Couldn't save, so please try again." });
       return result?.ok === true;
     } catch {
-      if (mounted.current) setMessage({ error: true, text: "Couldn't save. Try again." });
+      if (mounted.current) setMessage({ error: true, text: "Couldn't save, so please try again." });
       return false;
     } finally { locked.current = false; if (mounted.current) setPending(false); }
   }

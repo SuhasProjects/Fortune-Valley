@@ -8,7 +8,7 @@
 .fv-tag { display: inline-flex; align-items: center; gap: var(--px); border: calc(2 * var(--px)) solid transparent; border-image: url('/art/ui/frames/tag.png') 2 fill / calc(2 * var(--px)) / 0 stretch; color: var(--c-paper); background: var(--c-tag-dark); padding: 0 calc(2 * var(--px)); font-size: var(--fs-label); text-transform: uppercase; }
 .fv-tag--gold { background: var(--c-gold); color: var(--c-ink); border-image-source: url('/art/ui/frames/tag-gold.png'); } .fv-tag--red { background: var(--c-money-down); border-image-source: url('/art/ui/frames/tag-red.png'); } .fv-tag--green { background: var(--c-money-up); border-image-source: url('/art/ui/frames/tag-green.png'); }
 .fv-inset { background: var(--c-parchment-light); border: var(--px) solid var(--c-parchment-shadow); box-shadow: inset var(--px) var(--px) 0 var(--c-parchment-shadow), inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--c-paper); padding: calc(3 * var(--px)); }
-.fv-inset h3 { font: 700 var(--fs-body)/1 var(--font-heading); margin: 0 0 calc(2 * var(--px)); }
+.fv-inset h3 { font: 700 var(--fs-value)/1 var(--font-heading); margin: 0 0 calc(3 * var(--px)); }
 .fv-divider { display: block; border-top: var(--px) solid var(--c-parchment-shadow); margin: calc(2 * var(--px)) 0; }
 .fv-divider--vertical { border-top: 0; border-left: var(--px) solid var(--c-parchment-shadow); align-self: stretch; margin: 0 var(--px); }
 .fv-divider--dashed { border-style: dashed; }

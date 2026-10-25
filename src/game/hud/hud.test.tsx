@@ -32,7 +32,7 @@ describe('HUD', () => {
     useGameStore.setState({aiStatus:'online'}); rerender(<StatusTag/>); expect(container.querySelector('.fv-status-dot')).toBeNull()
   })
   it('prints the two footer lines', () => {
-    render(<HudFooter/>); expect(screen.getByText('Fictional educational simulation · Assumptions are illustrative')).toBeTruthy(); expect(screen.getByText('USD · A little town. A bigger perspective.')).toBeTruthy()
+    render(<HudFooter/>); expect(screen.getByText('Fictional educational simulation · Assumptions are illustrative · USD')).toBeTruthy(); expect(screen.queryByText(/bigger perspective/)).toBeNull()
   })
   it.each([['paused','online','PAUSED'],['finished','loading','STORY COMPLETE'],['playing','loading','PREPARING OPPORTUNITY'],['playing','online','AI CONNECTED'],['playing','offline','OFFLINE READY']] as const)('prioritizes %s / %s', (status, aiStatus, text) => {
     useGameStore.setState(state => ({game:{...state.game!,status},aiStatus})); render(<StatusTag/>); expect(screen.getByRole('status').textContent).toContain(text)
