@@ -1,8 +1,15 @@
-import { describe, expect, it } from 'vitest';
-import { handleAiRequest, type ModelClient } from '../../api/_lib/handler';
+import { describe, expect, it, vi } from 'vitest';
+import { EventEmitter } from 'node:events';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { handleAiRequest, type HandlerResult, type ModelClient } from '../../api/_lib/handler';
+import { makeOpenAiCompatibleClient } from '../../api/_lib/openaiCompatible';
+import vercelHandler from '../../api/ai';
+import { aiDevMiddleware, readServerEnv } from '../../server/aiDevMiddleware';
 import { fixtureState, fixtureConfig } from '@/fixtures';
 import { summarizeForAi } from '@/engine';
-import { generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+import { explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
 import { createGame, applyAction } from '@/engine';
 
 const fake = (output: unknown, stopReason = 'end_turn'): ModelClient => ({
@@ -12,6 +19,201 @@ const fake = (output: unknown, stopReason = 'end_turn'): ModelClient => ({
   },
 });
 const summary = () => summarizeForAi(fixtureState, fixtureConfig.narrativeFocus, 'entry_worker');
+
+/** Scripted upstream for the OpenAI-compatible provider: a string is a 200 chat completion with that content. */
+type Reply = string | { status: number; body?: unknown; raw?: string } | 'hang';
+const mockFetch = (replies: Reply[]) => {
+  const calls: { url: string; body: Record<string, unknown>; headers: Record<string, string> }[] = [];
+  const impl = ((url: string, init: RequestInit) => new Promise<Response>((resolve, reject) => {
+    calls.push({ url, body: JSON.parse(String(init.body)) as Record<string, unknown>, headers: init.headers as Record<string, string> });
+    const r = replies.shift() ?? '{}';
+    if (r === 'hang') { init.signal?.addEventListener('abort', () => { const e = new Error('aborted'); e.name = 'AbortError'; reject(e); }); return; }
+    if (typeof r === 'string') return resolve(new Response(JSON.stringify({ choices: [{ message: { content: r }, finish_reason: 'stop' }] }), { status: 200 }));
+    resolve(new Response(r.raw ?? JSON.stringify(r.body ?? {}), { status: r.status }));
+  })) as unknown as typeof fetch;
+  return { impl, calls };
+};
+/** Replays a gateway result to the browser client exactly as the dev server / Vercel would serve it. */
+const replay = (r: HandlerResult): typeof fetch => (async () => new Response(JSON.stringify(r.body), { status: r.status, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch;
+/** Runs `fn` with every AI_* variable removed from process.env (api/ai.ts reads process.env directly). */
+const withCleanAiEnv = async <T,>(fn: () => Promise<T>): Promise<T> => {
+  const saved = Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('AI_')));
+  for (const k of Object.keys(saved)) delete process.env[k];
+  try { return await fn(); } finally { Object.assign(process.env, saved); }
+};
+const scenarioProposal = { baseArchetype: 'entry_worker', title: 'First job, first loan', description: 'Entry-level worker with a student loan.', overrides: { grossAnnualSalary: 55000, housingMonthly: 1300, debts: [{ name: 'Student loan', kind: 'student_loan', balance: 18000, apr: 0.06, minimumPayment: 200 }] }, narrativeFocus: ['debt_payoff', 'emergency_fund'], defaultsApplied: ['essentialsMonthly'] };
+const scenarioInput = { freeText: "I'm 24, first job, 1,300 rent, 18k student loan at 6%", grossAnnualIncome: 55000, monthlyRent: 1300, debtBalance: 18000, debtApr: 0.06 };
+const scenarioReq = JSON.stringify({ kind: 'scenario', input: scenarioInput });
+
+describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code → browser fallback', () => {
+  const env = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.example', AI_MODEL: 'test/model', AI_API_KEY: 'k' };
+  const client = (impl: typeof fetch, timeoutMs?: number) => makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: 'k', model: env.AI_MODEL, fetchImpl: impl, timeoutMs });
+
+  it('scenario success: JSON reply → source:ai proposal that the engine turns into a playable config', async () => {
+    const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
+    const r = await handleAiRequest(scenarioReq, env, client(impl));
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ kind: 'scenario', source: 'ai', proposal: scenarioProposal, warnings: [] });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.body.model).toBe('test/model');
+    expect((calls[0]!.body.messages as { role: string }[]).map((m) => m.role)).toEqual(['system', 'user']);
+    const res = await generateScenario(scenarioInput, { fetchImpl: replay(r) });
+    expect(res.source).toBe('ai');
+    expect(createGame(scenarioToConfig(res.proposal, 7, res.source)).status).toBe('setup');
+  });
+
+  it('markdown-fenced JSON is repaired on the first attempt (no retry round-trip)', async () => {
+    const { impl, calls } = mockFetch(['```json\n' + JSON.stringify(scenarioProposal) + '\n```']);
+    const r = await handleAiRequest(scenarioReq, env, client(impl));
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ source: 'ai', proposal: { title: 'First job, first loan' } });
+    expect(calls).toHaveLength(1);
+  });
+
+  it('unparseable output twice → 502 schema_mismatch, and the browser client uses the offline keyword mapping', async () => {
+    const { impl, calls } = mockFetch(['Sorry, I cannot produce that.', '{"baseArchetype": "entry_worker", "title": ']);
+    const r = await handleAiRequest(scenarioReq, env, client(impl));
+    expect(r).toMatchObject({ status: 502, body: { code: 'schema_mismatch' } });
+    expect(calls).toHaveLength(2);
+    expect(JSON.stringify(calls[1]!.body)).toMatch(/not valid JSON/);
+    const res = await generateScenario(scenarioInput, { fetchImpl: replay(r) });
+    expect(res.source).toBe('fallback');
+    expect(res.proposal.overrides.housingMonthly).toBe(1300);
+    expect(res.warnings[0]).toMatch(/offline/);
+  });
+
+  it('200 with no choices, or a non-JSON body, is a schema_mismatch rather than a crash', async () => {
+    for (const reply of [{ status: 200, body: {} }, { status: 200, raw: '<html>gateway</html>' }]) {
+      const { impl } = mockFetch([reply, reply]);
+      const r = await handleAiRequest(scenarioReq, env, client(impl));
+      expect(r.body).toMatchObject({ code: 'schema_mismatch' });
+    }
+  });
+
+  it.each([[401, 'upstream_error', 502], [403, 'upstream_error', 502], [429, 'rate_limited', 429], [500, 'upstream_error', 502], [503, 'upstream_error', 502]] as const)(
+    'upstream %i → %s (no retry, provider message not forwarded) and every client call falls back', async (status, code, http) => {
+      const { impl, calls } = mockFetch([{ status, body: { error: { message: 'nope-from-provider' } } }]);
+      const r = await handleAiRequest(scenarioReq, env, client(impl));
+      expect(r).toMatchObject({ status: http, body: { code } });
+      expect(calls).toHaveLength(1);
+      expect(JSON.stringify(r.body)).not.toContain('nope-from-provider');
+      const s = summary();
+      const [a, b, c] = await Promise.all([generateScenario(scenarioInput, { fetchImpl: replay(r) }), proposeOpportunity(s, { fetchImpl: replay(r) }), explainOutcome(s, 'why', undefined, { fetchImpl: replay(r) })]);
+      expect([a.source, b.source, c.source]).toEqual(['fallback', 'fallback', 'fallback']);
+      expect([a.kind, b.kind, c.kind]).toEqual(['scenario', 'opportunity', 'explain']);
+    },
+  );
+
+  it('upstream timeout → 504 timeout → fallback; a hung gateway also falls back on the client-side timer', async () => {
+    const { impl } = mockFetch(['hang']);
+    const r = await handleAiRequest(scenarioReq, env, client(impl, 20));
+    expect(r).toMatchObject({ status: 504, body: { code: 'timeout' } });
+    expect((await proposeOpportunity(summary(), { fetchImpl: replay(r) })).source).toBe('fallback');
+    const { impl: hung } = mockFetch(['hang']);
+    const direct = await explainOutcome(summary(), 'why', undefined, { fetchImpl: hung, timeoutMs: 20 });
+    expect(direct.source).toBe('fallback');
+  });
+
+  it('per-client rate limit: the 41st request in the window is 429 rate_limited and never reaches the model', async () => {
+    let modelCalls = 0;
+    const counting: ModelClient = { async parse({ schema }) { modelCalls++; return { parsed: schema.parse({ text: 'ok' }), stopReason: 'stop' }; } };
+    const meta = { clientKey: `rate-limit-test-${Math.random()}` };
+    const body = JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' });
+    for (let i = 0; i < 40; i++) expect((await handleAiRequest(body, env, counting, meta)).status).toBe(200);
+    const r = await handleAiRequest(body, env, counting, meta);
+    expect(r).toMatchObject({ status: 429, body: { code: 'rate_limited', error: expect.stringMatching(/retry in \d+s/) } });
+    expect(modelCalls).toBe(40);
+    expect((await explainOutcome(summary(), 'why', undefined, { fetchImpl: replay(r) })).source).toBe('fallback');
+  });
+
+  it('.env.example (Luminal DeepSeek) drives the real client factory: URL, model and bearer header', async () => {
+    const example = Object.fromEntries(readFileSync('.env.example', 'utf8').split('\n').filter((l) => /^[A-Z_]+=/.test(l)).map((l) => { const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).trim()]; }));
+    expect(example).toMatchObject({ AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.luminal.cloud', AI_MODEL: 'deepseek-ai/DeepSeek-V4.1-Flash', AI_API_KEY: '' });
+    expect((await handleAiRequest(scenarioReq, example)).body).toMatchObject({ code: 'disabled' });
+    const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
+    vi.stubGlobal('fetch', impl);
+    try {
+      const r = await handleAiRequest(scenarioReq, { ...example, AI_API_KEY: 'test-key' });
+      expect(r.status).toBe(200);
+      expect(calls[0]!.url).toBe('https://flash.luminal.cloud/v1/chat/completions');
+      expect(calls[0]!.headers.Authorization).toBe('Bearer test-key');
+      expect(calls[0]!.body.model).toBe('deepseek-ai/DeepSeek-V4.1-Flash');
+      expect(calls[0]!.body.response_format).toEqual({ type: 'json_object' });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('AI_BASE_URL may carry a trailing slash or /v1 without doubling the path', async () => {
+    for (const baseUrl of ['https://flash.example/', 'https://flash.example/v1', 'https://flash.example/v1/']) {
+      const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
+      await handleAiRequest(scenarioReq, env, makeOpenAiCompatibleClient({ baseUrl, apiKey: 'k', model: 'm', fetchImpl: impl }));
+      expect(calls[0]!.url, baseUrl).toBe('https://flash.example/v1/chat/completions');
+    }
+  });
+});
+
+describe('dev middleware (npm run dev) serves the same shape as the Vercel function', () => {
+  interface Served { status: number; headers: Record<string, string>; body: unknown }
+  const serveDev = async (envDir: string, method: string, raw: string): Promise<Served> => {
+    let route: ((req: unknown, res: unknown) => unknown) | undefined;
+    const server = { config: { mode: 'development', envDir, root: envDir }, middlewares: { use: (path: string, fn: typeof route) => { expect(path).toBe('/api/ai'); route = fn; } }, ssrLoadModule: async () => import('../../api/_lib/handler') };
+    (aiDevMiddleware().configureServer as (s: unknown) => void)(server);
+    const req = Object.assign(new EventEmitter(), { method, socket: { remoteAddress: `dev-test-${Math.random()}` } });
+    const out: Served = { status: 0, headers: {}, body: undefined };
+    const done = new Promise<Served>((resolve) => {
+      const res = { statusCode: 200, setHeader: (k: string, v: string) => { out.headers[k] = v; }, end: (s: string) => { out.status = res.statusCode; out.body = JSON.parse(s); resolve(out); } };
+      void route!(req, res);
+    });
+    req.emit('data', Buffer.from(raw));
+    req.emit('end');
+    return done;
+  };
+  const serveVercel = async (method: string, raw: string): Promise<Served> => {
+    const out: Served = { status: 0, headers: {}, body: undefined };
+    const res = { status(c: number) { out.status = c; return res; }, json(b: unknown) { out.body = b; }, setHeader(k: string, v: string) { out.headers[k] = v; } };
+    await vercelHandler({ method, body: raw, headers: { 'x-forwarded-for': `vercel-test-${Math.random()}` } }, res);
+    return out;
+  };
+
+  it('405 / 400 / 503 responses are identical through both entry points', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fv-ai-noenv-'));
+    await withCleanAiEnv(async () => {
+      const cases: [string, string][] = [['GET', ''], ['POST', 'not json'], ['POST', JSON.stringify({ kind: 'opportunity', summary: summary() })]];
+      const expected = [405, 400, 503];
+      for (const [i, [method, raw]] of cases.entries()) {
+        const [dev, vercel] = await Promise.all([serveDev(dir, method, raw), serveVercel(method, raw)]);
+        expect(dev.status, method + raw.slice(0, 20)).toBe(expected[i]);
+        expect(vercel.status).toBe(dev.status);
+        expect(vercel.body).toEqual(dev.body);
+        expect(dev.headers['content-type']).toBe('application/json');
+        expect(dev.headers['cache-control']).toBe('no-store');
+        expect(vercel.headers['cache-control']).toBe('no-store');
+      }
+    });
+  });
+
+  it('reads AI_* from .env files (Vite does not copy them into process.env); shell variables win', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fv-ai-env-'));
+    writeFileSync(join(dir, '.env'), 'AI_API_KEY=file-key\nAI_PROVIDER=openai_compatible\nAI_BASE_URL=https://flash.example\nAI_MODEL=file/model\n');
+    await withCleanAiEnv(async () => {
+      expect(readServerEnv('development', dir, {})).toMatchObject({ AI_API_KEY: 'file-key', AI_MODEL: 'file/model' });
+      expect(readServerEnv('development', dir, { AI_MODEL: 'shell/model' }).AI_MODEL).toBe('shell/model');
+      const { impl, calls } = mockFetch(['{"text":"Across replays, the typical ending was positive."}']);
+      vi.stubGlobal('fetch', impl);
+      try {
+        const served = await serveDev(dir, 'POST', JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' }));
+        expect(served.status).toBe(200);
+        expect(served.body).toMatchObject({ kind: 'explain', source: 'ai', text: 'Across replays, the typical ending was positive.', warnings: [] });
+        expect(calls[0]!.url).toBe('https://flash.example/v1/chat/completions');
+        expect(calls[0]!.headers.Authorization).toBe('Bearer file-key');
+        expect(calls[0]!.body.model).toBe('file/model');
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+  });
+});
 
 describe('OpenAI-compatible provider', () => {
   const env = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://router.example', AI_MODEL: 'test/model', AI_API_KEY: 'k' };

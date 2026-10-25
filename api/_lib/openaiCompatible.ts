@@ -30,9 +30,13 @@ const stripFences = (s: string): string => {
   return first >= 0 && last > first ? t.slice(first, last + 1) : t;
 };
 
+/** Accepts an origin (`https://flash.luminal.cloud`) or a base already ending in `/v1`, as many provider dashboards print it. */
+export const chatCompletionsUrl = (baseUrl: string): string =>
+  `${baseUrl.trim().replace(/\/+$/, '').replace(/\/v1(\/chat\/completions)?$/, '')}/v1/chat/completions`;
+
 export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelClient {
   const f = o.fetchImpl ?? fetch;
-  const url = `${o.baseUrl.replace(/\/+$/, '')}/v1/chat/completions`;
+  const url = chatCompletionsUrl(o.baseUrl);
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (o.authHeader === 'api-key') headers['Api-Key'] = o.apiKey; else headers['Authorization'] = `Bearer ${o.apiKey}`;
 
