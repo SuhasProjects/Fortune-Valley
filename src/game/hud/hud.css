@@ -31,8 +31,6 @@
 .fv-pause-menu { --button-height: 9; width: calc(11 * var(--px)); padding: 0; flex: none; }
 .fv-pause-menu .fv-glyph { color: var(--c-ink); }
 /* Inside the 9 px pause-menu button the glyph is a 3x5 pair of bars (frame 1 px + 1 px padding each side), never touching the frame. */
-.fv-pause-menu .fv-glyph--pause { width: calc(3 * var(--px)); height: calc(5 * var(--px)); }
-.fv-pause-menu .fv-glyph--pause::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), calc(2 * var(--px)) 0, calc(2 * var(--px)) var(--px), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) calc(3 * var(--px)), calc(2 * var(--px)) calc(4 * var(--px)); }
 /* The status tag is a small, quiet label (one size under --fs-label) tucked top-left under the HUD. */
 .fv-status-tag .fv-tag { font-size: calc(4 * var(--px)); line-height: 1; min-height: calc(6 * var(--px)); }
 .fv-status-dot { display: inline-block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); animation: fv-pulse 900ms steps(2) infinite; }
@@ -43,10 +41,10 @@
 .fv-hud-footer span::before { content: ''; position: absolute; top: 0; width: calc(8 * var(--px)); height: var(--px); background: color-mix(in srgb, var(--c-outline) 60%, transparent); }
 .fv-hud-footer span::before { left: 0; }
 /* Pause / play glyphs: 5x7 art px drawn from box shadows so they stay crisp at every zoom. */
-.fv-glyph { position: relative; display: inline-block; flex: none; width: calc(5 * var(--px)); height: calc(7 * var(--px)); }
+.fv-glyph { position: relative; display: inline-block; flex: none; width: calc(3 * var(--px)); height: calc(5 * var(--px)); }
 .fv-glyph::before { content: ''; position: absolute; left: 0; top: 0; width: var(--px); height: var(--px); background: currentColor; }
-.fv-glyph--pause::before { box-shadow: var(--px) 0, 0 var(--px), var(--px) var(--px), 0 calc(2 * var(--px)), var(--px) calc(2 * var(--px)), 0 calc(3 * var(--px)), var(--px) calc(3 * var(--px)), 0 calc(4 * var(--px)), var(--px) calc(4 * var(--px)), 0 calc(5 * var(--px)), var(--px) calc(5 * var(--px)), 0 calc(6 * var(--px)), var(--px) calc(6 * var(--px)), calc(3 * var(--px)) 0, calc(4 * var(--px)) 0, calc(3 * var(--px)) var(--px), calc(4 * var(--px)) var(--px), calc(3 * var(--px)) calc(2 * var(--px)), calc(4 * var(--px)) calc(2 * var(--px)), calc(3 * var(--px)) calc(3 * var(--px)), calc(4 * var(--px)) calc(3 * var(--px)), calc(3 * var(--px)) calc(4 * var(--px)), calc(4 * var(--px)) calc(4 * var(--px)), calc(3 * var(--px)) calc(5 * var(--px)), calc(4 * var(--px)) calc(5 * var(--px)), calc(3 * var(--px)) calc(6 * var(--px)), calc(4 * var(--px)) calc(6 * var(--px)); }
-.fv-glyph--play::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), 0 calc(5 * var(--px)), 0 calc(6 * var(--px)), var(--px) var(--px), var(--px) calc(2 * var(--px)), var(--px) calc(3 * var(--px)), var(--px) calc(4 * var(--px)), var(--px) calc(5 * var(--px)), calc(2 * var(--px)) var(--px), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) calc(3 * var(--px)), calc(2 * var(--px)) calc(4 * var(--px)), calc(2 * var(--px)) calc(5 * var(--px)), calc(3 * var(--px)) calc(2 * var(--px)), calc(3 * var(--px)) calc(3 * var(--px)), calc(3 * var(--px)) calc(4 * var(--px)), calc(4 * var(--px)) calc(3 * var(--px)); }
+.fv-glyph--pause::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), calc(2 * var(--px)) 0, calc(2 * var(--px)) var(--px), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) calc(3 * var(--px)), calc(2 * var(--px)) calc(4 * var(--px)); }
+.fv-glyph--play::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), var(--px) var(--px), var(--px) calc(2 * var(--px)), var(--px) calc(3 * var(--px)), calc(2 * var(--px)) calc(2 * var(--px)); }
 [data-reduce-motion='true'] .fv-status-dot, [data-reduce-motion='true'].fv-value-tick { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-value-tick, .fv-status-dot { animation: none; } .fv-value-delta { display: none; } }
 /* Phones (< 640 px wide, stage zoom 1, UI zoom floored at 2 by GameScreen.css). Keep in step with --hud-bottom
