@@ -75,9 +75,10 @@ describe('UI kit components', () => {
   })
   it('emits select values and slider value text', () => {
     const select = vi.fn(), slide = vi.fn()
-    render(<><Select label="Material" value="wood" onChange={select} options={[{value:'wood',label:'Wood'},{value:'paper',label:'Paper'}]}/><Slider label="Contribution" value={200} onChange={slide} min={0} max={1000} step={10} format={value => `$${value}`}/></>)
+    render(<><Select label="Material" value="wood" onChange={select} options={[{value:'wood',label:'Wood'},{value:'paper',label:'Paper'}]}/><Slider label="Contribution" value={200} onChange={slide} min={0} max={1000} step={10} format={value => `$${value}`} error="Too low"/></>)
     fireEvent.change(screen.getByRole('combobox', {name:'Material'}), {target:{value:'paper'}}); expect(select).toHaveBeenCalledWith('paper')
     const slider = screen.getByRole('slider', {name:/Contribution/}); expect(slider.getAttribute('aria-valuetext')).toBe('$200')
+    expect(slider.getAttribute('aria-invalid')).toBe('true'); expect(screen.getByRole('alert').textContent).toBe('Too low')
     fireEvent.change(slider, {target:{value:'300'}}); expect(slide).toHaveBeenCalledWith(300)
   })
   it('describes its child with a tooltip', () => {

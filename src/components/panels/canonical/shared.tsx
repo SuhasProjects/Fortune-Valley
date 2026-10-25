@@ -52,7 +52,7 @@ export function MoneyInput({ label, raw, onChange, min = 0, max, step = .01, dis
   const id = useId(); const [touched, setTouched] = useState(false);
   useEffect(() => { if (!raw) setTouched(false); }, [raw]);
   const error = amountError(raw, min, max, step);
-  return <div className="ft-money-field"><span aria-hidden="true">$</span><Field label={label} id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} error={touched ? error : undefined} /></div>;
+  return <div className="ft-money-field"><Field label={label} prefix="$" id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} error={touched ? error : undefined} /></div>;
 }
 
 export function LedgerHistory({ state, categories }: { state: GameState; categories: LedgerCategory[] }) {

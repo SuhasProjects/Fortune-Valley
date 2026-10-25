@@ -22,10 +22,14 @@ export function Select({ label, options, onChange, id: passedId, ...rest }: Sele
   const generated = useId(), id = passedId ?? generated
   return <div className="fv-field"><label htmlFor={id}>{label}</label><div className="fv-select-wrap"><select {...rest} id={id} className="fv-field-control" onChange={event => onChange(event.target.value)}>{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select><Icon name="arrow-right" compact/></div></div>
 }
-export interface SliderProps { label: string; value: number; onChange: (value: number) => void; min: number; max: number; step: number; format?: (value: number) => string }
-export function Slider({ label, value, onChange, min, max, step, format = String }: SliderProps) {
-  const id = useId()
-  return <div className="fv-field"><label htmlFor={id}>{label} <output htmlFor={id}>{format(value)}</output></label><input className="fv-slider" id={id} type="range" min={min} max={max} step={step} value={value} aria-valuetext={format(value)} onChange={event => onChange(event.currentTarget.valueAsNumber)}/></div>
+export interface SliderProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'min' | 'max' | 'step' | 'type'> {
+  label: string; value: number; onChange: (value: number) => void; min: number; max: number; step: number; format?: (value: number) => string; error?: string
+}
+export function Slider({ label, value, onChange, min, max, step, format = String, error, id: passedId, className = '', ...rest }: SliderProps) {
+  const generated = useId(), id = passedId ?? generated
+  const describedBy = [rest['aria-describedby'], error && `${id}-error`].filter(Boolean).join(' ') || undefined
+  const formatted = format(value)
+  return <div className="fv-field"><label htmlFor={id}><span>{label}</span><output htmlFor={id}>{formatted}</output></label><input {...rest} className={`fv-slider ${className}`.trim()} id={id} type="range" min={min} max={max} step={step} value={value} aria-invalid={rest['aria-invalid'] ?? (error ? true : undefined)} aria-describedby={describedBy} aria-valuetext={formatted} onChange={event => onChange(event.currentTarget.valueAsNumber)}/>{error && <span id={`${id}-error`} className="fv-field__error" role="alert">{error}</span>}</div>
 }
 export interface ToggleProps { label: string; checked: boolean; onChange: (checked: boolean) => void }
 export function Toggle({ label, checked, onChange }: ToggleProps) { return <button className="fv-toggle" type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}><span className="fv-toggle__sprite" aria-hidden="true"/>{label}</button> }
