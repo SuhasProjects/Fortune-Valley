@@ -28,13 +28,16 @@ test('played results show four engine endings, offline explanation, and return t
   expect(errors).toEqual([])
 })
 
-test('finishing without decisions explains how to unlock comparisons', async ({page}) => {
+test('finishing without decisions still offers "from the start" comparisons', async ({page}) => {
   await openTitle(page); await startStory(page,'College Student')
   await page.getByRole('button', {name:/Next month/}).click()
   await page.getByRole('button', {name:/Finish & reveal/}).click()
   await expectReveal(page)
-  await expect(page.getByText('You didn’t change any settings this time. Next story, visit a building and make a choice to compare.')).toBeVisible()
-  await expect(page.getByLabel('Pick a decision', {exact:true})).toHaveCount(0)
+  const pick = page.getByLabel('Pick a decision', {exact:true})
+  await expect(pick).toBeVisible()
+  await expect(pick.locator('option')).not.toHaveCount(0)
+  expect((await pick.locator('option').allTextContents()).every(text => text.startsWith('From the start'))).toBe(true)
+  await expect(page.getByRole('heading', { name: 'Typical outcome' })).toBeVisible({ timeout: 15_000 })
 })
 
 // Isolate the comparison UI from simulation speed so selection, shared axes, cancellation and stale responses

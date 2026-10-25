@@ -1,18 +1,29 @@
+import { Button, Select, Toggle } from '../../ui'
 import { setSetting, useSettings } from './useSettings'
+import '../flow/flow.css'
 
+const autoOptions = [
+  { value: '0', label: 'Off' }, { value: '30', label: '30 seconds' }, { value: '60', label: '60 seconds' }, { value: '120', label: '120 seconds' },
+]
+
+/**
+ * Body of the Options dialog. The caller supplies the window (the pause menu and the title screen both open it
+ * inside a Modal named `Options`). Each toggle sits in a `<label>` so it can be found by its visible text.
+ */
 export function OptionsWindow({ onClose, onDeleteSave }: { onClose: () => void; onDeleteSave?: () => void }) {
   const settings = useSettings()
-  return <section aria-labelledby="options-title">
-    <h2 id="options-title">Options</h2>
-    <label>Auto-advance <select value={settings.autoAdvanceSeconds} onChange={event => {
-      const value = Number(event.target.value) as 0 | 30 | 60 | 120
-      setSetting('autoAdvanceSeconds', value)
-      if (value) setSetting('lastAutoAdvanceSeconds', value)
-    }}><option value={0}>Off</option><option value={30}>30 seconds</option><option value={60}>60 seconds</option><option value={120}>120 seconds</option></select></label>
-    <label><input type="checkbox" checked={settings.sound} onChange={event => setSetting('sound', event.target.checked)}/> Sound</label>
-    <label><input type="checkbox" checked={settings.reduceMotion} onChange={event => setSetting('reduceMotion', event.target.checked)}/> Reduce motion</label>
-    <label><input type="checkbox" checked={settings.tips} onChange={event => setSetting('tips', event.target.checked)}/> Tips</label>
-    {onDeleteSave && <button className="pixel-button pixel-button--danger" onClick={onDeleteSave}>Delete saved game</button>}
-    <button className="pixel-button" onClick={onClose}>Done</button>
-  </section>
+  return <div className="fv-options">
+    <Select label="Auto-advance" value={String(settings.autoAdvanceSeconds)} options={autoOptions} onChange={value => {
+      const seconds = Number(value) as 0 | 30 | 60 | 120
+      setSetting('autoAdvanceSeconds', seconds)
+      if (seconds) setSetting('lastAutoAdvanceSeconds', seconds)
+    }}/>
+    <label className="fv-options__row"><span>Sound</span><Toggle label="" checked={settings.sound} onChange={value => setSetting('sound', value)}/></label>
+    <label className="fv-options__row"><span>Reduce motion</span><Toggle label="" checked={settings.reduceMotion} onChange={value => setSetting('reduceMotion', value)}/></label>
+    <label className="fv-options__row"><span>Tips</span><Toggle label="" checked={settings.tips} onChange={value => { setSetting('tips', value); if (value) setSetting('tipsSeen', false) }}/></label>
+    <div className="fv-dialog-actions">
+      {onDeleteSave && <Button icon="warning" onClick={onDeleteSave}>Delete saved game</Button>}
+      <Button variant="primary" icon="check" onClick={onClose}>Done</Button>
+    </div>
+  </div>
 }

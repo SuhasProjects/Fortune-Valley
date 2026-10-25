@@ -207,7 +207,7 @@ describe('engine-owned what-if displays', () => {
     const state = initial();
     const plan = state.assumptions.insurancePlans.find(value => value.id === 'health_plus')!;
     render(<BuildingPanel building="hospital" state={state} dispatch={dispatchFor(state)} />);
-    expect(screen.getByRole('table', { name: 'Illustrative health choices for a $5,000 medical bill' }).textContent).toContain(money(settleClaim(5000, plan).outOfPocket));
+    expect(screen.getByRole('group', { name: 'Illustrative health choices for a $5,000 medical bill' }).textContent).toContain(money(settleClaim(5000, plan).outOfPocket));
   });
   it('shows engine validation errors instead of a fabricated projection', () => {
     render(<PolicyPreview state={initial()} overrides={{ household: { discretionaryMonthly: -1 } }} compact />);

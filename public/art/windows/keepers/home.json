@@ -1,0 +1,10 @@
+{
+  "src": "/art/windows/keepers/home.png",
+  "w": 24,
+  "h": 24,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "speed": 900
+}

@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/ring/scarecrow.png",
+  "w": 10,
+  "h": 18,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    5,
+    16
+  ]
+}

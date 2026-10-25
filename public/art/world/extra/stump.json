@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/stump.png",
+  "w": 9,
+  "h": 8,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    4,
+    7
+  ]
+}

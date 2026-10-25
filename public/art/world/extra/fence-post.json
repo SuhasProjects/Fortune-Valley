@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/fence-post.png",
+  "w": 7,
+  "h": 12,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    3,
+    11
+  ]
+}

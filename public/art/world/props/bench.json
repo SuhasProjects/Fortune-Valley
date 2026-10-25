@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/props/bench.png",
+  "w": 19,
+  "h": 11,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    9,
+    10
+  ]
+}

@@ -36,15 +36,15 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel }: OutcomeC
   if (![...Object.values(lines), low, high].every(Number.isFinite)) return <p role="alert">These results could not be displayed. Try finishing the story again.</p>
   return <figure className="fv-outcome-chart" aria-labelledby={`${id}-title`}>
     <figcaption id={`${id}-title`}>{title}</figcaption>
-    <div className="fv-chart-scroll"><svg viewBox="0 0 740 315" role="group" aria-label={`${title}: four ending net worth lines`} shapeRendering="crispEdges">
+    <div className="fv-chart-scroll"><svg viewBox="0 0 740 315" role="group" aria-label={`${title}: four ending net worth lines`} shapeRendering="geometricPrecision">
       <title>Net worth from month 0 to month {lines.months}. Straight lines connect the start and endings.</title>
-      {ticks.map((value, index) => <g key={index}><line x1={plot.left} x2={plot.right} y1={y(value)} y2={y(value)} className="fv-chart-grid"/><text className="fv-axis-tick" x={plot.left - 10} y={y(value) + 5} textAnchor="end">{usd(value)}</text></g>)}
-      {low < 0 && high > 0 && <g><line x1={plot.left} x2={plot.right} y1={y(0)} y2={y(0)} className="fv-chart-zero"/><text x={plot.left - 10} y={y(0) + 5} textAnchor="end">$0</text></g>}
+      {ticks.map((value, index) => <g key={index}><line x1={plot.left} x2={plot.right} y1={y(value)} y2={y(value)} className="fv-chart-grid" shapeRendering="crispEdges"/><text className="fv-axis-tick" x={plot.left - 10} y={y(value) + 5} textAnchor="end">{usd(value)}</text></g>)}
+      {low < 0 && high > 0 && <g><line x1={plot.left} x2={plot.right} y1={y(0)} y2={y(0)} className="fv-chart-zero" shapeRendering="crispEdges"/><text x={plot.left - 10} y={y(0) + 5} textAnchor="end">$0</text></g>}
       <polygon points={`${plot.left},${startY} ${plot.right},${y(lines.p10)} ${plot.right},${y(lines.p90)}`} fill="var(--c-leaf-light)" fillOpacity=".25"/>
       {[...ends].sort((a,b) => a.order - b.order).map(line => <g key={line.key} className={`fv-outcome-line ${active && active !== line.key ? 'fv-line-muted' : ''}`} style={{ '--line-order': line.order } as CSSProperties}>
-        {line.key === 'yourEvents' && <line className="fv-line-draw" x1={plot.left} y1={startY} x2={plot.right} y2={y(line.value)} pathLength="1" stroke="var(--c-outline)" strokeWidth={px * 4}/>}
-        <line className="fv-line-draw" x1={plot.left} y1={startY} x2={plot.right} y2={y(line.value)} pathLength="1" stroke={line.color} strokeWidth={px * line.weight} onMouseEnter={() => setActive(line.key)} onMouseLeave={() => setActive(null)}/>
-        <line x1={plot.right + 5} y1={y(line.value)} x2={plot.right + 24} y2={line.labelY} stroke={line.color} strokeWidth="2"/>
+        {line.key === 'yourEvents' && <line className="fv-line-draw" x1={plot.left} y1={startY} x2={plot.right} y2={y(line.value)} pathLength="1" stroke="var(--c-outline)" strokeWidth={px * 5} strokeLinecap="round"/>}
+        <line className="fv-line-draw" x1={plot.left} y1={startY} x2={plot.right} y2={y(line.value)} pathLength="1" stroke={line.color} strokeWidth={px * line.weight} strokeLinecap="round" onMouseEnter={() => setActive(line.key)} onMouseLeave={() => setActive(null)}/>
+        <line x1={plot.right + 5} y1={y(line.value)} x2={plot.right + 24} y2={line.labelY} stroke={line.color} strokeWidth={px}/>
         {line.key === 'yourEvents' && <image href="/art/title/favicon.png" x={plot.right - 7} y={y(line.value) - 7} width="14" height="14"/>}
         <g role="button" tabIndex={0} aria-label={`${line.label}: ${usd(line.value)} after ${lines.months} months`} onFocus={() => setActive(line.key)} onBlur={() => setActive(null)} onMouseEnter={() => setActive(line.key)} onMouseLeave={() => setActive(null)} onClick={() => setActive(active === line.key ? null : line.key)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setActive(active === line.key ? null : line.key) } }}>
           <title>{line.label}: {usd(line.value)} after {lines.months} months</title>

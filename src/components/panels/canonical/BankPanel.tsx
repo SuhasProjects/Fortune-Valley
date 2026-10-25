@@ -1,3 +1,4 @@
+import { Button, Select } from '../../../ui';
 import { useEffect, useId, useState } from 'react';
 import { netWorthOf } from '../../../engine';
 import { BOUNDS } from '../../../config/defaults';
@@ -25,16 +26,16 @@ export function BankPanel({ state, dispatch }: PanelProps) {
   </>} decision={<>
     <form onSubmit={event => { event.preventDefault(); if (!disabled && !savingsError) void task.send({ type: 'set_contributions', savingsContributionPerMonth: Number(savings), investmentContributionPerMonth: state.policy.investmentContributionPerMonth }); }}>
       <MoneyInput label="Monthly savings contribution" raw={savings} onChange={setSavings} max={BOUNDS.contributionMax} disabled={disabled} />
-      <button disabled={disabled || !!savingsError}>Save savings contribution</button>
+      <Button type="submit" variant="primary" disabled={disabled || !!savingsError}>Save savings contribution</Button>
     </form>
     <details><summary>Extra debt payment</summary>
       {paymentMax <= 0 && <p>No cash or debt available.</p>}
       <form onSubmit={async event => { event.preventDefault(); if (!disabled && debt && !paymentError && paymentMax > 0 && await task.send({ type: 'make_extra_payment', debtId: debt.id, amount: Number(payment) })) setPayment(''); }}>
-        <label htmlFor={id}>Debt</label><select id={id} value={debtId} disabled={disabled || !state.debts.length} onChange={event => { setDebtId(event.target.value); setPayment(''); }}>{state.debts.map(value => <option key={value.id} value={value.id}>{value.name}</option>)}</select>
+        <Select label="Debt" id={id} value={debtId} disabled={disabled || !state.debts.length} options={state.debts.map(value => ({ value: value.id, label: value.name }))} onChange={value => { setDebtId(value); setPayment(''); }} />
         <MoneyInput label="One-time debt payment" raw={payment} onChange={setPayment} min={paymentMax > 0 ? .01 : 0} max={paymentMax} disabled={disabled || paymentMax <= 0} />
         <p>{!paymentError ? `${money(-Number(payment))} once` : `Up to ${money(paymentMax)}`}</p>
         {!paymentError && debt && <PaymentPreview state={state} debtId={debt.id} amount={Number(payment)} />}
-        <button disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</button>
+        <Button type="submit" variant="wood" disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</Button>
       </form>
     </details>{task.feedback}
   </>} consequence={<><p>Savings after Save · {money(draftPolicy.savingsContributionPerMonth)} / month</p><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} compact /></>} help={<><ul><li>Savings repeats each month after bills.</li><li>Extra payments use cash and reduce the debt.</li><li>Edits apply when you save.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!!savingsError} /></>} details={<LedgerHistory state={state} categories={['savings_contribution', 'savings_interest', 'debt_payment', 'debt_interest']} />} />;

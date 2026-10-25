@@ -1,0 +1,105 @@
+/* Shared controls and frames come from src/ui. These rules arrange building content. */
+.ft-sheet, .ft-sheet * { box-sizing: border-box; }
+.ft-sheet { min-width: 0; color: var(--c-outline); font: var(--fs-body)/1.2 var(--font-body); font-variant-numeric: tabular-nums; }
+.ft-sheet__header, .ft-sheet__help-heading { display: flex; justify-content: space-between; align-items: center; gap: calc(2 * var(--px)); }
+.ft-sheet__header h2 { margin: 0; font: 700 var(--fs-heading)/1.1 var(--font-heading); }
+.ft-sheet__body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: calc(2 * var(--px)); }
+.ft-sheet__status, .ft-sheet__history { grid-column: 1 / -1; }
+.ft-sheet__decision, .ft-sheet__consequence { min-width: 0; }
+.ft-sheet__body > section > .fv-inset { height: 100%; }
+.ft-sheet p { margin: calc(2 * var(--px)) 0; }
+.ft-sheet dl, .ft-receipt { margin: calc(2 * var(--px)) 0; }
+.ft-sheet dl > div, .ft-receipt > div { display: flex; justify-content: space-between; align-items: baseline; gap: calc(3 * var(--px)); }
+.ft-sheet dd, .ft-receipt dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ft-sheet__status dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(2 * var(--px)) calc(5 * var(--px)); }
+.ft-sheet__status dl > div { border-bottom: var(--px) solid var(--c-parchment-shadow); padding-bottom: var(--px); }
+.ft-sheet form { display: grid; gap: calc(2 * var(--px)); }
+.ft-sheet fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
+.ft-sheet legend { margin-bottom: calc(2 * var(--px)); }
+.ft-sheet summary { cursor: pointer; padding: calc(2 * var(--px)) 0; font-family: var(--font-heading); }
+.ft-sheet__history { padding: 0 calc(2 * var(--px)); background: repeating-linear-gradient(transparent 0 calc(6 * var(--px) - 1px), var(--c-parchment-shadow) calc(6 * var(--px) - 1px) calc(6 * var(--px))); }
+.ft-sheet footer { margin-top: calc(3 * var(--px)); font-size: var(--fs-label); }
+.ft-sheet small, .ft-notice small { font-size: var(--fs-label); }
+.ft-sheet li { margin-bottom: var(--px); }
+.ft-sheet__help { position: relative; }
+.ft-sheet__popover { position: fixed; z-index: 2; top: calc(25 * var(--px)); right: calc(7 * var(--px)); width: min(calc(105 * var(--px)), calc(100vw - 28 * var(--px))); max-height: calc(100dvh - 50 * var(--px)); overflow: auto; color: var(--c-outline); font: var(--fs-body)/1.2 var(--font-body); }
+.ft-sheet__popover::before { content: ''; display: block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); margin: 0 auto calc(-2 * var(--px)); position: relative; z-index: 1; }
+.ft-sheet__help-heading { margin-bottom: calc(2 * var(--px)); }
+.ft-window-hint { grid-area: hint; margin: 0; color: var(--c-paper); font: var(--fs-label)/1.1 var(--font-body); }
+/* The world also calls its floating signs fv-plaque; keep kit header plaques in flow. */
+.fv-window__header > h2 > .fv-plaque { position: static; inset: auto; display: inline-block; text-align: left; pointer-events: auto; }
+.fv-window:has(.ft-building-portrait) { --building-roof: var(--c-roof-red); --building-roof-dark: var(--c-roof-red-dark); max-width: calc(100vw - 10 * var(--px)); }
+.fv-window:has([data-building='bank']) { --building-roof: var(--c-roof-blue); --building-roof-dark: var(--c-roof-blue-dark); }
+.fv-window:has([data-building='office']) { --building-roof: var(--c-roof-teal); --building-roof-dark: var(--c-roof-teal-dark); }
+.fv-window:has([data-building='market']) { --building-roof: var(--c-roof-green); --building-roof-dark: var(--c-roof-green-dark); }
+.fv-window:has(.ft-building-portrait) > .fv-window__header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: 'portrait title help close' 'portrait hint help close'; background: var(--building-roof); border-bottom: var(--px) solid var(--building-roof-dark); padding: calc(2 * var(--px)); }
+.fv-window:has(.ft-building-portrait) > .fv-window__header > h2 { grid-area: title; }
+.fv-window:has(.ft-building-portrait) > .fv-window__header > .fv-icon-button { grid-area: close; }
+.ft-building-portrait { grid-area: portrait; display: flex; align-items: center; justify-content: center; }
+.ft-building-portrait .fv-sprite { flex-shrink: 0; }
+/* Full world buildings use a smaller integer zoom as header portraits. */
+.ft-building-portrait .fv-portrait { --px: var(--portrait-px); }
+.ft-window-help-slot { grid-area: help; margin-left: auto; }
+.ft-keeper { display: flex; gap: calc(3 * var(--px)); align-items: center; margin-bottom: calc(3 * var(--px)); }
+.ft-keeper__portrait { flex: 0 0 calc(24 * var(--px)); width: calc(24 * var(--px)); height: calc(24 * var(--px)); background-size: calc(48 * var(--px)) calc(24 * var(--px)); image-rendering: pixelated; animation: ft-keeper-blink 4s step-end infinite; }
+.ft-keeper__portrait--bank { background-image: url('/art/windows/keepers/bank.png'); }
+.ft-keeper__portrait--office { background-image: url('/art/windows/keepers/office.png'); }
+.ft-keeper__portrait--hospital { background-image: url('/art/windows/keepers/hospital.png'); }
+.ft-keeper__portrait--home { background-image: url('/art/windows/keepers/home.png'); }
+.ft-keeper__portrait--market { background-image: url('/art/windows/keepers/market.png'); }
+.ft-keeper p { margin: 0; padding: calc(3 * var(--px)); background: var(--c-parchment-light); border: var(--px) solid var(--c-parchment-shadow); font: var(--fs-body)/1.1 var(--font-body); }
+@keyframes ft-keeper-blink { 0%, 94%, 100% { background-position: 0 0; } 95%, 99% { background-position: calc(-24 * var(--px)) 0; } }
+[data-reduce-motion='true'] .ft-keeper__portrait, .ft-keeper[data-reduce-motion] .ft-keeper__portrait { animation: none; }
+@media (prefers-reduced-motion: reduce) { .ft-keeper__portrait { animation: none; } }
+.ft-money-field { position: relative; }
+.ft-money-field > span { position: absolute; left: calc(4 * var(--px)); top: calc(8 * var(--px)); z-index: 1; }
+.ft-money-field input { padding-left: calc(6 * var(--px)); }
+.ft-allocation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(2 * var(--px)); }
+.ft-allocation > div { min-width: 0; }
+.ft-allocation small { display: block; overflow-wrap: anywhere; }
+.ft-asset-chip { display: inline-block; width: calc(3 * var(--px)); height: calc(2 * var(--px)); }
+.ft-asset-chip--stock { background: var(--c-roof-red); }
+.ft-asset-chip--bond { background: var(--c-roof-blue); }
+.ft-asset-chip--etf { background: var(--c-roof-green); }
+.ft-allocation-bar { display: flex; height: calc(3 * var(--px)); max-width: 100%; overflow: hidden; margin-top: calc(2 * var(--px)); background: var(--c-parchment-shadow); }
+.ft-allocation-bar > span { flex-shrink: 0; }
+.ft-plan-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(2 * var(--px)); }
+.ft-plan-card { display: flex; flex-direction: column; position: relative; gap: var(--px); padding: calc(2 * var(--px)); border: var(--px) solid var(--c-parchment-shadow); background: var(--c-paper); cursor: pointer; }
+.ft-plan-card[data-selected='true'] { border-color: var(--c-gold); }
+.ft-plan-card:has(:focus-visible) { outline: calc(2 * var(--px)) solid var(--c-gold); }
+.ft-plan-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.ft-plan-card dl > div { display: block; }
+.ft-plan-card dd { font-size: var(--fs-value); }
+.ft-plan-card strong { font-family: var(--font-heading); }
+.ft-plan-card:has(input:disabled) { cursor: default; opacity: .65; }
+.ft-job-letter { padding: calc(3 * var(--px)); margin-bottom: calc(2 * var(--px)); border-left: var(--px) solid var(--c-gold); background: var(--c-paper); }
+.ft-job-letter h4 { margin: 0; font-family: var(--font-heading); }
+.ft-job-letter .fv-button { margin: var(--px); }
+.ft-preview { margin-top: calc(2 * var(--px)); }
+.ft-table-scroll { overflow: auto; max-width: 100%; }
+.ft-table-scroll table { width: 100%; border-collapse: collapse; font-size: var(--fs-label); background: var(--c-paper); }
+.ft-table-scroll th, .ft-table-scroll td { text-align: left; padding: var(--px) calc(2 * var(--px)); border-bottom: var(--px) solid var(--c-parchment-shadow); }
+.ft-table-scroll caption { text-align: left; font-family: var(--font-heading); margin-bottom: calc(2 * var(--px)); }
+.ft-cash-bars { display: flex; align-items: end; gap: var(--px); height: calc(12 * var(--px)); margin: calc(2 * var(--px)) 0; }
+.ft-cash-bars > span { flex: 1; background: var(--c-money-up); min-width: var(--px); }
+.ft-cash-bars > span[data-negative='true'] { background: var(--c-money-down); }
+.ft-notice { position: relative; margin-bottom: calc(3 * var(--px)); }
+.ft-notice h2 { font: 700 var(--fs-heading)/1.1 var(--font-heading); margin: calc(2 * var(--px)) 0; }
+.ft-notice p { margin: calc(2 * var(--px)) 0; }
+.ft-notice__pin { position: absolute; top: calc(-2 * var(--px)); right: calc(4 * var(--px)); width: calc(2 * var(--px)); height: calc(3 * var(--px)); background: var(--c-gold); border-bottom: var(--px) solid var(--c-wood-dark); }
+.ft-notice__learning { display: flex; align-items: start; gap: calc(2 * var(--px)); }
+.ft-notice .event-actions { display: flex; flex-wrap: wrap; gap: calc(3 * var(--px)); margin: calc(3 * var(--px)) 0; }
+.ft-notice .event-actions > div { flex: 1; min-width: calc(32 * var(--px)); }
+.ft-notice .event-actions small { display: block; margin-top: var(--px); }
+.ft-receipt { padding: calc(2 * var(--px)); background: var(--c-paper); border-bottom: var(--px) dashed var(--c-outline); }
+.ft-stress { padding: calc(4 * var(--px)); }
+.ft-stress > section { margin-bottom: calc(8 * var(--px)); }
+.ft-stress .ft-sheet { max-width: calc(205 * var(--px)); margin-bottom: calc(4 * var(--px)); }
+.ft-sheet :focus-visible, .ft-notice :focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); outline-offset: var(--px); }
+@media (max-width: 719px) {
+  .ft-sheet__body { grid-template-columns: minmax(0, 1fr); }
+  .ft-sheet__status dl { grid-template-columns: minmax(0, 1fr); }
+  .ft-allocation, .ft-plan-cards { grid-template-columns: minmax(0, 1fr); }
+  .ft-keeper__portrait { flex-basis: calc(24 * var(--px)); }
+  .ft-sheet__popover { right: calc(4 * var(--px)); width: calc(100vw - 16 * var(--px)); }
+}

@@ -1,0 +1,13 @@
+size 6x10
+anchor 3,9
+--- 0
+......
+.kkkk.
+.kqQk.
+.kppk.
+.kWWk.
+..kk..
+..kw..
+..kW..
+..kk..
+......

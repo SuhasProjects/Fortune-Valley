@@ -295,6 +295,31 @@
       "key": "4",
       "name": "mountain-snow",
       "hex": "#eef3fa"
+    },
+    {
+      "key": "^",
+      "name": "sky-mid",
+      "hex": "#a4c6e6"
+    },
+    {
+      "key": ";",
+      "name": "mountain-far-dark",
+      "hex": "#6f80ab"
+    },
+    {
+      "key": ",",
+      "name": "mountain-mid",
+      "hex": "#5f7f8f"
+    },
+    {
+      "key": ":",
+      "name": "mountain-mid-dark",
+      "hex": "#48677a"
+    },
+    {
+      "key": "'",
+      "name": "mountain-mid-light",
+      "hex": "#7f9ca8"
     }
   ]
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { Button } from '@/ui'
 import { useGameStore } from '@/stores/useGameStore'
-import { TitleStage, MenuButton, TitleOptions, readReduceMotion, clickSound } from './contracts'
+import { TitleStage, TitleOptions, readReduceMotion, clickSound } from './contracts'
 import { TitleScene } from './TitleScene'
 import { StoryPicker } from './StoryPicker'
 import { CustomStoryLetter } from './CustomStoryLetter'
@@ -44,14 +45,18 @@ export function TitleScreen() {
         {screen === 'menu' && <p className="fv-motto">A little town. A bigger perspective.</p>}
       </header>
       {screen === 'menu' ? <div className="fv-title-menu" role="group" aria-label="Main menu" ref={menu} onKeyDown={move} onClick={clickSound}>
-        <MenuButton size="lg" data-menu="New Story" onClick={() => { returnFocus.current = 'New Story'; setScreen('picker') }}>New Story</MenuButton>
-        <MenuButton size="lg" data-menu="Custom Story" onClick={() => { returnFocus.current = 'Custom Story'; setScreen('letter') }}>Custom Story</MenuButton>
-        <MenuButton size="lg" disabled={!savedGame} title={savedGame ? 'Continue your saved story' : 'No saved story yet'} onClick={() => loadSavedGame()}><span>Continue{savedGame && <small>Month {savedGame.monthIndex} · {savedGame.title}</small>}</span></MenuButton>
+        <Button size="lg" data-menu="New Story" onClick={() => { returnFocus.current = 'New Story'; setScreen('picker') }}>New Story</Button>
+        <Button size="lg" data-menu="Custom Story" onClick={() => { returnFocus.current = 'Custom Story'; setScreen('letter') }}>Custom Story</Button>
+        <Button size="lg" disabled={!savedGame} title={savedGame ? 'Continue your saved story' : 'No saved story yet'} onClick={() => loadSavedGame()}>Continue{savedGame && <small>Month {savedGame.monthIndex} · {savedGame.title}</small>}</Button>
       </div> : <div className="fv-title-content" ref={content}>
-        <MenuButton className="fv-back" onClick={back}>Back</MenuButton>
+        <Button className="fv-back" onClick={back}>Back</Button>
         {screen === 'picker' ? <StoryPicker/> : <CustomStoryLetter/>}
       </div>}
-      <footer className="fv-title-corners"><MenuButton aria-label="Options" onClick={() => setWindow('options')}><img src="/art/title/gear.png" alt=""/>Options</MenuButton><small>Fictional lives. Real perspective.</small><MenuButton aria-label="Guide" onClick={() => setWindow('guide')}><img src="/art/title/book.png" alt=""/>Guide</MenuButton></footer>
+      <footer className="fv-title-corners">
+        <Button icon="gear" aria-label="Options" onClick={() => setWindow('options')}>Options</Button>
+        <small>Fictional lives. Real perspective.</small>
+        <Button icon="book" aria-label="Guide" onClick={() => setWindow('guide')}>Guide</Button>
+      </footer>
       {window === 'guide' && <GuideWindow onClose={() => setWindow(null)}/>}
       {window === 'options' && <TitleOptions onClose={() => setWindow(null)} onMotionChange={() => setReduceMotion(readReduceMotion())}/>}
     </div>

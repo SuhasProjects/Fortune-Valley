@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/flowers-white.png",
+  "w": 15,
+  "h": 11,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    7,
+    10
+  ],
+  "speed": 700
+}

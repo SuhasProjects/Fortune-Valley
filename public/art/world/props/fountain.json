@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/fountain.png",
+  "w": 37,
+  "h": 27,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    18,
+    26
+  ],
+  "speed": 220
+}

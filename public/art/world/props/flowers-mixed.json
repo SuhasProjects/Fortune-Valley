@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/flowers-mixed.png",
+  "w": 11,
+  "h": 9,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    5,
+    8
+  ],
+  "speed": 800
+}

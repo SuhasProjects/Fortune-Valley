@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/extra/pine-tree.png",
+  "w": 18,
+  "h": 28,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    9,
+    27
+  ],
+  "speed": 900
+}

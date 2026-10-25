@@ -1,0 +1,10 @@
+{
+  "src": "/art/world/fx/firefly.png",
+  "w": 3,
+  "h": 3,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "speed": 500
+}

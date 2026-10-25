@@ -7,6 +7,7 @@ export function paletteMap(colors: { key: string; name: string; hex: string | nu
 export function parseGrid(text: string, palette: Palette, file?: string): { meta: GridMeta; frames: Frame[] }
 export function outlineFrame(frame: Frame, key?: string): Frame
 export function litFrame(frame: Frame): Frame
+export function lightsFrame(frame: Frame): Frame
 export function expandFrames(parsed: { meta: GridMeta; frames: Frame[] }, file?: string): Frame[]
 export function renderSheet(frames: Frame[], palette: Palette, scale?: number): { width: number; height: number; data: Uint8Array }
 export function pngBytes(png: unknown): Uint8Array

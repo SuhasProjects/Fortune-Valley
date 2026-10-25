@@ -61,7 +61,7 @@ export async function explainOutcome(summary: StateSummary, question: string, mo
   const mc = monteCarlo ? { median: monteCarlo.median, p10: monteCarlo.p10, p90: monteCarlo.p90, probabilityNegativeNetWorth: monteCarlo.probabilityNegativeNetWorth, probabilityLiquidityShortfall: monteCarlo.probabilityLiquidityShortfall, observedNetWorth: monteCarlo.observedNetWorth, percentileOfObserved: monteCarlo.percentileOfObserved } : undefined;
   const r = await call({ kind: 'explain', summary, question, monteCarlo: mc }, opts);
   if (r && r.kind === 'explain') return r;
-  return { kind: 'explain', source: 'fallback', text: fallbackExplanation(summary, mc), warnings: ['AI gateway unavailable; used template explanation.'] };
+  return { kind: 'explain', source: 'fallback', text: fallbackExplanation(summary, mc, question), warnings: ['AI gateway unavailable; used template explanation.'] };
 }
 
 export { scenarioToConfig, proposalToEvent } from './scenarioMapper';

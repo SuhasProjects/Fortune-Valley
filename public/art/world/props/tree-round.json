@@ -1,0 +1,14 @@
+{
+  "src": "/art/world/props/tree-round.png",
+  "w": 22,
+  "h": 24,
+  "frames": [
+    "0",
+    "1"
+  ],
+  "anchor": [
+    11,
+    23
+  ],
+  "speed": 900
+}

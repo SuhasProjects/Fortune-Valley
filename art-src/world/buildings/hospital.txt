@@ -1,0 +1,51 @@
+size 69x47
+anchor 34,46
+variants hover,lit,lights
+--- 0
+.....................................................................
+............................kRRooRk..................................
+............................KRRoooRR.................................
+...........................RIRooooZrR................................
+.........................kkrZZZrrrZrrRR..............JkkJJkk.........
+........................RZZrZRoooIIrrZZk.............WWWWWSSW........
+......................krrrZrRZZoooZRrZrrRR...........kqqqqqQk........
+......................RZrrZZIZZoooIrRRrrRR...........kSSSSSSk........
+.........RRRRRRRRRRRRRrIrRRrIZZoooIrrRrrrrRRRRRRRRkkkkssssssk........
+.........RooooIoorrrRrrZZrIrIRRoIZIrrIRZrrrRrrrooorrrRzPPPPPk........
+.........RooooIorrrrkrrZrrIrIZZoooRrrZrZrrrRrrrrrorrrRzPPPPPkkR......
+.........RrrrrZrrIIZRrRrrrIZrZZoooIRrIrrRrrRIIIIRrIIIRppqPqqRZI......
+........RRZZRRRRRRRRRIrrrrRrrZZooorrRRrrrrZRRRRRZRRRRRzzzPPPRRRRR....
+.......kkrrrrrrrRIIZRrrrrRZrrZRIIIIrrRrrrrrRIIIrrrrIIRzzzPPPRIrZRW...
+.....KZRRrrrrrrrZIIZRrrrZrZrrRRPPRZrrRIZrrrRZIZrrrrIIRPPssssRZrrrRW..
+....RRZZRrrrrrrrZIIZkrrIrrZrRpqqqPRRrIrrrrRRIIIrrrrIIRssssssRZrZrrrK.
+...RIIRRRoRoRrZrRIRRRrRrrrZRppqsspppRIrrrRrRRRZZZZRZRRRRRRRRRRRRRRZR.
+...RrrZZRrrrrrrrrrIRRrrrrRRzqqsPPsppRRrrrrRRIrrrRrrrrZrrrrrrrrrrZrrr.
+...RrrZZRrrrrrrrrrIZRrrrRRdqpPPpPPsppRRrrrrRIIrrRrrrrZrrrrrrrrrrZrrr.
+...RrrZZRrrrrrrrrIIRRrrRRpqsPPpqqppsqppRrrrRZIrrZrrrrZrrrrrrrrrrZrrr.
+...RRRRRRRRRRRZZZZRRRrRRpppPPPpqPPPPsppqRrrRRRZZZZZRZRRRRRRZZRRRZRRR.
+..WRrRIIRrrZrrrrrrIZRRRpQDPpQQQQQQQQPspp2RRRZIrrrrZrrrrrZrrrrZrrrZrr.
+.YRrrZIZKrrZrrrrrrIRRRqqsPzQQQQrrQQQQPspp2RRIIrrrrZrrrrrZrrrrZrrrZrr.
+.YRrrRIZKrrZrrrrrIIRwqpsPqQQQQqrrQQQQqzspq2RZIrrrrZrrrrrZrrrrRrrrZrr.
+.YkrZIZRRRRZRRRRZRRRqqsPPQQQrrrrrrrQQQzPsqqRRRRRRRRRRRRRRRZRRRRRRRZZ.
+.WRrrrrZRrrrrrrrrIIZRRppsQQQrrrrrrrrQQPppRRRIrrrrrrrrZrrrrrrrrrrrrrr.
+..RrrrrZRrrrrrrrrrZZZZqqsqqQ44zrr44QQQPqqRZZrrrrrrrrrrrrrrrrrrrrrrrr.
+..RRRRRRRRRRRRRRRRRRRRqqqQQQQQqrrqqQQQPqqRRRRRRRRRRRRRRRRRRRRRRRRRRR.
+...sqpqppppqppqppppppdqqqqqqQQQrQQQQQqPqqPppppppppppppppppPPpppppppp.
+...WwssssssssssssssswwPPPPPPPQPqqqQPPPPPPssDDDDsssssssssssssssssDwww.
+....WbwPppppppppppPpsqqqqQQqqqqqqqqqqqqqqqsPwwPppppppppppppppppppwbW.
+....WDbppqqqqqqqqqppsqqqqqqqqqqqqqqqqqqqqqspwbppqqqqqqqqqqqqqqqppbbW.
+....WDbqqqqqqbbwqqqpssssswssssnsnnDDssPPssppbbqqqqqqqpbbwwqqqqqqqDDW.
+....WDbqqqqwbwWvwpqqpsPPPsPPPRRRRRRPPsPPsppqbbqqqqqqbbuWWbbqqqqqqDDW.
+....WDbqqqwZuuwuubbqpPsssPdqRZZZZZRRddssPqqqbbqqqqqbbuUWuuwbqqqqqDDW.
+....WDbqqqDbUUWUUbbqqdPppppRRRRRRRRRRppspqqqbbqqqqqbwUUwUUwbqqqqqDDW.
+....WDbqqqbwWWWRRbbqqdzqQpqRRZRRRZZZRqqsqqqqbbqqqqqbRRWWWwWbqqqqqDDW.
+....WDbqqqbbuuR99bbqqdpqqpqRIEZZIEuIRqqsqqqqbbqqqqqbbuuRuuwbqqqqqDDW.
+....wDbqqqbbUURU9wwqqdpqQpqRrUZII9vZRqqsqqqqbbqqqqqbw1URUUwbqqqqqDDW.
+....WDbqqqbwuSRUuwPqqdzqQpRRIERRISVIRqqsqqqqbbqqqqqbwUuWu9EbqqqqqDDW.
+....WDbqqqwnDDDDDbwqqdpqQpqRrOIRZOIIRqqsqqqqbbpqqqqwbbbbbbbwqqqqqDDW.
+...WzbpPpqPbbwwwwwqqqdpqqpqRIRRIIbRIRqqsqqqqTTTTqqqwwwwbbwwwqqqqqDDW.
+...WPPPPsppPTTTpppqqdPPqqpRRIZIRIIRIRqqspqqTggggTppppqppppppqppddwwk.
+...WPPPPsPNggggTppqzzwsPPPRZIZIRZIRIRpPsPPTttggttTzqzqPppqqpppzzqqqW.
+...WsssssNttggttNssssSqqQsRRRIIRIIRRRPPqzNNtgttttNNssssPPPPsssPPssTW.
+..tWsssssNMttttTNssssSPPPwwwwwwwwwwwwwwwwwwwwwwwwwwssssPPssPssPPsPPW.
+.....................................................................
