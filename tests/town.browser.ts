@@ -47,7 +47,7 @@ test('town navigation, focus, month tick, history and finish', async ({ page }, 
   }
   await page.getByRole('button', { name: /Next month/ }).click()
   await expect(page.getByText(/^Month 1 \/ \d+$/)).toBeVisible()
-  await page.getByRole('button', { name: /Pause/ }).click()
+  await page.getByRole('button', { name: /^Pause \(Space\)/ }).click()
   await expect(page.getByRole('button', { name: /Next month/ })).toBeDisabled()
   await page.getByRole('button', { name: /Resume/ }).click()
   await page.getByRole('button', { name: /Next month/ }).click()

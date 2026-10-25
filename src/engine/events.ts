@@ -62,8 +62,8 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
       type: 'A',
       title: a.label,
       body: plan
-        ? `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}. Your ${plan.name} paid $${insurerPaid.toLocaleString()}; you paid $${outOfPocket.toLocaleString()} (deductible + coinsurance).`
-        : `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}. You had no ${a.coveredBy} coverage, so you paid the full amount.`,
+        ? `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}; your ${plan.name} paid $${insurerPaid.toLocaleString()} and you paid $${outOfPocket.toLocaleString()} after the deductible and coinsurance.`
+        : `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}, and with no ${a.coveredBy} coverage you paid the full amount.`,
       buildingTarget: a.coveredBy === 'health' ? 'hospital' : a.coveredBy === 'auto' ? 'hospital' : 'home',
       options: [{ id: 'ack', label: 'Got it', description: 'Acknowledge', effect: { template: 'none' } }],
       createdAtMonth: s.monthIndex,

@@ -41,7 +41,8 @@
 .fv-title-menu > .fv-button .fv-button__content > span { display:flex; flex-direction:column; align-items:center; gap:var(--px); }
 .fv-title-menu > .fv-button:disabled { background:var(--c-parchment); }
 .fv-title-menu small { font:calc(4.5 * var(--px))/1 var(--font-body); max-width:calc(90 * var(--px)); white-space:nowrap; }
-.fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { content:''; position:absolute; top:calc(50% - 3 * var(--px)); left:calc(-9 * var(--px)); width:calc(6 * var(--px)); height:calc(6 * var(--px)); background:url('/art/title/pointer.png') center / 100% 100%; image-rendering:pixelated; }
+/* Pointer: 6 art px square, 2 art px left of the hovered button's border, vertically centred (same at every breakpoint). */
+.fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { content:''; position:absolute; top:calc(50% - 3 * var(--px)); left:calc(-8 * var(--px)); width:calc(6 * var(--px)); height:calc(6 * var(--px)); background:url('/art/title/pointer.png') center / 100% 100%; image-rendering:pixelated; }
 .fv-title-corners { position:absolute; bottom:calc(4 * var(--px)); left:calc(4 * var(--px)); right:calc(4 * var(--px)); display:flex; justify-content:space-between; align-items:end; gap:calc(3 * var(--px)); }
 .fv-title-corners .fv-button,.fv-title-content .fv-back { font-size:calc(5.5 * var(--px)); }
 
@@ -74,8 +75,12 @@
 .fv-letter-kicker { font:700 calc(4 * var(--px))/1 var(--font-heading); color:var(--c-wood-dark); text-transform:uppercase; }
 .fv-letter textarea { min-height:calc(22 * var(--px)); max-height:calc(50 * var(--px)); }
 .fv-letter-meta { display:flex; justify-content:flex-end; margin-top:var(--px); }
-.fv-examples { display:flex; gap:calc(2 * var(--px)); flex-wrap:wrap; margin:calc(3 * var(--px)) 0; }
-.fv-examples .fv-button { flex:1 1 calc(60 * var(--px)); height:auto; min-height:calc(9 * var(--px)); white-space:normal; text-align:left; font:calc(4 * var(--px))/1.15 var(--font-body); padding:var(--px) calc(2 * var(--px)); }
+/* Example chips: multi-line buttons; the text wraps inside the frame (`.fv-button__content` is display: contents, so the
+   button itself is the flex box and needs `display:block` for the sentence to flow). */
+.fv-examples { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(2 * var(--px)); margin:calc(3 * var(--px)) 0; }
+.fv-examples .fv-button { display:block; height:auto; min-height:calc(12 * var(--px)); min-width:0; white-space:normal; overflow-wrap:anywhere; text-align:left; font:calc(4.5 * var(--px))/1.2 var(--font-body); color:var(--c-outline); padding:calc(2 * var(--px)) calc(3 * var(--px)); }
+.fv-examples .fv-button b { display:block; margin-bottom:var(--px); font:700 calc(4 * var(--px))/1 var(--font-heading); color:var(--c-wood-dark); text-transform:uppercase; }
+@media (max-width:899px) { .fv-examples { grid-template-columns:1fr; } }
 .fv-letter-numbers { margin:calc(3 * var(--px)) 0; } .fv-letter-numbers summary { cursor:pointer; font-family:var(--font-heading); font-weight:700; }
 .fv-number-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(3 * var(--px)); margin:calc(3 * var(--px)) 0; }
 .fv-actions { display:flex; flex-wrap:wrap; align-items:center; gap:calc(3 * var(--px)); margin-top:calc(4 * var(--px)); }
@@ -123,7 +128,6 @@
   /* Menu below the valley scene (its band ends ~143 CSS px under the centre at zoom 1), never over it. */
   .fv-title-menu { flex-direction:column; top:calc(50% + 150px); width:75%; gap:calc(4 * var(--px)); } .fv-title-menu > .fv-button { min-height:calc(20 * var(--px)); font-size:var(--fs-heading); }
   .fv-title-menu small { font-size:var(--fs-label); white-space:normal; }
-  .fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { left:calc(-7 * var(--px)); }
   .fv-title-corners .fv-button,.fv-title-content .fv-back { font-size:var(--fs-body); }
   .fv-title-content { inset:calc(76px) calc(2px) calc(40px); }
   .fv-story-grid { grid-template-columns:1fr; gap:calc(3 * var(--px)); } .fv-story-card.fv-button { padding:calc(3 * var(--px)); font-size:calc(5.5 * var(--px)); } .fv-story-card strong { font-size:calc(7 * var(--px)); }
