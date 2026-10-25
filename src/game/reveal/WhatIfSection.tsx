@@ -18,7 +18,9 @@ function GroupedSelect({ label, value, groups, onChange }: { label: string; valu
 
 export function WhatIfSection({ payload, original }: { payload: FinishPayload; original: ChartLines }) {
   const decisions = useMemo(() => endingApi.listDecisions?.(payload.config, payload.policyLog) ?? [], [payload.config, payload.policyLog])
-  const [selection, setSelection] = useState(() => ({ decision: decisions[0]?.id ?? '', alternative: decisions[0]?.alternatives[0]?.id ?? '' }))
+  // Start on a concrete decision ("all my decisions" vs the default plan is rarely the interesting comparison).
+  const initial = decisions.find(decision => decision.id !== 'all') ?? decisions[0]
+  const [selection, setSelection] = useState(() => ({ decision: initial?.id ?? '', alternative: initial?.alternatives[0]?.id ?? '' }))
   const [response, setResponse] = useState<{ key: string; result?: WhatIfResult; error?: string } | null>(null)
   const selected = decisions.find(decision => decision.id === selection.decision)
   const key = `${selection.decision}:${selection.alternative}`
