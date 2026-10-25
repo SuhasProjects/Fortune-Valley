@@ -86,6 +86,23 @@ describe('TownWorld', () => {
     }
   })
 
+  it('core decor is small scenery only, 2 px clear of every building; big ring structures stay in the ring', () => {
+    const reference = new Set(['world/props/fountain', 'world/props/lamp', 'world/props/bench', 'world/props/lilypad'])
+    const fromReference = (p: { x: number; y: number }) => (p.x === 166 && p.y === 127) || (p.x === 336 && p.y === 205) || (p.x === 110 && p.y === 212) // the reference image's flower clumps hug the bank, the market and the lake
+    const decor = /^world\/(props\/(bush|tree-round|flowers-white|flowers-mixed)|extra\/(rock|stump|grass-tuft|grass-tuft-2|mushrooms|log|hay-bale|signpost|pine-tree)|ring\/crate)$/
+    for (const p of CORE_PROPS) {
+      if (reference.has(p.sprite) || fromReference(p) || CORE_CORNER_TREES.includes(p)) continue
+      expect(p.sprite, `${p.sprite} is too big for the core`).toMatch(decor)
+      const { w, h } = SPRITES[p.sprite]
+      for (const id of BUILDING_IDS) {
+        const b = BUILDING_LAYOUT[id], m = SPRITES[`world/buildings/${id}`]
+        const clear = p.x + w <= b.x - 2 || p.x >= b.x + m.w + 2 || p.y + h <= b.y - 2 || p.y >= b.y + m.h + 2
+        expect(clear, `${p.sprite} at ${p.x},${p.y} crowds ${id}`).toBe(true)
+      }
+    }
+    expect(CORE_PROPS.length).toBeGreaterThanOrEqual(60)
+  })
+
   it('rotates the office clock hand with monthIndex', () => {
     const { rerender } = render(<TownWorld monthIndex={0}/>)
     const hand = () => document.querySelector<HTMLElement>('.fv-clock')!

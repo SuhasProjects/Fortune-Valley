@@ -67,16 +67,19 @@ export const CORE_PROPS: PlacedSprite[] = [
   ...CORE_CORNER_TREES,
   lily(90, 175), lily(110, 183), lily(126, 197), lily(140, 219),
   // The field left of Pine Bank: the farm's hay, crates and signpost by the river road, with a bush and tufts.
-  tuft(88, 64), hay(86, 94), hay(90, 104), crate(88, 114), crate(96, 118), { sprite: 'world/extra/signpost', x: 104, y: 116 },
+  tuft(88, 64), hay(86, 94), hay(90, 104), crate(88, 114), crate(96, 118), { sprite: 'world/extra/signpost', x: 102, y: 116 },
   mixedFlowers(100, 98), tuft2(92, 126),
-  // Along the top edge: between the bank and the office, and above the Health House.
-  tuft2(128, 64), bush(140, 58), whiteFlowers(158, 62), rock(174, 68), shrooms(124, 74),
-  bush(284, 62), mixedFlowers(302, 72), tuft(322, 64), rock(336, 58), tuft2(330, 76), shrooms(384, 76), tuft(386, 62), bush(378, 58),
-  // Between the office and the Health House, and east of the hospital.
-  tuft(278, 100), rock(282, 112), tuft2(368, 96), shrooms(372, 112),
-  // Right of the Market Hall.
-  bush(380, 158), rock(360, 156), tuft(350, 168), tuft2(378, 176), whiteFlowers(378, 196), shrooms(366, 214), stump(382, 212), bush(350, 222), tuft(348, 180),
-  // Bottom-left corner of the core, by the river mouth.
+  // Along the top edge (the HUD hides rows above ~76 at the common window sizes, so the decor sits just over the eaves).
+  shrooms(122, 76), tuft2(130, 78), bush(136, 72), whiteFlowers(154, 71), rock(174, 68), tuft(172, 78),
+  mixedFlowers(302, 76), shrooms(320, 80), tuft2(330, 78), rock(340, 78), tuft(346, 78), bush(376, 74), tuft(380, 80), shrooms(384, 76),
+  // Between the office and the Health House, and the strip east of the Health House.
+  bush(278, 78), mixedFlowers(280, 90), tuft(278, 100), tuft2(286, 104), rock(282, 112), shrooms(286, 120),
+  tuft(386, 88), tuft2(368, 96), bush(378, 100), shrooms(372, 112), rock(368, 122), whiteFlowers(376, 124),
+  // Right of the Market Hall, under the corner tree.
+  rock(360, 154), tree(370, 158), tuft(350, 168), mixedFlowers(356, 172), tuft(348, 180), bush(382, 186), whiteFlowers(378, 198),
+  stump(382, 212), shrooms(366, 214), rock(384, 222), bush(350, 222), tuft2(362, 226), log(348, 230), tuft2(304, 214), rock(336, 222),
+  // Below Pine Bank, above the lake, and the bottom-left corner of the core by the river mouth.
+  tree(126, 152), bush(94, 154), mixedFlowers(106, 152), rock(108, 160), tuft(100, 164), tuft2(140, 158),
   tuft2(92, 206), bush(88, 222), rock(102, 228), shrooms(118, 206),
 ]
 
