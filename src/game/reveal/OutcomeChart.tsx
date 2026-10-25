@@ -37,7 +37,7 @@ export interface OutcomeChartProps { lines: ChartLines; yDomain: [number, number
 // or (compact, phones) in an HTML list under the chart so the plot can shrink to the screen without a sideways scroll.
 const W = 680, H = 326
 const plot = { left: 100, right: 340, top: 18, bottom: 268 }
-const labelX = plot.right + 22, labelGap = 44, stroke = 2.5
+const labelX = plot.right + 22, labelGap = 56, stroke = 2.5
 const COMPACT = '(max-width: 639px)'
 
 function useCompact() {
@@ -97,7 +97,7 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel }: OutcomeC
         <line x1={plot.right + 6} y1={line.endY} x2={labelX - 4} y2={line.labelY} stroke={line.color} strokeWidth="1"/>
         <g role="button" tabIndex={0} aria-label={describe(line)} onFocus={() => setActive(line.key)} onBlur={() => setActive(null)} onMouseEnter={() => setActive(line.key)} onMouseLeave={() => setActive(null)} onClick={() => toggle(line.key)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(line.key) } }}>
           <title>{describe(line)}</title>
-          <rect x={labelX - 4} y={line.labelY - 16} width={W - labelX + 2} height="42" fill="var(--c-paper)" fillOpacity={active === line.key ? 1 : 0}/>
+          <rect x={labelX - 4} y={line.labelY - 18} width={W - labelX + 2} height="50" fill="var(--c-paper)" fillOpacity={active === line.key ? 1 : 0}/>
           <text x={labelX} y={line.labelY} fill="var(--c-outline)" className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{line.label}</text>
           <text x={labelX} y={line.labelY + 20} fill="var(--c-ink)">{usd(line.value)} ({tickLabel(line.value - lines.start)})</text>
         </g>
