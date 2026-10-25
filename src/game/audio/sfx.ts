@@ -10,7 +10,7 @@ const patterns: Record<SfxName, Array<[number, number, OscillatorType]>> = {
 
 function enabled() {
   if (typeof window === 'undefined' || navigator.webdriver) return false
-  try { return JSON.parse(localStorage.getItem('fortune-valley-settings-v1') ?? '{}').sound !== false } catch { return true }
+  try { return JSON.parse(localStorage.getItem('fortune-valley-settings-v2') ?? '{}').sound !== false } catch { return true }
 }
 
 export function sfx(name: SfxName): void {

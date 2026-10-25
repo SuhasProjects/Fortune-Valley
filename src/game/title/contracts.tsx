@@ -18,7 +18,7 @@ export function TitleStage(props: { world: ReactNode; label: string; children?: 
   return <main className="fv-owned" aria-label={props.label}><GameStage {...props}/></main>
 }
 
-const SETTINGS_KEY = 'fortune-valley-settings-v1'
+const SETTINGS_KEY = 'fortune-valley-settings-v2'
 export function readReduceMotion() {
   try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}').reduceMotion === true } catch { return false }
 }

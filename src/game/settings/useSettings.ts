@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { z } from 'zod'
 
-export const SETTINGS_STORAGE_KEY = 'fortune-valley-settings-v1'
+export const SETTINGS_STORAGE_KEY = 'fortune-valley-settings-v2'
 
 const SettingsSchema = z.object({
   autoAdvanceSeconds: z.union([z.literal(0), z.literal(15), z.literal(30), z.literal(60), z.literal(120)]),
