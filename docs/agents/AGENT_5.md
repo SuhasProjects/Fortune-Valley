@@ -163,8 +163,11 @@ steps, with header plaque **Your Next Chapter**. Sections, top to bottom:
    - **Typical (median)** → `median`, `--c-outline`, 2× thickness;
    - **Unlucky (10th percentile)** → `p10`, `--c-money-down`;
    - a flat light wedge (`--c-leaf-light` at 25%) filling between the lucky and unlucky lines, the visual "spread";
-   - **What actually happened** → `yourEvents`, the **highlighted** line: `--c-gold`, thickest, with a 1-art-px
-     `--c-outline` underlay and an end marker (a small pixel coin);
+   - **What actually happened** → `yourEvents`, the **highlighted** line: same stroke width as the others (plain,
+     consistent strokes; no thick underlay), gold-brown colour, a small gold square end marker and a bold label;
+   - the y axis is **gain or loss against the starting net worth**: `$0` (= start) is a bold middle baseline, losses
+     below, gains above, ticks like `-$2,000` / `+$1,500`; the x axis runs Start → Month N. `sharedYDomain` is symmetric
+     around zero and snapped to a round step, so the what-if pair shares one identical scale;
    - a dashed `$0` line when the range crosses zero; start point labelled "Start $S".
    - **Direct labels** at each line's right end: name and value in VT323 (no legend; nudge labels apart vertically so
      they never overlap; keep a visually hidden legend and a small table version for screen readers).
@@ -177,7 +180,8 @@ steps, with header plaque **Your Next Chapter**. Sections, top to bottom:
    - Line drawing animation: each line extends from the origin in 4 stepped frames, staggered (unlucky, typical, lucky,
      then yours last). None under reduced motion.
 
-3. **"What if you'd chosen differently?"**: two kit `Select`s side by side:
+3. **"What if you'd chosen differently?"**: two kit `Dropdown`s (themed listbox: combobox button + `role=listbox`,
+   arrow keys, Home/End, Escape; supports option groups) side by side:
    *Pick a decision* (`listDecisions` labels, e.g. "Month 3 · Save $300/month") → *Instead…* (that decision's
    `alternatives`, first one preselected). Changing either runs `runWhatIfAsync` (abort the previous run, show
    "Re-running 1,000 futures…" with the hourglass/coin animation over the second chart, keep the first chart visible).

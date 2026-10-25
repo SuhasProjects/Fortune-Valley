@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
-import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, IconButton, Icon, Select, Slider, Tooltip, setUiReducedMotion, useReducedMotion } from './index'
+import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, IconButton, Icon, Select, Slider, Tooltip, Dropdown, setUiReducedMotion, useReducedMotion } from './index'
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); setUiReducedMotion(false) })
 beforeEach(() => {
@@ -80,6 +80,21 @@ describe('UI kit components', () => {
     const slider = screen.getByRole('slider', {name:/Contribution/}); expect(slider.getAttribute('aria-valuetext')).toBe('$200')
     expect(slider.getAttribute('aria-invalid')).toBe('true'); expect(screen.getByRole('alert').textContent).toBe('Too low')
     fireEvent.change(slider, {target:{value:'300'}}); expect(slide).toHaveBeenCalledWith(300)
+  })
+  it('opens a themed listbox dropdown with keyboard support and groups', () => {
+    const change = vi.fn()
+    render(<Dropdown label="Decision" value="b" onChange={change} groups={[{label:'Yours',options:[{value:'a',label:'Alpha'},{value:'b',label:'Bravo'}]},{label:'From the start',options:[{value:'c',label:'Charlie'}]}]}/>)
+    const button = screen.getByRole('combobox', {name:'Decision'}); expect(button.textContent).toBe('Bravo'); expect(button.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('listbox')).toBeNull()
+    fireEvent.keyDown(button, {key:'ArrowDown'})
+    const list = screen.getByRole('listbox', {name:'Decision'}); expect(button.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Alpha','Bravo','Charlie']); expect(screen.getAllByRole('group')).toHaveLength(2)
+    expect(screen.getByRole('option', {name:'Bravo'}).getAttribute('aria-selected')).toBe('true'); expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', {name:'Bravo'}).id)
+    fireEvent.keyDown(list, {key:'ArrowDown'}); expect(list.getAttribute('aria-activedescendant')).toBe(screen.getByRole('option', {name:'Charlie'}).id)
+    fireEvent.keyDown(list, {key:'Home'}); fireEvent.keyDown(list, {key:'Enter'}); expect(change).toHaveBeenCalledWith('a')
+    expect(screen.queryByRole('listbox')).toBeNull(); expect(document.activeElement).toBe(button)
+    fireEvent.click(button); fireEvent.keyDown(screen.getByRole('listbox'), {key:'Escape'}); expect(screen.queryByRole('listbox')).toBeNull(); expect(change).toHaveBeenCalledTimes(1)
+    fireEvent.click(button); fireEvent.click(screen.getByRole('option', {name:'Charlie'})); expect(change).toHaveBeenLastCalledWith('c')
   })
   it('describes its child with a tooltip', () => {
     render(<Tooltip content="Keyboard: N"><Button>Next</Button></Tooltip>)
