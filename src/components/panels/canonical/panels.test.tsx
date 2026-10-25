@@ -152,6 +152,58 @@ describe('Insurance, Home and Office', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(2);
     expect(screen.getByText(/no car, so car accidents never happen/)).toBeTruthy();
   });
+  it('Home: a car section with an owned switch and three value bands saves set_car and previews the running cost', async () => {
+    const state = initial(); const dispatch = dispatchFor(state);
+    render(<BuildingPanel building="home" state={state} dispatch={dispatch} />);
+    expect(screen.getByText('Car / month').nextElementSibling!.textContent).toMatch(/\$180\.00 · Cheap/);
+    const owned = screen.getByRole('switch', { name: 'I own a car' }); expect(owned.getAttribute('aria-checked')).toBe('true');
+    const bands = screen.getByRole('group', { name: 'Car value band' });
+    expect(within(bands).getAllByRole('radio')).toHaveLength(3);
+    expect((within(bands).getByLabelText(/Cheap car/) as HTMLInputElement).checked).toBe(true);
+    const save = screen.getByRole('button', { name: 'Save car' }) as HTMLButtonElement; expect(save.disabled).toBe(true);
+    fireEvent.click(within(bands).getByLabelText(/Nice car/));
+    expect(screen.getByText(/About \$380\.00 \/ month in fuel/)).toBeTruthy();
+    expect(screen.getByText(/cost more on a nicer car/)).toBeTruthy();
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_car', owned: true, valueBand: 'nice' }));
+    const next = dispatch.mock.results[0]!.value; expect(next.ok).toBe(true); expect(next.state.car).toEqual({ owned: true, valueBand: 'nice' });
+    expect(next.state.policyLog.at(-1)!.action).toEqual({ type: 'set_car', owned: true, valueBand: 'nice' });
+    expect(screen.getAllByRole('slider')).toHaveLength(1); // the budget slider stays the only slider
+  });
+  it('Home: a car-less life can add a car; a financed car cannot be given up', async () => {
+    const student = applyAction(createGame(scenarios[0]!), { type: 'resume' }).state; const dispatch = dispatchFor(student);
+    render(<BuildingPanel building="home" state={student} dispatch={dispatch} />);
+    expect(screen.getByText('Car / month').nextElementSibling!.textContent).toBe('No car');
+    const owned = screen.getByRole('switch', { name: 'I own a car' }); expect(owned.getAttribute('aria-checked')).toBe('false');
+    expect(screen.queryByRole('group', { name: 'Car value band' })).toBeNull();
+    expect(screen.getByText(/No running costs, no car repairs and no auto insurance/)).toBeTruthy();
+    fireEvent.click(owned);
+    expect(screen.getByRole('group', { name: 'Car value band' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Save car' }));
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_car', owned: true, valueBand: 'cheap' }));
+    expect(dispatch.mock.results[0]!.value.ok).toBe(true);
+    cleanup();
+    const worker = initial(); // entry worker still owes on the car loan
+    render(<BuildingPanel building="home" state={worker} dispatch={dispatchFor(worker)} />);
+    fireEvent.click(screen.getByRole('switch', { name: 'I own a car' }));
+    expect(screen.getByRole('switch', { name: 'I own a car' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText(/car loan is still open/)).toBeTruthy();
+  });
+  it('Health House: without a car it points to Your Home, offers no auto cards, and can clear a stray auto plan', async () => {
+    const student = applyAction(createGame(scenarios[0]!), { type: 'resume' }).state;
+    render(<BuildingPanel building="hospital" state={student} dispatch={dispatchFor(student)} />);
+    expect(screen.getByText('No car on file; add one at Your Home.')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Set auto plan to none' })).toBeNull();
+    cleanup();
+    const stray = structuredClone(student); stray.insurance.auto = 'auto_full'; stray.policy.insurancePlanIds.auto = 'auto_full';
+    const dispatch = dispatchFor(stray);
+    render(<BuildingPanel building="hospital" state={stray} dispatch={dispatch} />);
+    expect(screen.queryByRole('group', { name: /auto choices/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Set auto plan to none' }));
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_insurance', line: 'auto', planId: null }));
+    expect(dispatch.mock.results[0]!.value.state.insurance.auto).toBeNull();
+  });
   it('uses one budget slider within the engine bounds', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="home" state={state} dispatch={dispatch} />);

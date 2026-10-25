@@ -4,7 +4,7 @@
  */
 import { archetypeConfig } from '@/config/archetypes';
 import { BOUNDS } from '@/config/defaults';
-import { advanceMonth, applyAction, createGame, round2 } from '@/engine';
+import { advanceMonth, applyAction, createGame, hasCar, round2 } from '@/engine';
 import { makeRng, type Rng } from '@/engine/rng';
 import type { AdvanceOptions } from '@/engine';
 import type { ArchetypeId, EventEffect, GameAction, GameConfig, GameEvent, GameState, HousingKind, InsuranceLine } from '@/types/domain';
@@ -32,7 +32,8 @@ export function randomEffect(rng: Rng, s: GameState): EventEffect {
     case 3: {
       const line = pick(rng, LINES);
       const plans = s.assumptions.insurancePlans.filter((p) => p.line === line);
-      return { template: 'change_insurance', line, planId: rng.next() < 0.3 ? null : pick(rng, plans).id };
+      // Auto cover needs a car; a car-less life can only hold "none".
+      return { template: 'change_insurance', line, planId: rng.next() < 0.3 || (line === 'auto' && !hasCar(s)) ? null : pick(rng, plans).id };
     }
     case 4: return { template: 'budget_choice', discretionaryMonthly: money(rng, 1500) };
     case 5: return { template: 'loan_choice', principal: round2(1 + rng.next() * 20_000), apr: round2(rng.next() * 0.3), termMonths: rng.int(BOUNDS.loanTermMonthsMin, BOUNDS.loanTermMonthsMax), name: 'Random loan' };
@@ -55,7 +56,7 @@ export function randomAction(rng: Rng, s: GameState, n: number): GameAction | nu
     case 3: {
       const line = pick(rng, LINES);
       const plans = s.assumptions.insurancePlans.filter((p) => p.line === line);
-      return { type: 'set_insurance', line, planId: rng.next() < 0.3 ? null : pick(rng, plans).id };
+      return { type: 'set_insurance', line, planId: rng.next() < 0.3 || (line === 'auto' && !hasCar(s)) ? null : pick(rng, plans).id };
     }
     case 4: return { type: 'set_extra_debt_payment', amount: money(rng, 500) };
     case 5: return { type: 'set_min_cash_buffer', amount: money(rng, 3000) };
@@ -74,6 +75,12 @@ export function randomAction(rng: Rng, s: GameState, n: number): GameAction | nu
     }
     case 8: return { type: 'enqueue_event', event: randomOpportunity(rng, s, n) };
     case 9: return { type: 'set_housing', housingMonthly: money(rng, 3000), housingKind: pick(rng, HOUSING) };
+    case 10: {
+      // Car: any band, or none unless an auto loan is still outstanding (the engine refuses to sell a financed car).
+      const financed = s.debts.some((d) => d.kind === 'auto_loan' && d.balance > 0);
+      const band = pick(rng, financed ? (['cheap', 'mid', 'nice'] as const) : (['none', 'cheap', 'mid', 'nice'] as const));
+      return { type: 'set_car', owned: band !== 'none', valueBand: band };
+    }
     default: return null;
   }
 }

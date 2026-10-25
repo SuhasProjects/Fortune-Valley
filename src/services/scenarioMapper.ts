@@ -6,6 +6,7 @@ import type { GameConfig, OpportunityProposal, GameEvent, GameState, ScenarioPro
 import { archetypeConfig } from '@/config/archetypes';
 import { BOUNDS, DEFAULT_DURATION_MONTHS } from '@/config/defaults';
 import { validateConfig, validateEffect } from '@/engine/validation';
+import { bandFromMonthlyCost, hasCar, normalizeCar } from '@/engine/car';
 import { round2 } from '@/engine/accounting';
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
@@ -35,6 +36,17 @@ export function scenarioToConfig(p: ScenarioProposal, seed: number, source: 'ai'
       minimumPayment: round2(clamp(d.minimumPayment, 0, BOUNDS.debtMax)),
     })).filter((d) => d.balance > 0);
   }
+  // Car: an explicit statement wins; otherwise the archetype default, forced on by any auto loan in the debts.
+  if (o.car !== undefined) {
+    if (!o.car.owned) st.car = { owned: false, valueBand: 'none' };
+    else {
+      const current = normalizeCar(st.car, st.debts);
+      const band = o.car.valueBand ?? (o.car.monthlyCost !== undefined ? bandFromMonthlyCost(clamp(o.car.monthlyCost, 0, BOUNDS.monthlySpendMax)) : current.owned ? current.valueBand : 'cheap');
+      st.car = { owned: true, valueBand: band === 'none' ? 'cheap' : band };
+    }
+  }
+  st.car = normalizeCar(st.car, st.debts);
+  if (!st.car.owned) { st.insurance = { ...st.insurance, auto: null }; st.policy = { ...st.policy, insurancePlanIds: { ...st.policy.insurancePlanIds, auto: null } }; }
   // Keep policy contributions plausible relative to income: cap at 40% of gross monthly.
   const grossMonthly = st.employment.grossAnnualSalary / 12;
   const capContrib = Math.max(0, Math.round(grossMonthly * 0.4));
@@ -59,6 +71,8 @@ export function scenarioToConfig(p: ScenarioProposal, seed: number, source: 'ai'
 export function proposalToEvent(p: OpportunityProposal, state: GameState, source: 'ai' | 'fallback'): GameEvent | null {
   const options = p.options.slice(0, 3).map((o, i) => ({ id: `opt_${i}`, label: o.label.slice(0, 60), description: o.description.slice(0, 200), effect: o.effect }));
   if (options.length === 0 || options.some((o) => !validateEffect(state.assumptions, o.effect).ok)) return null;
+  // Auto cover is only for lives with a car; an offer to insure a car that does not exist is dropped whole.
+  if (!hasCar(state) && options.some((o) => o.effect.template === 'change_insurance' && o.effect.line === 'auto' && o.effect.planId !== null)) return null;
   if (!options.some((o) => o.effect.template === 'none')) options.push({ id: `opt_${options.length}`, label: 'Not now', description: 'Decline this opportunity.', effect: { template: 'none' } });
   return {
     id: `EVB_${source}_${state.seed.toString(36)}_${state.monthIndex}`,

@@ -10,6 +10,8 @@ const building = z.enum(['bank', 'office', 'home', 'hospital', 'market']);
 const housingKind = z.enum(['rent', 'dorm', 'family', 'own']);
 const insuranceLine = z.enum(['health', 'auto', 'renters']);
 const money = (max: number) => z.number().finite().min(0).max(max);
+/** Car on file: owned plus an optional value band or quoted monthly running cost. */
+const car = z.object({ owned: z.boolean(), valueBand: z.enum(['cheap', 'mid', 'nice']).optional(), monthlyCost: money(5_000).optional() }).strict();
 
 export const PersonalizedInputSchema = z.object({
   freeText: z.string().max(2000),
@@ -20,6 +22,7 @@ export const PersonalizedInputSchema = z.object({
   debtBalance: money(5_000_000).optional(),
   debtApr: z.number().min(0).max(0.6).optional(),
   dependents: z.number().int().min(0).max(8).optional(),
+  car: car.optional(),
 }).strict();
 
 export const StateSummarySchema = z.object({
@@ -92,6 +95,7 @@ export const ScenarioProposalSchema = z.object({
     })).max(6).optional(),
     dependents: z.number().int().min(0).max(8).optional(),
     durationMonths: z.number().int().min(6).max(240).optional(),
+    car: car.optional(),
   }),
   narrativeFocus: z.array(z.string().min(1).max(40)).min(1).max(6),
   defaultsApplied: z.array(z.string().max(60)).max(20),

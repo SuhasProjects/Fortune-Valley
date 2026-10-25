@@ -7,15 +7,10 @@ import { DEFAULT_LIFE_EVENTS } from '@/config/defaults';
 import type { Rng } from './rng';
 import { coverShortfall, makeId, post, round2 } from './accounting';
 import { validateEffect } from './validation';
+import { carBand, hasCar, shockMedianFor } from './car';
 
-/**
- * A life has a car when it carries (or has paid off) an auto loan. Car-less lives
- * skip auto shocks and the Health House hides auto cover. Debts stay in the list
- * after payoff, so a car never vanishes mid-game.
- */
-export function hasCar(s: Pick<GameState, 'debts'>): boolean {
-  return s.debts.some((d) => d.kind === 'auto_loan');
-}
+/** Car rule lives in ./car.ts: `state.car.owned`, forced on by an outstanding auto loan. */
+export { hasCar };
 
 export function activePlan(s: GameState, line: InsurancePlan['line']): InsurancePlan | null {
   const id = s.insurance[line];
@@ -59,7 +54,8 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
     const z = rng.normal(); // always consume severity draw to keep streams aligned
     if (u >= a.monthlyIncidence) continue;
     if (a.coveredBy === 'auto' && !hasCar(s)) continue; // no car, no car accident (draws already consumed, streams stay aligned)
-    const grossCost = round2(Math.min(a.costMax, Math.max(a.costMin, a.costMedian * Math.exp(a.costSigma * z))));
+    const median = shockMedianFor(a.coveredBy, a.costMedian, carBand(s)); // a nicer car costs more to fix
+    const grossCost = round2(Math.min(a.costMax, Math.max(a.costMin, median * Math.exp(a.costSigma * z))));
     const plan = activePlan(s, a.coveredBy);
     const { insurerPaid, outOfPocket } = settleClaim(grossCost, plan);
     post(s, 'cash', 'shock_cost', -grossCost, `${a.label}: total cost`, lean);
@@ -161,6 +157,7 @@ export function applyEffect(s: GameState, effect: EventEffect, lean = false): st
       s.household = { ...s.household, housingMonthly: effect.housingMonthly, housingKind: effect.housingKind };
       return null;
     case 'change_insurance':
+      if (effect.line === 'auto' && effect.planId !== null && !hasCar(s)) return 'No car on file; add one at Your Home before choosing auto cover';
       s.insurance = { ...s.insurance, [effect.line]: effect.planId };
       s.policy = { ...s.policy, insurancePlanIds: { ...s.policy.insurancePlanIds, [effect.line]: effect.planId } };
       return null;

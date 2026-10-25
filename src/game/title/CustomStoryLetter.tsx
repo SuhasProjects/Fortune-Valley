@@ -1,12 +1,14 @@
 import { useRef, useState, useEffect, type FormEvent } from 'react'
-import { Board, Button, Field, Tag } from '@/ui'
+import { Board, Button, Field, Select, Tag } from '@/ui'
 import { useGameStore, type PersonalizationResult } from '@/stores/useGameStore'
 import type { PersonalizedInput } from '@/types/domain'
 import { scenarioCards } from '@/data/scenarios'
 
 const examples = ["I'm 24, earn $48k, rent is $1,400 and I have $9k of card debt.", 'How could I build an emergency fund while raising two children?', 'I want to explore investing while paying down a student loan.']
 type Numbers = Omit<PersonalizedInput, 'freeText'>
-const fields: { key: keyof Numbers; label: string; max: number; step: string }[] = [
+type NumberKey = Exclude<keyof Numbers, 'car'>
+const carOptions = [{ value: '', label: 'Not specified (inferred from your letter)' }, { value: 'no', label: 'No car' }, { value: 'yes', label: 'Yes, I own a car' }]
+const fields: { key: NumberKey; label: string; max: number; step: string }[] = [
   { key: 'age', label: 'Age', max: 110, step: '1' },
   { key: 'grossAnnualIncome', label: 'Yearly income (USD)', max: 1000000, step: '1' },
   { key: 'monthlyRent', label: 'Monthly rent (USD)', max: 20000, step: '1' },
@@ -53,7 +55,10 @@ export function CustomStoryLetter() {
       <div className="fv-letter-meta"><small id="fv-prompt-count">{prompt.length} / 2,000</small></div>
       <div className="fv-examples" role="group" aria-label="Example situations">{examples.map((example, i) => <Button size="sm" key={example} onClick={() => { setPrompt(example); document.getElementById('fv-story-prompt')?.focus() }}><b>Example {i + 1}</b>{example}</Button>)}</div>
       <details className="fv-letter-numbers"><summary>Add numbers <small>(optional)</small></summary><div className="fv-number-grid">{fields.map(field =>
-        <Field key={field.key} label={field.label} type="number" inputMode="decimal" min={field.key === 'age' ? 13 : 0} max={field.max} step={field.step} value={numbers[field.key] ?? ''} onChange={event => setNumbers(previous => { const next = { ...previous }; if (event.target.value === '') delete next[field.key]; else next[field.key] = event.target.valueAsNumber; return next })}/>)}</div></details>
+        <Field key={field.key} label={field.label} type="number" inputMode="decimal" min={field.key === 'age' ? 13 : 0} max={field.max} step={field.step} value={numbers[field.key] ?? ''} onChange={event => setNumbers(previous => { const next = { ...previous }; if (event.target.value === '') delete next[field.key]; else next[field.key] = event.target.valueAsNumber; return next })}/>)}
+        <Select label="Car" options={carOptions} value={numbers.car === undefined ? '' : numbers.car.owned ? 'yes' : 'no'} onChange={value => setNumbers(previous => { const next = { ...previous }; if (value === '') delete next.car; else next.car = value === 'yes' ? { owned: true, ...(previous.car?.monthlyCost !== undefined ? { monthlyCost: previous.car.monthlyCost } : {}) } : { owned: false }; return next })}/>
+        {numbers.car?.owned && <Field label="Monthly car cost (USD, fuel + upkeep)" type="number" inputMode="decimal" min={0} max={5000} step="1" value={numbers.car.monthlyCost ?? ''} onChange={event => setNumbers(previous => { const car = { owned: true as const, monthlyCost: event.target.valueAsNumber }; if (event.target.value === '' || !Number.isFinite(car.monthlyCost)) return { ...previous, car: { owned: true } }; return { ...previous, car } })}/>}
+      </div></details>
       <div className="fv-actions"><Button type="submit" variant="primary" disabled={loading || !prompt.trim()}>Write my story</Button>
       {loading && <span role="status"><span className="fv-quill" aria-hidden="true"/>The valley is preparing your story…</span>}</div>
       {(error || storeError) && <p role="alert">{error || storeError}</p>}

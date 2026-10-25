@@ -49,6 +49,25 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
   const env = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.example', AI_MODEL: 'test/model', AI_API_KEY: 'k' };
   const client = (impl: typeof fetch, timeoutMs?: number) => makeOpenAiCompatibleClient({ baseUrl: env.AI_BASE_URL, apiKey: 'k', model: env.AI_MODEL, fetchImpl: impl, timeoutMs });
 
+  it('scenario with a car: the input carries car numbers, the prompt asks for car inference, and the reply maps onto config', async () => {
+    const carProposal = { ...scenarioProposal, overrides: { ...scenarioProposal.overrides, car: { owned: true, monthlyCost: 300 } }, defaultsApplied: ['essentialsMonthly'] };
+    const { impl, calls } = mockFetch([JSON.stringify(carProposal)]);
+    const carInput = { ...scenarioInput, freeText: 'I drive to work, rent is 1,300, 18k student loan', car: { owned: true, monthlyCost: 300 } };
+    const r = await handleAiRequest(JSON.stringify({ kind: 'scenario', input: carInput }), env, client(impl));
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ kind: 'scenario', source: 'ai', proposal: carProposal });
+    const messages = calls[0]!.body.messages as { role: string; content: string }[];
+    expect(messages[0]!.content).toMatch(/I drive to work.*car\.owned true/);
+    expect(messages[1]!.content).toContain('"car":{"owned":true,"monthlyCost":300}');
+    const res = await generateScenario(carInput, { fetchImpl: replay(r) });
+    expect(res.source).toBe('ai');
+    const cfg = scenarioToConfig(res.proposal, 7, res.source);
+    expect(cfg.initialState.car).toEqual({ owned: true, valueBand: 'mid' });
+    expect(createGame(cfg).car).toEqual({ owned: true, valueBand: 'mid' });
+    // A reply with an impossible car band is a schema mismatch, not a crash.
+    const bad = mockFetch([JSON.stringify({ ...carProposal, overrides: { car: { owned: true, valueBand: 'none' } } })]);
+    expect((await handleAiRequest(JSON.stringify({ kind: 'scenario', input: carInput }), env, client(bad.impl))).body).toMatchObject({ code: 'schema_mismatch' });
+  });
   it('scenario success: JSON reply → source:ai proposal that the engine turns into a playable config', async () => {
     const { impl, calls } = mockFetch([JSON.stringify(scenarioProposal)]);
     const r = await handleAiRequest(scenarioReq, env, client(impl));

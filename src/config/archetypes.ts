@@ -21,6 +21,7 @@ const base = (over: Partial<InitialState> & Pick<InitialState, 'employment' | 'h
   insurance: { health: 'health_basic', auto: null, renters: null },
   taxProfile: { filingStatus: 'single', note: DEFAULT_ASSUMPTIONS.tax.note },
   policy: { ...DEFAULT_POLICY, insurancePlanIds: { health: 'health_basic', auto: null, renters: null } },
+  car: { owned: false, valueBand: 'none' },
   ...over,
 });
 
@@ -58,6 +59,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
         { id: 'auto_1', name: 'Car loan', kind: 'auto_loan', balance: 9000, apr: 0.079, minimumPayment: 220 },
       ],
       insurance: { health: 'health_basic', auto: 'auto_liability', renters: null },
+      car: { owned: true, valueBand: 'cheap' },
       policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 250, investmentContributionPerMonth: 150, insurancePlanIds: { health: 'health_basic', auto: 'auto_liability', renters: null } },
     }),
   },
@@ -74,6 +76,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
       household: { housingKind: 'rent', housingMonthly: 2400, essentialsMonthly: 1500, discretionaryMonthly: 1200, dependents: 0 },
       debts: [{ id: 'auto_1', name: 'Car loan', kind: 'auto_loan', balance: 18000, apr: 0.065, minimumPayment: 420 }],
       insurance: { health: 'health_plus', auto: 'auto_full', renters: 'renters_basic' },
+      car: { owned: true, valueBand: 'mid' },
       policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 500, investmentContributionPerMonth: 1200, targetAllocation: { stock: 0.35, bond: 0.15, etf: 0.5 }, insurancePlanIds: { health: 'health_plus', auto: 'auto_full', renters: 'renters_basic' }, minCashBuffer: 1500 },
     }),
   },
@@ -93,6 +96,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
         { id: 'auto_1', name: 'Minivan loan', kind: 'auto_loan', balance: 16000, apr: 0.071, minimumPayment: 380 },
       ],
       insurance: { health: 'health_family', auto: 'auto_full', renters: 'renters_basic' },
+      car: { owned: true, valueBand: 'mid' },
       taxProfile: { filingStatus: 'married_joint', note: DEFAULT_ASSUMPTIONS.tax.note },
       policy: { ...DEFAULT_POLICY, savingsContributionPerMonth: 300, investmentContributionPerMonth: 200, extraDebtPaymentPerMonth: 100, insurancePlanIds: { health: 'health_family', auto: 'auto_full', renters: 'renters_basic' }, minCashBuffer: 1000 },
     }),

@@ -35,6 +35,17 @@ export const INSURANCE_LINES: readonly InsuranceLine[] = ['health', 'auto', 'ren
 export type DebtKind = 'student_loan' | 'credit_card' | 'auto_loan' | 'personal_loan' | 'overdraft';
 
 export type EmploymentStatus = 'employed' | 'unemployed' | 'student';
+
+/** Rough resale value of the household car: cheap ≈ $3–8k, mid ≈ $10–20k, nice ≈ $25k+. `none` only with `owned: false`. */
+export type CarValueBand = 'none' | 'cheap' | 'mid' | 'nice';
+export const CAR_VALUE_BANDS: readonly CarValueBand[] = ['none', 'cheap', 'mid', 'nice'] as const;
+
+/**
+ * Car ownership. Owning a car adds a monthly running cost (`car_costs` ledger line, by band), makes auto
+ * shocks possible (median scales with band) and unlocks auto insurance (premium scales mildly with band).
+ * An outstanding `auto_loan` debt always implies `owned: true`. No resale value is tracked.
+ */
+export interface CarState { owned: boolean; valueBand: CarValueBand }
 export type HousingKind = 'rent' | 'dorm' | 'family' | 'own';
 
 /** Where money is drawn from when cash is insufficient (in order). */
@@ -213,6 +224,7 @@ export type LedgerCategory =
   | 'tax_withholding'
   | 'housing'
   | 'essentials'
+  | 'car_costs'
   | 'discretionary'
   | 'insurance_premium'
   | 'debt_interest'
@@ -351,6 +363,7 @@ export type GameAction =
   | { type: 'set_allocation'; allocation: Allocation }
   | { type: 'set_budget'; discretionaryMonthly: number }
   | { type: 'set_housing'; housingMonthly: number; housingKind: HousingKind }
+  | { type: 'set_car'; owned: boolean; valueBand: CarValueBand }
   | { type: 'set_insurance'; line: InsuranceLine; planId: string | null }
   | { type: 'set_contributions'; savingsContributionPerMonth: number; investmentContributionPerMonth: number }
   | { type: 'set_extra_debt_payment'; amount: number }
@@ -467,6 +480,8 @@ export interface InitialState {
   insurance: InsuranceState;
   taxProfile: TaxProfile;
   policy: Policy;
+  /** Absent in saves from before car ownership existed; the engine then infers it from any auto_loan debt. */
+  car?: CarState;
 }
 
 export interface GameConfig {
@@ -504,6 +519,7 @@ export interface GameState {
   household: Household;
   insurance: InsuranceState;
   taxProfile: TaxProfile;
+  car: CarState;
   marketState: MarketState;
   policy: Policy;
   assumptions: Assumptions;
@@ -606,6 +622,8 @@ export interface PersonalizedInput {
   debtBalance?: number;
   debtApr?: number;
   dependents?: number;
+  /** Car on file: owned, plus either a value band or the monthly running cost the player quoted. */
+  car?: { owned: boolean; valueBand?: Exclude<CarValueBand, 'none'>; monthlyCost?: number };
 }
 
 export type AiRequest =
@@ -638,6 +656,8 @@ export interface ScenarioProposal {
     debts?: { name: string; kind: Exclude<DebtKind, 'overdraft'>; balance: number; apr: number; minimumPayment: number }[];
     dependents?: number;
     durationMonths?: number;
+    /** Car ownership inferred from the text ("I drive to work" ⇒ owned); band or monthly cost optional. */
+    car?: { owned: boolean; valueBand?: Exclude<CarValueBand, 'none'>; monthlyCost?: number };
   };
   narrativeFocus: string[];
   /** Human-readable list of fields the AI defaulted. */

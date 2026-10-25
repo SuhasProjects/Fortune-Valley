@@ -17,6 +17,8 @@ import { round2 } from './accounting';
 import { advanceMonth } from './advanceMonth';
 import { createGame } from './createGame';
 import { describeEffect, hasCar } from './events';
+import { describeCar, carRunningCost } from './car';
+import { CAR_VALUE_BANDS, type CarValueBand } from '@/types/domain';
 import { hasPolicyDecisions, replayEntry, replayPath, runPaths, summarize } from './monteCarlo';
 
 export function outcomeLines(mc: MonteCarloResult, startNetWorth: number): OutcomeLines {
@@ -66,6 +68,7 @@ function describeAction(config: GameConfig, before: GameState, a: GameAction): s
     case 'set_allocation': return `Invest as ${describeAllocation(a.allocation)}`;
     case 'set_insurance': return a.planId === null ? `Drop ${a.line} coverage` : `Switch ${a.line} plan to ${planName(config, a.planId)}`;
     case 'set_housing': return `Change housing to ${usd(a.housingMonthly)}/month`;
+    case 'set_car': return a.owned ? `Own a ${describeCar({ owned: true, valueBand: a.valueBand }).toLowerCase()}, ${usd(carRunningCost(a.valueBand))}/month to run` : 'Go without a car';
     case 'set_extra_debt_payment': return `Pay ${usd(a.amount)}/month extra on debt`;
     case 'set_min_cash_buffer': return `Keep a ${usd(a.amount)} cash buffer`;
     case 'make_extra_payment': return `Pay ${usd(a.amount)} extra on ${debtName(before, a.debtId)}`;
@@ -120,6 +123,17 @@ function replacementsFor(config: GameConfig, before: GameState, entry: PolicyLog
         if (next.savingsContributionPerMonth !== a.savingsContributionPerMonth || next.investmentContributionPerMonth !== a.investmentContributionPerMonth) {
           out.push({ id, label: describeAction(config, before, next), entry: scaled(entry, next) });
         }
+      }
+      break;
+    }
+    case 'set_car': {
+      undo(before.car.owned ? `Keep the ${describeCar(before.car).toLowerCase()}` : 'Keep going without a car');
+      const financed = before.debts.some((d) => d.kind === 'auto_loan' && d.balance > 0);
+      for (const band of CAR_VALUE_BANDS) {
+        const next = band === 'none' ? { ...a, owned: false, valueBand: band } : { ...a, owned: true, valueBand: band };
+        if (next.owned === a.owned && next.valueBand === a.valueBand) continue;
+        if (!next.owned && financed) continue;
+        out.push({ id: `car:${band}`, label: describeAction(config, before, next), entry: scaled(entry, next) });
       }
       break;
     }
@@ -252,6 +266,12 @@ function hypotheticals(config: GameConfig): Hypothetical[] {
   const current = s.insurance.health ?? null;
   add('insurance', 'Pick a different health plan', config.assumptions.insurancePlans.filter((plan) => plan.line === 'health' && plan.id !== current)
     .map((plan) => [`plan:${plan.id}`, `Choose ${plan.name}`, at0({ type: 'set_insurance', line: 'health', planId: plan.id })]));
+  const financed = s.debts.some((d) => d.kind === 'auto_loan' && d.balance > 0);
+  add('car', s.car.owned ? 'Drive a different car' : 'Own a car', CAR_VALUE_BANDS
+    .filter((band): band is CarValueBand => band !== s.car.valueBand && !(band === 'none' && financed))
+    .map((band): [string, string, PolicyLogEntry | null] => band === 'none'
+      ? ['car:none', 'Go without a car (no running costs, no repairs, no auto cover)', at0({ type: 'set_car', owned: false, valueBand: 'none' })]
+      : [`car:${band}`, `Own a ${describeCar({ owned: true, valueBand: band }).toLowerCase()} at ${usd(carRunningCost(band))}/month`, at0({ type: 'set_car', owned: true, valueBand: band })]));
   if (hasCar(s)) {
     const auto = s.insurance.auto ?? null;
     add('auto', 'Insure the car differently', [

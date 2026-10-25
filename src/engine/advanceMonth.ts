@@ -2,7 +2,8 @@
  * advanceMonth: the single, published monthly accounting order. Owner: Agent 1.
  *
  *  1. Income        gross pay (or unemployment benefit) → illustrative withholding
- *  2. Bills         housing, essentials, discretionary, insurance premiums
+ *  2. Bills         housing, essentials, car running costs (if a car is owned), discretionary,
+ *                   insurance premiums (auto only with a car; auto premium scales with the car's band)
  *  3. Debt          interest accrues to each balance FIRST, then scheduled payment
  *                   (minimum + extra on highest-APR debt), never more than the balance
  *     → funding     if cash < 0 after 1–3: savings → investments → borrow (overdraft)
@@ -20,6 +21,7 @@ import type { GameEvent, GameState, LedgerCategory, ShockKind } from '@/types/do
 import { ASSET_CLASSES } from '@/types/domain';
 import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
 import { activePlan, rollEmployment, rollLifeEvent, rollShocks } from './events';
+import { carBand, carRunningCost, hasCar, premiumFor } from './car';
 import { monthRng, type Rng } from './rng';
 
 export interface AdvanceOptions {
@@ -97,18 +99,24 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
 
   // ── 2. Bills ────────────────────────────────────────────────────────────────
   const h = s.household;
+  const car = hasCar(s);
+  const band = carBand(s);
+  const carCosts = car ? carRunningCost(band) : 0;
   const bills: [LedgerCategory, number, string][] = [
     ['housing', h.housingMonthly, `${h.housingKind === 'own' ? 'Mortgage/housing' : 'Rent/housing'}`],
     ['essentials', h.essentialsMonthly, 'Essentials (groceries, utilities, transport)'],
+    ['car_costs', carCosts, 'Car running costs (fuel, maintenance, registration)'],
     ['discretionary', h.discretionaryMonthly, 'Discretionary spending'],
   ];
   for (const [cat, amt, desc] of bills) if (amt > 0) post(s, 'cash', cat, -amt, desc, lean);
   let premiums = 0;
   for (const line of ['health', 'auto', 'renters'] as const) {
+    if (line === 'auto' && !car) continue; // no car → no auto premium, whatever the plan field says
     const plan = activePlan(s, line);
     if (plan) {
-      premiums += plan.monthlyPremium;
-      post(s, 'cash', 'insurance_premium', -plan.monthlyPremium, `${plan.name} premium`, lean);
+      const premium = premiumFor(plan, band);
+      premiums += premium;
+      post(s, 'cash', 'insurance_premium', -premium, `${plan.name} premium`, lean);
     }
   }
 
@@ -223,10 +231,10 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     notes.push({ kind: 'positive', summary: 'Emergency fund: 3 months of essentials covered', building: 'bank' });
   }
   if (!lean) {
-    const net = round2(grossPay - withheld - (h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly) - premiums - debtPaid);
+    const net = round2(grossPay - withheld - (h.housingMonthly + h.essentialsMonthly + carCosts + h.discretionaryMonthly) - premiums - debtPaid);
     notes.unshift({
       kind: 'info',
-      summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
+      summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + carCosts + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
     });
     notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}) }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));

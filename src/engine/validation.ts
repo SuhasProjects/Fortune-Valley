@@ -2,8 +2,8 @@
  * Validation for actions, effects and configs. Owner: Agent 1.
  * Pure functions returning { ok, message }.
  */
-import type { Allocation, Assumptions, EventEffect, GameEvent, GameConfig, HousingKind, InsuranceLine } from '@/types/domain';
-import { ASSET_CLASSES, INSURANCE_LINES } from '@/types/domain';
+import type { Allocation, Assumptions, CarState, Debt, EventEffect, GameEvent, GameConfig, HousingKind, InsuranceLine } from '@/types/domain';
+import { ASSET_CLASSES, CAR_VALUE_BANDS, INSURANCE_LINES } from '@/types/domain';
 import { BOUNDS } from '@/config/defaults';
 
 export interface Validation { ok: boolean; message: string }
@@ -33,6 +33,20 @@ export function validatePlanId(assumptions: Assumptions, line: InsuranceLine, pl
   const plan = assumptions.insurancePlans.find((p) => p.id === planId);
   if (!plan) return fail(`Unknown insurance plan ${planId}`);
   if (plan.line !== line) return fail(`Plan ${planId} is not a ${line} plan`);
+  return ok;
+}
+
+/**
+ * `set_car` / initial car: owned ⇔ band ≠ none; an outstanding auto loan cannot be sold out from under the bank.
+ * `debts` is optional so a config can be checked before its debts are known.
+ */
+export function validateCar(car: Partial<CarState> | undefined, debts: readonly Pick<Debt, 'kind' | 'balance'>[] = []): Validation {
+  if (!car || typeof car !== 'object') return fail('Car missing');
+  if (typeof car.owned !== 'boolean') return fail('Car ownership must be true or false');
+  if (!CAR_VALUE_BANDS.includes(car.valueBand as CarState['valueBand'])) return fail(`Unknown car value band ${String(car.valueBand)}`);
+  if (car.owned && car.valueBand === 'none') return fail('Pick a value band for the car you own');
+  if (!car.owned && car.valueBand !== 'none') return fail('A life without a car has no value band');
+  if (!car.owned && debts.some((d) => d.kind === 'auto_loan' && d.balance > 0)) return fail('Pay off the car loan before giving up the car');
   return ok;
 }
 
@@ -98,6 +112,10 @@ function validateConfigFields(c: GameConfig): Validation {
     if (!isFiniteNonNeg(d.balance) || d.balance > BOUNDS.debtMax) return fail(`debt ${d.id} balance out of bounds`);
     if (!isFiniteNonNeg(d.apr) || d.apr > BOUNDS.aprMax) return fail(`debt ${d.id} APR out of bounds`);
     if (!isFiniteNonNeg(d.minimumPayment)) return fail(`debt ${d.id} minimum payment invalid`);
+  }
+  if (s.car !== undefined) { // optional: configs from before car ownership are inferred by createGame
+    const car = validateCar(s.car);
+    if (!car.ok) return car;
   }
   const alloc = validateAllocation(s.policy.targetAllocation);
   if (!alloc.ok) return alloc;

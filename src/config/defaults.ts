@@ -2,7 +2,7 @@
  * Validated demo assumptions. All numbers are illustrative teaching defaults,
  * NOT calibrated real-world probabilities or forecasts. Owner: Agent 1.
  */
-import type { Allocation, Assumptions, InsurancePlan, LifeEventAssumptions, Policy } from '@/types/domain';
+import type { Allocation, Assumptions, CarValueBand, InsurancePlan, LifeEventAssumptions, Policy } from '@/types/domain';
 
 export const DISCLAIMER =
   'Fictional educational simulation. All returns, costs, tax rates and event probabilities are illustrative demo assumptions, not forecasts or advice.';
@@ -18,6 +18,18 @@ export const INSURANCE_PLANS: InsurancePlan[] = [
   // Renters
   { id: 'renters_basic', line: 'renters', name: 'Renters Insurance', monthlyPremium: 18, deductible: 500, coinsurance: 0, outOfPocketMax: null, coverageCap: 20000 },
 ];
+
+/**
+ * Car value bands (illustrative). `runningCost` is billed monthly as `car_costs` (fuel + maintenance +
+ * registration); `shockScale` multiplies the auto shock's median cost; `premiumScale` multiplies auto premiums.
+ */
+export interface CarBandDefinition { label: string; value: string; runningCost: number; shockScale: number; premiumScale: number }
+export const CAR_BANDS: Record<CarValueBand, CarBandDefinition> = {
+  none: { label: 'No car', value: '—', runningCost: 0, shockScale: 0, premiumScale: 0 },
+  cheap: { label: 'Cheap', value: '$3–8k', runningCost: 180, shockScale: 0.8, premiumScale: 0.85 },
+  mid: { label: 'Mid-range', value: '$10–20k', runningCost: 260, shockScale: 1, premiumScale: 1 },
+  nice: { label: 'Nice', value: '$25k+', runningCost: 380, shockScale: 1.5, premiumScale: 1.3 },
+};
 
 export const DEFAULT_ALLOCATION: Allocation = { stock: 0.2, bond: 0.3, etf: 0.5 };
 

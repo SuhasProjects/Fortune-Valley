@@ -1,0 +1,52 @@
+import { expect, test } from '@playwright/test'
+import { openTitle, startStory } from './helpers'
+
+// OWNER: car-ownership brief. Your Home → Car section; Health House auto cover follows it.
+
+test('Your Home has a car section whose band drives the running cost, and the Health House follows the car', async ({ page }, testInfo) => {
+  await openTitle(page)
+  await startStory(page, 'Entry-Level Worker')
+  await page.getByRole('button', { name: /Open Your Home/ }).click()
+  const home = page.getByRole('dialog', { name: 'Your Home' })
+  await expect(home).toBeVisible()
+  await expect(home.getByText('Car / month')).toBeVisible()
+  const owned = home.getByRole('switch', { name: 'I own a car' })
+  await expect(owned).toHaveAttribute('aria-checked', 'true')
+  const bands = home.getByRole('group', { name: 'Car value band' })
+  await expect(bands.getByRole('radio')).toHaveCount(3)
+  await bands.getByLabel(/Mid-range car/).check()
+  await expect(home.getByText(/About \$260\.00 \/ month in fuel/)).toBeVisible()
+  if (testInfo.project.name === 'desktop') await page.screenshot({ path: 'test-results/car-home-1366.png' })
+  await home.getByRole('button', { name: 'Save car' }).click()
+  await expect(home.getByText('Saved.')).toBeVisible()
+  await expect(home.getByText('Car / month').locator('xpath=following-sibling::dd')).toContainText('$260.00 · Mid-range')
+  await page.getByRole('button', { name: 'Close panel' }).click()
+
+  await page.getByRole('button', { name: /Open Health House/ }).click()
+  const health = page.getByRole('dialog', { name: 'Health House' })
+  await expect(health).toBeVisible()
+  await expect(health.getByRole('group', { name: /auto choices/ })).toBeVisible()
+  await expect(health.getByText(/Auto · Auto Liability Only · \$70\.00 \/ month/)).toBeVisible()
+  if (testInfo.project.name === 'desktop') await page.screenshot({ path: 'test-results/car-health-1366.png' })
+  await page.getByRole('button', { name: 'Close panel' }).click()
+})
+
+test('a life without a car sees the pointer to Your Home instead of auto cover', async ({ page }) => {
+  await openTitle(page)
+  await startStory(page, 'College Student')
+  await page.getByRole('button', { name: /Open Health House/ }).click()
+  const health = page.getByRole('dialog', { name: 'Health House' })
+  await expect(health.getByText('No car on file; add one at Your Home.')).toBeVisible()
+  await expect(health.getByRole('group', { name: /auto choices/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Close panel' }).click()
+  await page.getByRole('button', { name: /Open Your Home/ }).click()
+  const home = page.getByRole('dialog', { name: 'Your Home' })
+  await expect(home.getByRole('switch', { name: 'I own a car' })).toHaveAttribute('aria-checked', 'false')
+  await home.getByRole('switch', { name: 'I own a car' }).click()
+  await expect(home.getByRole('group', { name: 'Car value band' })).toBeVisible()
+  await home.getByRole('button', { name: 'Save car' }).click()
+  await expect(home.getByText('Saved.')).toBeVisible()
+  await page.getByRole('button', { name: 'Close panel' }).click()
+  await page.getByRole('button', { name: /Open Health House/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Health House' }).getByRole('group', { name: /auto choices/ })).toBeVisible()
+})
