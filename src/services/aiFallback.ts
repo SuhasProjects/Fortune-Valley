@@ -663,3 +663,5 @@ export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap'])
   const three = `After ${r.months} months the run ended at ${fmtUsd(r.endNetWorth)}, ${diff === 0 ? 'level with' : `${fmtUsd(Math.abs(diff))} ${diff > 0 ? 'above' : 'below'}`} the start.`;
   return `${one} ${two} ${three}`;
 }
+/** Coach chat fallback: keyword-matched ELI5 answers built from the summary's own numbers (src/services/coachFallback.ts). */
+export { fallbackCoach } from './coachFallback';

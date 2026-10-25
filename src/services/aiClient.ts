@@ -6,6 +6,8 @@
 import type { AiErrorResponse, AiRequest, AiResponse, MonteCarloResult, PersonalizedInput, ShockFlavourInput, StateSummary } from '@/types/domain';
 import { fallbackExplanation, fallbackFlavour, fallbackOpportunity, fallbackScenario } from './aiFallback';
 import { fallbackRecap, fallbackWhatIf } from './aiFallback';
+import type { BuildingId, CoachFacts, CoachTurn } from '@/types/domain';
+import { fallbackCoach } from './aiFallback';
 
 export interface AiClientOptions {
   endpoint?: string;
@@ -30,6 +32,7 @@ export type ExplainResult = Extract<AiResponse, { kind: 'explain' }>;
 export type FlavourResult = Extract<AiResponse, { kind: 'flavour' }>;
 export type WhatIfLineResult = Extract<AiResponse, { kind: 'whatif' }>;
 export type RecapResult = Extract<AiResponse, { kind: 'recap' }>;
+export type CoachResult = Extract<AiResponse, { kind: 'coach' }>;
 
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;
@@ -87,6 +90,15 @@ export async function recapRun(recap: Extract<AiRequest, { kind: 'recap' }>['rec
   const r = await call({ kind: 'recap', recap }, opts);
   if (r && r.kind === 'recap') return r;
   return { kind: 'recap', source: 'fallback', text: fallbackRecap(recap), warnings: ['AI gateway unavailable; used template recap.'] };
+}
+
+/** Coach chat: one ELI5 answer (≤ 70 words) to a short question; the last 4 turns give the model context. */
+export async function askCoach(summary: StateSummary, question: string, history: CoachTurn[] = [], openBuilding: BuildingId | null = null, facts?: CoachFacts, opts: AiClientOptions = {}): Promise<CoachResult> {
+  const q = question.trim().slice(0, 300);
+  const turns = history.slice(-4).map((t) => ({ role: t.role, text: t.text.slice(0, 600) }));
+  const r = await call({ kind: 'coach', summary, question: q, history: turns, openBuilding, facts }, opts);
+  if (r && r.kind === 'coach') return r;
+  return { kind: 'coach', source: 'fallback', text: fallbackCoach(summary, q, openBuilding, facts), warnings: ['AI gateway unavailable; used offline coach answer.'] };
 }
 
 export { scenarioToConfig, proposalToEvent } from './scenarioMapper';

@@ -1,0 +1,42 @@
+/* The Coach: a speech-bubble button in the bottom-right corner of the town (right of the control bar, above the
+   footer disclaimer) and the chat window it opens. Every size is in art px via --px, like the rest of the UI. */
+.fv-coach { position: absolute; z-index: var(--z-hud); right: calc(3 * var(--px)); bottom: calc(5 * var(--px)); }
+.fv-coach__button { --button-height: 11; }
+/* 7x6 art px speech bubble drawn in pixels (base pixel at column 0, row 1; shadows place the rest). */
+.fv-glyph--bubble { width: calc(7 * var(--px)); height: calc(6 * var(--px)); }
+.fv-glyph--bubble::before { top: var(--px); box-shadow:
+  var(--px) calc(-1 * var(--px)), calc(2 * var(--px)) calc(-1 * var(--px)), calc(3 * var(--px)) calc(-1 * var(--px)), calc(4 * var(--px)) calc(-1 * var(--px)), calc(5 * var(--px)) calc(-1 * var(--px)),
+  calc(6 * var(--px)) 0,
+  0 var(--px), calc(6 * var(--px)) var(--px),
+  var(--px) calc(2 * var(--px)), calc(2 * var(--px)) calc(2 * var(--px)), calc(3 * var(--px)) calc(2 * var(--px)), calc(4 * var(--px)) calc(2 * var(--px)), calc(5 * var(--px)) calc(2 * var(--px)),
+  calc(2 * var(--px)) calc(3 * var(--px)),
+  var(--px) calc(4 * var(--px)); }
+
+/* The chat window docks over the corner instead of the centre: 120 art px wide (kit "sm"), about 104 tall, no dimmed
+   backdrop so the town stays visible. The selector repeats GameScreen.css's so it wins the top/bottom placement. */
+.fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: auto calc(3 * var(--px)) calc(var(--bar-top) + 2 * var(--px)) auto; margin: 0; width: calc(120 * var(--px)); max-width: calc(100vw - 6 * var(--px)); max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px)); }
+.fv-coach .fv-modal::backdrop { background: transparent; }
+.fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal > .fv-window { width: 100%; height: calc(104 * var(--px)); max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px)); }
+.fv-coach .fv-window__body { padding: calc(2 * var(--px)); }
+.fv-coach .fv-window__body > .fv-scroll-area { display: flex; flex-direction: column; overflow: hidden; }
+.fv-coach__chat { display: flex; flex-direction: column; gap: calc(2 * var(--px)); height: 100%; min-height: 0; }
+.fv-coach__log { list-style: none; margin: 0; padding: 0 var(--px) 0 0; flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: calc(2 * var(--px)); }
+.fv-coach__turn { display: flex; align-items: flex-start; gap: calc(2 * var(--px)); }
+.fv-coach__turn--user { justify-content: flex-end; }
+.fv-coach__bubble { margin: 0; max-width: calc(100% - 14 * var(--px)); font: var(--fs-body)/1.2 var(--font-body); overflow-wrap: anywhere; }
+.fv-coach__turn--user .fv-coach__bubble { max-width: 85%; background: var(--c-parchment-light); }
+.fv-coach__bubble--thinking { font-style: italic; }
+/* Keeper portraits are 24 art px; show the Coach at half that so a 70-word answer still fits beside it. */
+.fv-coach__portrait { --px: calc(var(--ui-px, 4px) / 2); flex: none; }
+.fv-coach__chips { display: flex; flex-wrap: wrap; gap: var(--px); }
+.fv-coach__chips .fv-button { white-space: normal; text-align: left; font-weight: 400; }
+.fv-coach__form { display: flex; align-items: flex-end; gap: calc(2 * var(--px)); flex: none; }
+.fv-coach__form .fv-field { flex: 1; min-width: 0; }
+.fv-coach__form .fv-button { flex: none; min-height: calc(11 * var(--px)); }
+
+/* Phones: the bubble sits above the control bar on the right; the chat is a full-width sheet above the bar. */
+@media (max-width: 639px) {
+  .fv-coach { bottom: calc(var(--bar-top) + 2 * var(--px)); }
+  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: auto calc(2 * var(--px)) calc(var(--bar-top) + 2 * var(--px)) calc(2 * var(--px)); width: auto; max-width: none; }
+  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal > .fv-window { height: min(calc(150 * var(--px)), calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px))); }
+}

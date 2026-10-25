@@ -9,6 +9,9 @@ import { describeShock, explainOutcome, generateScenario, proposeOpportunity, pr
 /** One flavour request per shock notification, keyed by scenario + notification id; survives store resets within a session. */
 const flavourRequested = new Set<string>();
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
+import { INSURANCE_PLANS } from '@/config/defaults';
+import { askCoach } from '@/services/aiClient';
+import type { CoachFacts, CoachTurn } from '@/types/domain';
 
 export interface FinishPayload {
   config: GameConfig;
@@ -57,6 +60,13 @@ export interface GameStore {
   /** Mid-game "explain this" for a salient event or player question; no Monte Carlo involved. */
   requestInsight(question: string): Promise<{ text: string; source: 'ai' | 'fallback' } | null>;
   lastInsight: { monthIndex: number; question: string; text: string; source: 'ai' | 'fallback' } | null;
+  /** Coach chat (session only, never saved to disk). */
+  coachOpen: boolean;
+  coachHistory: CoachTurn[];
+  coachLoading: boolean;
+  setCoachOpen(open: boolean): void;
+  /** Append the question, ask the AI (or offline coach) with the last 4 turns and the open building, append the answer. */
+  askCoach(question: string): Promise<CoachTurn | null>;
   finishGame(): void;
   resetGame(): void;
   generatePersonalized(prompt: string, numbers?: Omit<PersonalizedInput, 'freeText'>): Promise<PersonalizationResult>;
@@ -94,6 +104,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   savedGame: null,
   storage: defaultStorage(),
   lastInsight: null,
+  coachOpen: false,
+  coachHistory: [],
+  coachLoading: false,
 
   startGame: (config) => {
     const game = createGame(config);
@@ -109,6 +122,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       personalizationError: null,
       lastActionError: null,
       aiStatus: 'idle',
+      coachOpen: false,
+      coachHistory: [],
+      coachLoading: false,
       requestVersion: s.requestVersion + 1,
     }));
   },
@@ -188,6 +204,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
+  setCoachOpen: (coachOpen) => set({ coachOpen }),
+  askCoach: async (question) => {
+    const { game, config, requestVersion, coachLoading } = get();
+    if (!game || !config || coachLoading) return null;
+    const q = question.trim().slice(0, 300);
+    if (!q) return null;
+    const history = get().coachHistory;
+    set({ coachHistory: [...history, { role: 'user', text: q }], coachLoading: true });
+    try {
+      const summary = summarizeForAi(game, config.narrativeFocus, config.archetype);
+      const facts: CoachFacts = {
+        savingsApy: game.assumptions.savingsApy,
+        debts: game.debts.map((d) => ({ name: d.name, kind: d.kind, balance: d.balance, apr: d.apr, minimumPayment: d.minimumPayment })),
+        insurance: INSURANCE_PLANS.filter((p) => Object.values(game.insurance).includes(p.id)).map((p) => ({ line: p.line, name: p.name, monthlyPremium: p.monthlyPremium, deductible: p.deductible, coinsurance: p.coinsurance })),
+      };
+      const result = await askCoach(summary, q, history.slice(-4), get().openBuildingId, facts);
+      if (get().requestVersion !== requestVersion) return null;
+      const turn: CoachTurn = { role: 'coach', text: result.text, source: result.source };
+      set((s) => ({ coachHistory: [...s.coachHistory, turn], coachLoading: false, aiStatus: result.source === 'ai' ? 'online' : 'offline' }));
+      return turn;
+    } catch {
+      if (get().requestVersion === requestVersion) set({ coachLoading: false });
+      return null;
+    }
+  },
+
   requestInsight: async (question) => {
     const { game, config, requestVersion } = get();
     if (!game || !config) return null;
@@ -242,7 +284,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     try { parsed = parseSave(storage.getItem(SAVE_STORAGE_KEY)); } catch { return false; }
     if (!parsed.ok) { get().clearSavedGame(); return false; }
     const { config, state } = parsed.save;
-    set((s) => ({ config: structuredClone(config), game: structuredClone(state), finishPayload: null, openBuildingId: null, timelineOpen: false, historyOpen: false, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1, savedGame: { savedAt: parsed.save.savedAt, title: config.title, monthIndex: state.monthIndex } }));
+    set((s) => ({ config: structuredClone(config), game: structuredClone(state), finishPayload: null, openBuildingId: null, timelineOpen: false, historyOpen: false, lastActionError: null, aiStatus: 'idle', coachOpen: false, coachHistory: [], coachLoading: false, requestVersion: s.requestVersion + 1, savedGame: { savedAt: parsed.save.savedAt, title: config.title, monthIndex: state.monthIndex } }));
     return true;
   },
   clearSavedGame: () => {
@@ -251,7 +293,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   refreshSavedGame: () => set((s) => ({ savedGame: readSaveMeta(s.storage) })),
 
-  resetGame: () => set((s) => ({ game: null, config: null, lastInsight: null, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
+  resetGame: () => set((s) => ({ game: null, config: null, lastInsight: null, coachOpen: false, coachHistory: [], coachLoading: false, openBuildingId: null, timelineOpen: false, historyOpen: false, finishPayload: null, lastActionError: null, aiStatus: 'idle', requestVersion: s.requestVersion + 1 })),
 
   generatePersonalized: async (prompt, numbers = {}) => {
     const clean = prompt.trim();
