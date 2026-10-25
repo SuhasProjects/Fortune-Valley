@@ -2,8 +2,8 @@
  * applyAction: validates and applies a GameAction without mutating the input.
  * Invalid actions return { ok:false } with the ORIGINAL state. Owner: Agent 1.
  */
-import type { ActionErrorCode, ActionResult, GameAction, GameState, TimelineEntry } from '@/types/domain';
-import { makeId, netWorthOf, post, round2 } from './accounting';
+import { ASSET_CLASSES, type ActionErrorCode, type ActionResult, type GameAction, type GameState, type TimelineEntry } from '@/types/domain';
+import { allocateAmount, investmentsTotal, makeId, netWorthOf, post, round2 } from './accounting';
 import { applyEffect, describeEffect } from './events';
 import { isFiniteNonNeg, validateAllocation, validateCar, validatePlanId, validateNarrativeEvent } from './validation';
 import { describeCar, carRunningCost } from './car';
@@ -47,7 +47,19 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
       const v = validateAllocation(action.allocation);
       if (!v.ok) return reject(input, 'invalid_allocation', v.message);
       s.policy = { ...s.policy, targetAllocation: { ...action.allocation } };
-      logPolicy(s, action, 'policy_change', `Target allocation → stock ${(action.allocation.stock * 100).toFixed(0)}% / bond ${(action.allocation.bond * 100).toFixed(0)}% / ETF ${(action.allocation.etf * 100).toFixed(0)}%`);
+      // Rebalance existing holdings to the new target at once (sell/buy across classes; no tax, net worth unchanged).
+      const total = investmentsTotal(s.investments);
+      const moved: string[] = [];
+      if (total > 0) {
+        const target = allocateAmount(total, action.allocation);
+        for (const c of ASSET_CLASSES) {
+          const delta = round2(target[c] - s.investments[c]);
+          if (delta === 0) continue;
+          post(s, c, 'rebalance', delta, `Rebalanced: ${delta > 0 ? 'bought' : 'sold'} $${Math.abs(delta).toLocaleString()} of ${s.assumptions.assets[c].label}`);
+          moved.push(`${delta > 0 ? 'bought' : 'sold'} ${c} $${Math.abs(delta).toLocaleString()}`);
+        }
+      }
+      logPolicy(s, action, 'policy_change', `Target allocation → stock ${(action.allocation.stock * 100).toFixed(0)}% / bond ${(action.allocation.bond * 100).toFixed(0)}% / ETF ${(action.allocation.etf * 100).toFixed(0)}%${moved.length ? ` (rebalanced: ${moved.join(', ')})` : ''}`);
       return { ok: true, state: s };
     }
     case 'set_budget': {

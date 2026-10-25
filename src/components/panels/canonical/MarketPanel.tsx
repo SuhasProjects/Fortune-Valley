@@ -8,8 +8,8 @@ import { PolicyPreview } from '../PolicyPreview';
 import type { PanelProps } from '../panelTypes';
 import { amountError, editable, LedgerHistory, money, MoneyInput, percent, useAction, useDraft } from './shared';
 
-const labels: Record<AssetClass, string> = { stock: 'Single-stock basket', bond: 'Bonds', etf: 'Diversified equity ETF' };
-const shortLabels: Record<AssetClass, string> = { stock: 'Stocks', bond: 'Bonds', etf: 'Equity ETF' };
+const labels: Record<AssetClass, string> = { stock: 'Tech stock basket', bond: 'Bond fund', etf: 'S&P 500 index ETF' };
+const shortLabels: Record<AssetClass, string> = { stock: 'Stocks', bond: 'Bonds', etf: 'S&P 500 ETF' };
 const displayWeights = (allocation: Allocation) => Object.fromEntries(ASSET_CLASSES.map(asset => [asset, String(Number((allocation[asset] * 100).toFixed(6)))])) as Record<AssetClass, string>;
 
 export function MarketPanel({ state, dispatch }: PanelProps) {

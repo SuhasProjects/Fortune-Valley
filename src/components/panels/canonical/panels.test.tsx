@@ -88,13 +88,13 @@ describe('reduced Market decisions', () => {
     render(<BuildingPanel building="market" state={state} dispatch={dispatch} />);
     expect(screen.getByRole('group', { name: 'Stocks allocation' }).textContent).toContain('Last month');
     expect(screen.getByRole('group', { name: 'Stocks allocation' }).textContent).toContain('Annual assumption');
-    fireEvent.change(screen.getByLabelText('Single-stock basket (%)'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('Tech stock basket (%)'), { target: { value: '30' } });
     expect((screen.getByRole('button', { name: 'Save allocation' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.change(screen.getByLabelText('Bonds (%)'), { target: { value: '20' } });
-    fireEvent.change(screen.getByLabelText('Single-stock basket (%)'), { target: { value: '-10' } });
+    fireEvent.change(screen.getByLabelText('Tech stock basket (%)'), { target: { value: '-10' } });
     fireEvent.change(screen.getByLabelText('Bonds (%)'), { target: { value: '60' } });
     expect(screen.getByText(/Allocation weight for stock must be between 0 and 1/)).toBeTruthy();
-    fireEvent.change(screen.getByLabelText('Single-stock basket (%)'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText('Tech stock basket (%)'), { target: { value: '30' } });
     fireEvent.change(screen.getByLabelText('Bonds (%)'), { target: { value: '20' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save allocation' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_allocation', allocation: { stock: .3, bond: .2, etf: .5 } }));

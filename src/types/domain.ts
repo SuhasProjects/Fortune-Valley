@@ -240,6 +240,7 @@ export type LedgerCategory =
   | 'overdraft'
   | 'event'
   | 'transfer'
+  | 'rebalance'
   | 'loan_proceeds';
 
 export interface LedgerEntry {

@@ -38,10 +38,18 @@ export const DEFAULT_LIFE_EVENTS: LifeEventAssumptions = { monthlyIncidence: 0.4
 
 export const DEFAULT_ASSUMPTIONS: Assumptions = {
   version: 1,
+  /**
+   * Monthly lognormal (GBM) step per asset: `expectedAnnualReturn` is the ARITHMETIC mean return (the drift is
+   * `ln(1+r)/12 − σ²/12/2`, so the monthly mean is (1+r)^(1/12) and the median sits below it, as for a real index).
+   * Rounded long-run nominal figures, in the spirit of US data 1926–2024 (Ibbotson/SBBI, Damodaran's NYU history
+   * tables, Bloomberg US Aggregate): large-cap stocks ~10%/yr at ~17% vol, a concentrated tech basket
+   * ~12%/yr at ~35% vol (single names carry idiosyncratic risk), aggregate bonds ~4.5%/yr at ~6% vol; stock–index
+   * correlation ~0.75, stock–bond ~0.1 (ETF–bond follows from the construction). Teaching defaults, not forecasts.
+   */
   assets: {
-    stock: { label: 'Single-stock basket', expectedAnnualReturn: 0.08, annualVolatility: 0.3 },
-    bond: { label: 'Bond fund', expectedAnnualReturn: 0.035, annualVolatility: 0.06 },
-    etf: { label: 'Diversified stock ETF', expectedAnnualReturn: 0.07, annualVolatility: 0.16 },
+    stock: { label: 'Tech stock basket', expectedAnnualReturn: 0.12, annualVolatility: 0.35 },
+    bond: { label: 'Bond fund', expectedAnnualReturn: 0.045, annualVolatility: 0.06 },
+    etf: { label: 'S&P 500 index ETF', expectedAnnualReturn: 0.10, annualVolatility: 0.17 },
   },
   correlation: { stockEtf: 0.75, stockBond: 0.1 },
   savingsApy: 0.04,
