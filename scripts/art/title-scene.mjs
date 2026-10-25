@@ -50,12 +50,12 @@ function mountains({ seed, h, base, amp, periods, body, dark, light, snow, snowA
 
 mkdirSync('art-src/title/scene', { recursive: true });
 
-// Sky: high → mid → low with 2x2-ish checker transitions, no clouds.
+// Sky: high → mid → low in flat bands (no dither: the checker read as a glitch), no clouds.
 {
   const h = 146;
   const rows = grid(W, h, '1');
   for (let y = 0; y < h; y++) for (let x = 0; x < W; x++) {
-    const k = y < 44 ? '1' : y < 52 ? (checker(x >> 1, y >> 1) ? '1' : '^') : y < 96 ? '^' : y < 106 ? (checker(x >> 1, y >> 1) ? '^' : '2') : '2';
+    const k = y < 48 ? '1' : y < 101 ? '^' : '2';
     rows[y][x] = k;
   }
   write('art-src/title/scene/sky.txt', rows);
