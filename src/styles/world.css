@@ -7,8 +7,9 @@
   --chart-observed: #9d592f;
   --chart-positive: #56824e;
   --chart-negative: #b65b43;
-  --ft-font-body: 'Pixelify Sans', 'VT323', monospace;
-  font-family: 'Pixelify Sans', 'VT323', monospace;
+  --ft-font-body: var(--font-body, 'Pixel Operator', monospace);
+  font-family: var(--font-body, 'Pixel Operator', monospace);
+  -webkit-font-smoothing: antialiased;
   color: var(--ink);
   background: #42684b;
   font-synthesis: none;
@@ -24,7 +25,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px dashed #355f66; outline-offset: 5px; }
 a { color: inherit; }
 svg, img { image-rendering: pixelated; }
-h1, h2, h3 { font-family: 'Pixelify Sans', monospace; font-weight: 700; }
+h1, h2, h3 { font-family: var(--font-heading, 'Pixel Operator', monospace); font-weight: 700; }
 h1, h2, h3, p { overflow-wrap: break-word; }
 p { line-height: 1.4; }
 .world-backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; }

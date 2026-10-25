@@ -1,10 +1,18 @@
 @import '../styles/palette.css';
+/* Pixel Operator (CC0, Jayvee Enaguas) — a clean 5x7-style bitmap face drawn on a 16px em: square caps, digits at
+   full cap height (3/8, 6/9, 0/8 unambiguous), real descenders on g/p/q/y. Self-hosted from public/fonts. */
+@font-face { font-family: 'Pixel Operator'; font-style: normal; font-weight: 400; font-display: block; src: url('/fonts/pixel-operator/PixelOperator.ttf') format('truetype'); }
+@font-face { font-family: 'Pixel Operator'; font-style: normal; font-weight: 700; font-display: block; src: url('/fonts/pixel-operator/PixelOperator-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'Pixel Operator Mono'; font-style: normal; font-weight: 400; font-display: block; src: url('/fonts/pixel-operator/PixelOperatorMono.ttf') format('truetype'); }
+@font-face { font-family: 'Pixel Operator Mono'; font-style: normal; font-weight: 700; font-display: block; src: url('/fonts/pixel-operator/PixelOperatorMono-Bold.ttf') format('truetype'); }
 :root {
   --px: 4px;
-  /* Pixelify Sans (Minecraft-like, open counters) for every size; VT323 stays loaded for the few places that opt in via --font-mono. */
-  --font-body: 'Pixelify Sans', 'VT323', ui-monospace, monospace;
-  --font-heading: 'Pixelify Sans', ui-monospace, monospace;
-  --font-mono: 'VT323', ui-monospace, monospace;
+  /* One family for body, numbers and headings (700 for headings). --font-mono is the fixed-width cut for aligned columns. */
+  --font-body: 'Pixel Operator', 'Pixelify Sans', ui-monospace, monospace;
+  --font-heading: 'Pixel Operator', 'Pixelify Sans', ui-monospace, monospace;
+  --font-mono: 'Pixel Operator Mono', 'Pixel Operator', ui-monospace, monospace;
+  /* Sizes in --px multiples. Pixel Operator's native grid is 16px, so 16 / 24 / 32 are whole multiples (1x / 1.5x / 2x;
+     2x / 3x / 4x on retina) and stay crisp. */
   --fs-label: calc(4.5 * var(--px));
   --fs-body: calc(6 * var(--px));
   --fs-value: calc(6.5 * var(--px));

@@ -246,13 +246,17 @@ is missing, ask Agent 2 (or build it inside `src/ui/` with Agent 2's OK in the P
 Frames are 9-slice PNGs (`border-image`, `border-image-slice` from the grid's `slice`, `border-width: calc(slice * var(--px))`)
 so corners stay pixel-perfect at every zoom.
 
-**Fonts** (already bundled locally through `@fontsource`; no network fonts):
-- **Pixelify Sans 700** for headings, names, button labels, the logo.
-- **VT323** for numbers, body text, labels. Numbers use `font-variant-numeric: tabular-nums`.
-- Fallback `ui-monospace, monospace`. Nothing else, ever.
-- Sizes are tokens in `src/ui/tokens.css` (Agent 2), in `--px` multiples: label `calc(3.5*var(--px))`,
-  body `calc(4.5*var(--px))`, value `calc(5*var(--px))`, heading `calc(6*var(--px))`, title `calc(12*var(--px))`.
-  At scale 4: 14 / 18 / 20 / 24 / 48 px.
+**Fonts** (self-hosted from `public/fonts`; no network fonts, no `@fontsource` imports needed):
+- **Pixel Operator** (CC0) for everything: 400 for body, numbers and labels, 700 for headings, names, button labels.
+  A clean 5x7-style bitmap face drawn on a 16px em: square caps, digits at full cap height (3/8, 6/9, 0/8 stay distinct),
+  real descenders on g/p/q/y. Numbers use `font-variant-numeric: tabular-nums`.
+- **Pixel Operator Mono** only through `--font-mono` for aligned columns.
+- `@font-face` rules and the `--font-body` / `--font-heading` / `--font-mono` tokens live in `src/ui/tokens.css`;
+  `index.html` preloads the two body cuts. Fallback `ui-monospace, monospace`. Nothing else, ever.
+- Sizes are tokens in `src/ui/tokens.css` (Agent 2), in `--px` multiples: label `calc(4.5*var(--px))`,
+  body `calc(6*var(--px))`, value `calc(6.5*var(--px))`, heading `calc(8*var(--px))`, title `calc(12*var(--px))`.
+  At scale 4: 18 / 24 / 26 / 32 / 48 px. 16, 24, 32 and 48 are whole multiples of the font's 16px grid (and every
+  size is on retina), so prefer those when adding a new size.
 
 **Money colours:** positive `--c-money-up`, negative/debt `--c-money-down`, neutral `--c-outline`. Format with
 `usd()` from `src/components/flow/format.ts`. **Never compute money in UI**; only format engine values.
@@ -467,7 +471,7 @@ cleanup (delete legacy CSS/components, regenerate screenshots, update docs).
 ## 12. Repo facts you can rely on without reading the code
 
 **Stack:** React 19 + TypeScript 5.9 + Vite 7, Zustand 5 store, Recharts 3, framer-motion 12, Zod 4. Path alias `@/` = `src/`.
-Fonts via `@fontsource/pixelify-sans` (400, 700) and `@fontsource/vt323`, imported in `src/styles/index.css`.
+Fonts: Pixel Operator (400, 700) and Pixel Operator Mono, self-hosted in `public/fonts/pixel-operator`, declared in `src/ui/tokens.css`.
 
 **Domain ids:** `BuildingId = 'bank' | 'office' | 'home' | 'hospital' | 'market'`. Display titles: Pine Bank, Town Office,
 Your Home, Health House, Market Hall. Hints: "Savings & debt", "Income & career", "Rent & everyday costs",
