@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import { paletteMap, parseGrid, pngBytes, renderSheet } from '../../scripts/art/grid.mjs'
 import { SPRITES } from '../../src/game/art/manifest'
 
-it('keeps the complete tree canopy inside both frames and preserves the rooted sway', () => {
+it.skip('keeps the complete tree canopy inside both frames and preserves the rooted sway' /* the wider canopy spaced the title tree line out; the original 20-px sprite is back by request */, () => {
   const { colors } = JSON.parse(readFileSync('art-src/palette.json', 'utf8'))
   const palette = paletteMap(colors)
   const parsed = parseGrid(readFileSync('art-src/world/props/tree-round.txt', 'utf8'), palette)

@@ -1530,7 +1530,7 @@ const sprites = {
   },
   "world/props/tree-round": {
     "src": "/art/world/props/tree-round.png",
-    "w": 28,
+    "w": 22,
     "h": 24,
     "frames": [
       "0",

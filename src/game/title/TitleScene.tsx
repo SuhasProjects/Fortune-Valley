@@ -34,7 +34,7 @@ for (let x = 2; x < MAP_W; x += 20) {
   if ((x + 18 > 60 && x < 80) || (x + 18 > 400 && x < 420)) continue // edge bands
   const step = Math.round((x - 2) / 20)
   forest.push(pine(x, 118 + (step % 3) * 3))
-  if (step % 4 === 1 && x + 9 + SPRITES['world/props/tree-round'].w <= 400) forest.push(tree(x + 9, 126))
+  if (step % 4 === 1 && x + 31 <= 400) forest.push(tree(x + 9, 126))
 }
 
 const PROPS: Placed[] = [

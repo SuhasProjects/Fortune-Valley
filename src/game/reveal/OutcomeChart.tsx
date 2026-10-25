@@ -109,7 +109,7 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel, hideTitle 
           <title>{describe(line)}</title>
           <rect x={labelX - 4} y={line.labelY - 18} width={W - labelX + 2} height="50" fill="var(--c-paper)" fillOpacity={active === line.key ? 1 : 0}/>
           <text x={labelX} y={line.labelY} fill="var(--c-outline)" className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{fitLabel(line.label)}</text>
-          <text x={labelX} y={line.labelY + 20} fill="var(--c-ink)">{fitLabel(`${tickLabel(line.value - lines.start)} · ends ${usd(line.value)}`)}</text>
+          <text x={labelX} y={line.labelY + 20} fill="var(--c-ink)">{fitLabel(`${tickLabel(line.value - lines.start)} (${usd(line.value)})`)}</text>
         </g>
       </g>)}
       <text className="fv-axis-x" x={plot.left} y={plot.bottom + 27} textAnchor="middle">Start ({usd(lines.start)})</text>
@@ -119,7 +119,7 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel, hideTitle 
     </svg></div>
     {compact && <ul className="fv-chart-legend">{byOrder.map(line => <li key={line.key} className={active && active !== line.key ? 'fv-line-muted' : ''}>
       <button type="button" aria-label={describe(line)} aria-pressed={active === line.key} style={{ '--line-color': line.color } as CSSProperties} onFocus={() => setActive(line.key)} onBlur={() => setActive(null)} onClick={() => toggle(line.key)}>
-        <span className="fv-chart-legend__swatch" aria-hidden="true"/><span className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{line.label}</span><strong>{tickLabel(line.value - lines.start)} · ends {usd(line.value)}</strong>
+        <span className="fv-chart-legend__swatch" aria-hidden="true"/><span className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{line.label}</span><strong>{tickLabel(line.value - lines.start)} ({usd(line.value)})</strong>
       </button></li>)}</ul>}
     <details className="fv-chart-table"><summary aria-label={`Table: ${title}`}>Table</summary><table><caption>Starting net worth {usd(lines.start)} and ending net worth after {lines.months} months.</caption><thead><tr><th scope="col">Future</th><th scope="col">Ending net worth</th><th scope="col">Change from start</th></tr></thead><tbody>{byOrder.map(line => <tr key={line.key}><th scope="row">{line.label}</th><td>{usd(line.value)}</td><td>{tickLabel(line.value - lines.start)}</td></tr>)}</tbody></table></details>
   </figure>
