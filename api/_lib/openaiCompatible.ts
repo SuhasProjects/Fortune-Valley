@@ -62,7 +62,12 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
         res = await send(false);
         body = (await res.json().catch(() => null)) as typeof body;
       }
-      if (!res.ok) throw new UpstreamError(res.status, typeof body?.error === 'string' ? body.error : body?.error?.message ?? `HTTP ${res.status}`);
+      if (!res.ok) {
+        const message = typeof body?.error === 'string' ? body.error : body?.error?.message ?? `HTTP ${res.status}`;
+        // Server log only (Vercel function logs / dev terminal); the browser never sees provider bodies.
+        console.error(`[ai] upstream ${res.status} from ${url} model=${o.model}: ${message.slice(0, 300)}`);
+        throw new UpstreamError(res.status, message);
+      }
       const choice = body?.choices?.[0];
       return { text: choice?.message?.content ?? '', finish: choice?.finish_reason ?? null };
     } catch (e) {
