@@ -21,7 +21,10 @@ test('played results show four engine endings, offline explanation, and return t
   await expect(page.getByRole('group', {name:'Your 1,000 futures: four ending net worth lines'})).toBeVisible()
   const chart = page.getByRole('figure', {name:'Your 1,000 futures'})
   await expect(chart.getByRole('button')).toHaveCount(4)
-  for (const label of ['Unlucky','Typical','Lucky','What actually happened']) await expect(chart.getByRole('button', {name:new RegExp(label)})).toBeVisible()
+  for (const label of ['Unlucky (10th)','Typical','Lucky (90th)','You:']) await expect(chart.getByRole('button', {name:new RegExp(label.replace('(','\\(').replace(')','\\)'))})).toBeVisible()
+  // Short copy: no spread sentence under the headline, and the chart's own caption is for screen readers only.
+  await expect(page.getByText(/8 in 10/)).toHaveCount(0)
+  await expect(page.getByRole('heading', {name:'Same strategy, 1,000 futures'})).toBeVisible()
   await page.getByLabel('Ask about your results', {exact:true}).fill('Why did these futures differ?')
   await page.getByRole('button', {name:'Ask',exact:true}).click()
   await expect(page.getByText('Offline explanation (template)', {exact:true})).toBeVisible()
@@ -44,7 +47,7 @@ test('finishing without decisions still offers "from the start" comparisons', as
   await page.keyboard.press('Escape')
   await expect(page.getByRole('listbox')).toHaveCount(0)
   await expect(pick).toBeFocused()
-  await expect(page.getByRole('heading', { name: 'Typical outcome' })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: 'Typical', exact: true })).toBeVisible({ timeout: 15_000 })
 })
 
 // Isolate the comparison UI from simulation speed so selection, shared axes, cancellation and stale responses
@@ -76,6 +79,13 @@ test('comparison selectors show paired charts with shared axes and replace an in
   await expect(page.getByText('+$1,240', {exact:true})).toBeVisible()
   await expect(page.getByText('-$310', {exact:true})).toBeVisible()
   await expect(page.getByText('Narrower by $2,000', {exact:true})).toBeVisible()
+  await expect(page.getByRole('heading', {name:'Your run', exact:true})).toBeVisible()
+  // End labels (name and value lines) stay inside their SVG's viewBox on both charts.
+  const labelOverflow = await page.locator('.fv-comparison-charts svg').evaluateAll(svgs => svgs.map(svg => {
+    const width = Number(svg.getAttribute('viewBox')!.split(' ')[2])
+    return [...svg.querySelectorAll('[role=button] > text')].some(text => { const b = (text as SVGGraphicsElement).getBBox(); return b.x + b.width > width })
+  }))
+  expect(labelOverflow).toEqual([false, false])
   const ticks = await page.locator('.fv-comparison-charts .fv-outcome-chart').evaluateAll(charts => charts.map(chart => [...chart.querySelectorAll('.fv-axis-tick')].map(tick => tick.textContent)))
   expect(ticks).toHaveLength(2); expect(ticks[0]).toEqual(ticks[1]); expect(ticks[0]![2]).toBe('$0')
   // Every drawn line, marker and wedge sits inside the plot box.

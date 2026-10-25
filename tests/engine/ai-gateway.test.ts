@@ -352,7 +352,7 @@ describe('prompts and schema for the reveal + director', () => {
   };
   const mc = { median: 1200, p10: -8400, p90: 2000, probabilityNegativeNetWorth: 0.54, probabilityLiquidityShortfall: 0.06, observedNetWorth: -171, percentileOfObserved: 0.41 };
 
-  it('explain: system prompt frames the straight-line endings, forbids advice, caps length; user prompt carries the formatted numbers', async () => {
+  it('explain: system prompt frames the straight-line endings, asks for general levers with trade-offs, caps length; user prompt carries the formatted numbers', async () => {
     const { client, seen } = capture({ text: 'ok' });
     const r = await handleAiRequest(JSON.stringify({ kind: 'explain', summary: summary(), question: 'Was my rent too high?', monteCarlo: mc }), { AI_API_KEY: 'k' }, client);
     expect(r.status).toBe(200);
@@ -362,8 +362,15 @@ describe('prompts and schema for the reveal + director', () => {
     expect(system).toMatch(/typical/i);
     expect(system).toMatch(/lucky/i);
     expect(system).toMatch(/NOT a grade/);
-    expect(system).toMatch(/120 words/);
-    expect(system).toMatch(/No advice/i);
+    expect(system).toMatch(/110 words/);
+    expect(system).toMatch(/never "you should"/i);
+    expect(system).toMatch(/trade-off/);
+    expect(system).toMatch(/higher bond share usually narrows the spread/);
+    expect(system).toMatch(/3–6 months/);
+    expect(system).toMatch(/highest-rate debt first/);
+    expect(system).toMatch(/what-if panel/);
+    expect(system).toMatch(/Never open with "I can't say"/);
+    expect(system).toMatch(/at most 8 words/);
     expect(system).toMatch(/guarantee/i);
     expect(system).toMatch(/Plain English/i);
     expect(system).toMatch(/illustrative demo assumptions/);

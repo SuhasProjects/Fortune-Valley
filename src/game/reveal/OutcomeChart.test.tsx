@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { OutcomeChart, niceStep, sharedYDomain } from './OutcomeChart'
+import { LABEL_COLUMN, OutcomeChart, estimateTextWidth, fitLabel, niceStep, sharedYDomain } from './OutcomeChart'
 import { ChangeStrip, changeSentence } from './ChangeStrip'
 import type { OutcomeLines, WhatIfResult } from './ending-contract'
 import { usd } from '@/components/flow/format'
@@ -27,6 +27,20 @@ it('labels all four exact engine endings with plain straight SVG lines kept insi
   expect(container.querySelector('.fv-chart-zero')).toBeTruthy()
   expect(container.textContent).not.toContain('8 in 10 futures')
   expect(container.innerHTML).not.toContain('NaN')
+})
+it('keeps every end label inside the label column, with the full text in the accessible name', () => {
+  const extreme = { ...lines, start:-999999, p10:-9999999, median:999999, p90:9999999, yourEvents:-9999999 }
+  for (const highlight of [undefined, 'You, this choice']) {
+    const { container, unmount } = render(<OutcomeChart lines={extreme} yDomain={sharedYDomain(extreme)} title="Wide" highlightLabel={highlight}/>)
+    const texts = [...container.querySelectorAll('[role=button] > text')]
+    expect(texts).toHaveLength(8)
+    for (const text of texts) expect(estimateTextWidth(text.textContent ?? ''), text.textContent ?? '').toBeLessThanOrEqual(LABEL_COLUMN)
+    expect(container.querySelector('[role=button][aria-label^="You"]')?.getAttribute('aria-label')).toContain(highlight ?? 'You:')
+    unmount()
+  }
+  for (const label of ['Unlucky (10th)','Typical','Lucky (90th)','You','You, this choice']) expect(fitLabel(label)).toBe(label)
+  const long = fitLabel('Your exact events, with this change, and more')
+  expect(long.endsWith('…')).toBe(true); expect(estimateTextWidth(long)).toBeLessThanOrEqual(LABEL_COLUMN)
 })
 it('nudges end labels apart so none overlap', () => {
   const crowded = { ...lines, p10:12000, median:12010, p90:12020, yourEvents:12030 }

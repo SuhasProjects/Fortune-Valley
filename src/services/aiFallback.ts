@@ -502,10 +502,10 @@ export type ExplainTopic = 'savings' | 'debt' | 'investing' | 'insurance' | 'spe
 export function classifyQuestion(question: string | undefined): ExplainTopic {
   const q = (question ?? '').toLowerCase();
   if (!q.trim()) return 'general';
-  if (/should i|what should|what would you|recommend|advice|best (thing|move|option|choice)|what do i do|what can i do|how (do|can) i (improve|fix|do better)|next time/.test(q)) return 'advice';
+  if (/should i|what should|what would you|recommend|advice|best (thing|move|option|choice)|what do i do|what can i do|how (do|can|could) i (improve|fix|do better|be safer)|next time/.test(q)) return 'advice';
   if (/insur|deductible|premium|coverage|covered|medical|hospital|health plan/.test(q)) return 'insurance';
   if (/debt|loan|credit card|interest|apr|borrow|owe|payoff|pay off/.test(q)) return 'debt';
-  if (/invest|stock|bond|etf|market|portfolio|allocation|return/.test(q)) return 'investing';
+  if (/invest|stock|bond|etf|market|portfolio|allocation|return|volatil|risk|safer|steadier|stable|swing|spread/.test(q)) return 'investing';
   if (/saving|emergency|buffer|cushion|rainy|cash/.test(q)) return 'savings';
   if (/spend|budget|rent|housing|essential|discretionary|lifestyle|cost/.test(q)) return 'spending';
   return 'general';
@@ -513,83 +513,96 @@ export function classifyQuestion(question: string | undefined): ExplainTopic {
 
 type Mc = { median: number; p10: number; p90: number; probabilityNegativeNetWorth: number; probabilityLiquidityShortfall: number; observedNetWorth: number; percentileOfObserved?: number };
 
-const DISCLAIMER = 'All figures use the illustrative demo assumptions listed in the reveal; they are not forecasts or personal advice.';
+/** Closing note, at most 8 words, mirroring the AI prompt's rule. */
+const DISCLAIMER = 'Demo figures are illustrative, not personal advice.';
 
 const healthName = (id: string | null) => (id === 'health_basic' ? 'Basic Health' : id === 'health_plus' ? 'Plus Health' : id === 'health_family' ? 'Family Health' : id === null ? 'no health plan' : id);
 const autoName = (id: string | null) => (id === 'auto_liability' ? 'liability-only auto' : id === 'auto_full' ? 'full auto coverage' : id === null ? 'no auto coverage' : id);
 
-function topicSentences(topic: ExplainTopic, s: StateSummary, mc: Mc | undefined): string[] {
+const BUFFER_LEVER = 'A buffer of roughly 3–6 months of essentials means a shock is paid from savings instead of borrowing, which lifts the unlucky ending; the trade-off is cash that earns little while it waits.';
+const DEBT_LEVER = 'Paying the highest-rate debt first lowers the total interest charged each month, while keeping payments at the minimum leaves more cash free for shocks.';
+const MIX_LEVER = (mc: Mc | undefined) => mc
+  ? `A higher bond share usually narrows the spread between the lucky (${fmtUsd(mc.p90)}) and unlucky (${fmtUsd(mc.p10)}) endings but lowers the typical one; a stock-heavier mix does the reverse.`
+  : 'A higher bond share usually narrows the spread of endings but lowers the typical one; a stock-heavier mix does the reverse.';
+const COVER_LEVER = (mc: Mc | undefined) => mc
+  ? `Coverage changes what a shock costs, never whether it happens: a fuller plan or lower deductible trims the bad-month bill (${fmtPct(mc.probabilityLiquidityShortfall)} of replays needed emergency borrowing), at the cost of higher premiums every month.`
+  : 'Coverage changes what a shock costs, never whether it happens: a fuller plan or lower deductible trims the bad-month bill, at the cost of higher premiums every month.';
+const SPEND_LEVER = 'Lower fixed costs raise the surplus in every month of every replay, so they move all three lines together; the trade-off is less room for the things that make a budget liveable.';
+
+/** Two or three generally-true levers, each with its trade-off, anchored on this run's own figures. */
+function leverSentences(topic: ExplainTopic, s: StateSummary, mc: Mc | undefined): string[] {
   const buffer = fmtMonths(s.monthsOfEssentialsCovered);
   const pol = s.policy;
   switch (topic) {
     case 'savings':
       return [
         `Your liquid buffer is ${fmtUsd(s.cash)} in cash plus ${fmtUsd(s.savings)} in savings, about ${buffer} of housing and essentials, with ${fmtUsd(pol.savingsContributionPerMonth)}/mo flowing into savings.`,
-        s.monthsOfEssentialsCovered < 3
-          ? 'In the simulation, shocks that land below roughly three months of cover tend to be paid with borrowing, which is what pulls the unlucky line down; you could explore a larger buffer in the what-if panel.'
-          : 'In the simulation a buffer above roughly three months means most shocks are paid from savings rather than borrowing, which keeps the unlucky line closer to the typical one.',
+        BUFFER_LEVER,
       ];
     case 'debt':
-      if (s.debtTotal <= 0) return ['You finished with no debt, so none of the gap between the unlucky and lucky endings comes from interest; it comes from income, spending and market luck.'];
-      return [
-        `You carry ${fmtUsd(s.debtTotal)} of debt and pay ${fmtUsd(pol.extraDebtPaymentPerMonth)}/mo above the minimums.`,
-        'Interest is charged every month before payments, so the balance costs the same whether a replay is lucky or not; you could explore how extra payments move the typical line.',
-      ];
+      if (s.debtTotal <= 0) return ['You finished with no debt, so none of the gap between the unlucky and lucky endings comes from interest; it comes from income, spending and market luck.', DEBT_LEVER];
+      return [`You carry ${fmtUsd(s.debtTotal)} of debt and pay ${fmtUsd(pol.extraDebtPaymentPerMonth)}/mo above the minimums.`, DEBT_LEVER];
     case 'investing':
       return [
         `Investments total ${fmtUsd(s.investmentsTotal)}, with ${fmtUsd(pol.investmentContributionPerMonth)}/mo added at a target mix of ${fmtPct(pol.targetAllocation.stock)} stock, ${fmtPct(pol.targetAllocation.bond)} bonds and ${fmtPct(pol.targetAllocation.etf)} ETF.`,
-        mc
-          ? `Market returns are random in every replay, so they are a large part of why the lucky ending (${fmtUsd(mc.p90)}) and the unlucky ending (${fmtUsd(mc.p10)}) are so far apart; a steadier mix narrows that gap and a growth-heavier mix widens it.`
-          : 'Market returns are random in every replay; a steadier mix narrows the range of endings and a growth-heavier mix widens it.',
+        MIX_LEVER(mc),
       ];
     case 'insurance':
       return [
         `You hold ${healthName(s.insurance.health)}, ${autoName(s.insurance.auto)} and ${s.insurance.renters ? 'renters insurance' : 'no renters insurance'}.`,
-        mc
-          ? `Coverage changes what a shock costs, never whether it happens: it is a big part of why ${fmtPct(mc.probabilityLiquidityShortfall)} of replays needed emergency borrowing, and premiums are the certain cost paid every month in the typical line.`
-          : 'Coverage changes what a shock costs, never whether it happens; premiums are a certain monthly cost, the deductible is the size of the bad-month bill.',
+        COVER_LEVER(mc),
       ];
     case 'spending':
       return [
         `Each month you spend ${fmtUsd(s.housingMonthly)} on housing, ${fmtUsd(s.essentialsMonthly)} on essentials and ${fmtUsd(s.discretionaryMonthly)} on everything else, against a gross salary of ${fmtUsd(s.grossAnnualSalary)}/yr.`,
-        'Spending is the lever that moves all three lines together, because it changes the surplus in every month of every replay.',
+        SPEND_LEVER,
       ];
     case 'advice':
       return [
-        'This simulation cannot tell you what to do; it shows how one strategy fares under many kinds of luck.',
-        `You could explore the what-if panel to change a single decision and compare the lines; people often test a larger buffer (yours covers ${buffer}), ${s.debtTotal > 0 ? `extra payments on your ${fmtUsd(s.debtTotal)} of debt` : 'a different savings-versus-investing split'}, or a different coverage level.`,
+        `The levers that usually matter most are a cash buffer of 3–6 months of essentials (yours covers ${buffer}), which cuts forced borrowing but earns little while it waits; paying the highest-rate debt first${s.debtTotal > 0 ? ` (you carry ${fmtUsd(s.debtTotal)})` : ''}, which lowers interest but ties up cash; and a steadier investment mix, which narrows the spread of endings but lowers the typical one.`,
+        s.insurance.health === null ? 'Health coverage turns a large medical bill into premiums paid every month, so it costs more in calm futures and far less in unlucky ones.' : SPEND_LEVER,
       ];
     default: {
       const out: string[] = [];
-      if (s.monthsOfEssentialsCovered < 3) out.push(`Your liquid buffer covers about ${buffer} of housing and essentials; shocks in the simulation hit harder below roughly three months.`);
-      if (s.debtTotal > 0) out.push(`You carry ${fmtUsd(s.debtTotal)} of debt; interest accrues every month before payments, so extra payments reduce future interest.`);
-      if (s.insurance.health === null) out.push('Without health coverage, medical shocks are paid in full; coverage changes the cost, not the chance.');
-      if (out.length === 0) out.push(`Your buffer covers about ${buffer} of housing and essentials, you hold no debt, and you have ${healthName(s.insurance.health)}; the gap between the lines mostly reflects shocks and market luck.`);
-      return out.slice(0, 2);
+      if (s.monthsOfEssentialsCovered < 3) out.push(`Your liquid buffer covers about ${buffer} of housing and essentials; a buffer of 3–6 months pays shocks without borrowing, at the cost of cash that earns little.`);
+      if (s.debtTotal > 0) out.push(`You carry ${fmtUsd(s.debtTotal)} of debt; paying the highest-rate debt first lowers total interest, while minimum payments keep more cash free.`);
+      if (s.insurance.health === null) out.push('Without health coverage, medical shocks are paid in full; coverage changes the cost, not the chance, in exchange for premiums every month.');
+      if (out.length < 2) out.push(MIX_LEVER(mc));
+      return out.slice(0, 3);
     }
   }
 }
 
+/** One sentence naming a single change the what-if panel can test, tied to the lever just explained. */
+function whatIfSentence(topic: ExplainTopic, s: StateSummary): string {
+  const pick = topic === 'savings' ? 'a larger monthly savings contribution'
+    : topic === 'debt' ? 'extra payments on the highest-rate debt'
+    : topic === 'investing' ? 'a higher bond share'
+    : topic === 'insurance' ? 'a different coverage level'
+    : topic === 'spending' ? 'a cheaper place or a smaller discretionary budget'
+    : s.monthsOfEssentialsCovered < 3 ? 'a larger monthly savings contribution' : s.debtTotal > 0 ? 'extra payments on the highest-rate debt' : 'a steadier investment mix';
+  return `The what-if panel can test one change at a time, such as ${pick}, with the same luck in every future.`;
+}
+
 /**
  * Template explanation for the reveal (with Monte Carlo numbers) or a mid-game
- * insight (without). 3–5 plain sentences, keyed on the question; no new math.
+ * insight (without), mirroring the AI prompt: what happened, two or three general
+ * levers with their trade-offs, one what-if pointer, a short note. No new math.
+ * A topic question is answered first; its levers come before the summary.
  */
 export function fallbackExplanation(s: StateSummary, mc?: Mc, question?: string): string {
   const topic = classifyQuestion(question);
-  const parts: string[] = [];
+  const happened: string[] = [];
   if (mc) {
-    parts.push(`The chart draws straight lines from your starting net worth to three endings from 1,000 replays of your strategy under different luck: unlucky (10th percentile) at ${fmtUsd(mc.p10)}, typical (the median ending net worth) at ${fmtUsd(mc.median)}, and lucky (90th percentile) at ${fmtUsd(mc.p90)}.`);
     const where = mc.percentileOfObserved !== undefined && Number.isFinite(mc.percentileOfObserved)
-      ? `Your actual run ended at ${fmtUsd(mc.observedNetWorth)}, above about ${fmtPct(mc.percentileOfObserved)} of those replays, which reflects luck as well as choices and is not a grade`
-      : `Your actual run ended at ${fmtUsd(mc.observedNetWorth)}, and where it sits among the replays reflects luck as well as choices, so it is not a grade`;
-    parts.push(`${where}; about ${fmtPct(mc.probabilityNegativeNetWorth)} of replays ended with negative net worth and ${fmtPct(mc.probabilityLiquidityShortfall)} needed emergency borrowing at some point.`);
+      ? `your run ended at ${fmtUsd(mc.observedNetWorth)}, above about ${fmtPct(mc.percentileOfObserved)} of those replays, which reflects luck as well as choices and is not a grade`
+      : `your run ended at ${fmtUsd(mc.observedNetWorth)}, and where it sits among the replays reflects luck as well as choices, so it is not a grade`;
+    happened.push(`Across 1,000 replays of your strategy under different luck, the typical ending (the median ending net worth) was ${fmtUsd(mc.median)}, the unlucky (10th percentile) and lucky (90th percentile) endings were ${fmtUsd(mc.p10)} and ${fmtUsd(mc.p90)}, and ${where}.`);
+    happened.push(`About ${fmtPct(mc.probabilityNegativeNetWorth)} of replays ended with negative net worth and ${fmtPct(mc.probabilityLiquidityShortfall)} needed emergency borrowing at some point.`);
   } else {
-    parts.push(`As of ${s.monthLabel}, your net worth is ${fmtUsd(s.netWorth)}: ${fmtUsd(s.cash)} cash, ${fmtUsd(s.savings)} savings and ${fmtUsd(s.investmentsTotal)} invested, less ${fmtUsd(s.debtTotal)} of debt.`);
+    happened.push(`As of ${s.monthLabel}, your net worth is ${fmtUsd(s.netWorth)}: ${fmtUsd(s.cash)} cash, ${fmtUsd(s.savings)} savings and ${fmtUsd(s.investmentsTotal)} invested, less ${fmtUsd(s.debtTotal)} of debt.`);
   }
-  const topical = topicSentences(topic, s, mc);
-  // Keep the total at 3–5 sentences including the disclaimer.
-  const room = 4 - parts.length;
-  parts.push(...topical.slice(0, Math.max(1, room)));
-  parts.push(DISCLAIMER);
-  return parts.join(' ');
+  const levers = leverSentences(topic, s, mc);
+  const asked = topic !== 'general' && (question ?? '').trim().length > 0;
+  return [...(asked ? [...levers, ...happened] : [...happened, ...levers]), whatIfSentence(topic, s), DISCLAIMER].join(' ');
 }
