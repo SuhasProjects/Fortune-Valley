@@ -130,11 +130,13 @@ Request (`api/_lib/kinds/coach.ts`; the browser sends it from `askCoach` in `src
 ```
 `question` is 1–300 chars, `history` at most the last 4 turns (the client trims both), `openBuilding` the window the player has open (or null), `facts` the rates the StateSummary leaves out (each debt's APR, the savings APY, the plans held) so the answer can quote them instead of inventing numbers. Response (200): `{ "kind": "coach", "source": "ai", "text": "…", "warnings": [] }`; `text` is capped at 600 chars (≈ 70 words) by the response schema.
 
+Persona: the Coach is drawn and voiced as **the Sage**, the valley's old mentor (white beard, ochre robe, staff; sprite `windows/keepers/coach`, 24×24, 2-frame blink). The voice is a warm, energetic old teacher: at most one short exclamation of warmth at the start ("Ah, good question, my friend!"), the odd "look here" / "see how it works?", never more than two exclamation marks, never a repeated greeting, never pep talk; the persona is flavour and never adds length.
+
 Style (system prompt): explain like the player is twelve, cause → effect with the player's own numbers ("Your card charges 24%. Your savings earn 4%. Every $100 you throw at the card saves about $2 a month; the same $100 saved earns about 33 cents…"), answer in the first sentence, general rule plus its trade-off, never "you should" / "I recommend" / guarantees, no invented rates, no "the simulation can't decide" openers, no two-word fragments, ≤ 70 words, no personal identifiers. The gateway asks for up to 1,200 tokens because the provider's reasoning tokens count against the limit; the visible answer is still bounded by the schema.
 
-Offline fallback (`fallbackCoach` in `src/services/coachFallback.ts`, re-exported from `aiFallback.ts`): `classifyCoachQuestion` keyword-matches eight families (save vs debt, insurance, investing allocation, emergency fund, budget cut, job loss, loans, what-if) plus a general answer; the open building breaks ties. Each answer is built from the summary (cash, savings, months of cover, spending, policy, coverage) and `facts` when present (highest-rate debt, plan premium/deductible), in the same voice and under 70 words (`tests/engine/ai-coach.test.ts`).
+Offline fallback (`fallbackCoach` in `src/services/coachFallback.ts`, re-exported from `aiFallback.ts`): `classifyCoachQuestion` keyword-matches eight families (save vs debt, insurance, investing allocation, emergency fund, budget cut, job loss, loans, what-if) plus a general answer; the open building breaks ties. Each answer is built from the summary (cash, savings, months of cover, spending, policy, coverage) and `facts` when present (highest-rate debt, plan premium/deductible), in the same Sage voice (one warm opener, then the numbers, ≤ 2 exclamation marks) and under 70 words (`tests/engine/ai-coach.test.ts`).
 
-UI: the speech-bubble button bottom-right of the town (`src/game/coach/CoachPanel.tsx`) opens a 120×104 art px parchment chat (full-width sheet above the control bar on phones) with the Coach portrait, three suggested chips, an input and Ask. Escape closes and focus returns to the bubble; history lives in the store for the session only (cleared on new game, load and quit).
+UI: the speech-bubble button bottom-right of the town (`src/game/coach/CoachPanel.tsx`) opens a 120×104 art px parchment chat (full-width sheet above the control bar on phones) titled "The Sage" (bubble button "Ask the Sage") with the Sage portrait, a ≤ 25-word greeting in his voice, three suggested chips, an input and Ask. Escape closes and focus returns to the bubble; history lives in the store for the session only (cleared on new game, load and quit).
 
 Live check (2026-10-24, Luminal DeepSeek-V4.1-Flash, `npx vite --port 5243`, the month-6 fixture summary plus the facts above):
 
@@ -143,6 +145,16 @@ Live check (2026-10-24, Luminal DeepSeek-V4.1-Flash, `npx vite --port 5243`, the
 | What happens if I save more? | Saving more grows your cushion. $100 in savings earns about 33 cents a month at 4%. That same $100 paid on your 24% card would stop about $2 of interest a month. Your $3,047 covers about 2.2 months of essentials, so more saved means fewer scares but slower progress on the $2,351 card. |
 | Pay the card or save? | Your card charges 24% a year; savings earn 4%. Every $100 you put on the card saves about $2 a month, while $100 saved earns about 33 cents. Your cash and savings cover 2.2 months of essentials, a small cushion. More saved means fewer scares, but money sitting still earns little, so extra dollars toward the card cut the faster-growing cost. |
 | What does this insurance do? | Your health plan is a trade: $180 a month keeps it active, then you pay the first $4,000 of care each year yourself; after that you pay 30% and the insurer pays the rest. Your auto policy costs $70 a month and covers harm you cause to others, but you pay 100% of your own car's repairs. |
+
+Live check (2026-10-25, Sage persona, Luminal DeepSeek-V4.1-Flash, `npx vite --port 5251`, same fixture summary and facts):
+
+| Question | Answer (source: ai) |
+|---|---|
+| Pay the card or save? | Look here, this one is a fine puzzle. Your card charges 24% a year, about 2% a month: every $100 left on it costs about $2. Savings earn 4%, so $100 there makes about 33 cents a month. The card bites six times harder. With about 2.2 months of essentials covered, extra money above that cushion cuts more cost on the card than it earns in savings. |
+| What does this insurance do? | Look here, this plan is a safety net with a big first gap. You pay $180 a month, about $2,160 a year, before any care. Then you pay the first $4,000 of bills yourself; after that you pay 30% and the insurer pays 70%. Your $2,000 cash would not cover that deductible, so a big bill would lean on savings. |
+| What happens if I save more? | Ah, good question, my friend! More saving builds a bigger cushion, but that money earns slowly. Your $5,047 cash plus savings covers about 2.2 months of essentials. Each $100 saved earns about 4% a year, roughly 33 cents a month. The same $100 left on the 24% card costs about $2 a month. So extra saving buys safety; the card keeps charging while it waits. |
+
+60–67 words each, one opener at most, the numbers still lead; no second iteration was needed.
 
 Before the `facts` block existed the same questions came back vaguer ("Compare the card's APR with what Pine Bank pays on savings"); passing the rates and adding "lead with the numbers, not with instructions" to the prompt fixed that in one iteration.
 

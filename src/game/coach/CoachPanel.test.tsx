@@ -4,7 +4,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { createGame } from '../../engine'
 import { scenarios } from '../../data/scenarios'
 import { useGameStore } from '../../stores/useGameStore'
-import { CoachPanel, COACH_CHIPS } from './CoachPanel'
+import { CoachPanel, COACH_CHIPS, COACH_GREETING } from './CoachPanel'
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
 beforeEach(() => {
@@ -18,13 +18,15 @@ beforeEach(() => {
 describe('Coach panel', () => {
   it('opens from the speech-bubble button, shows the greeting and the three chips, closes on Escape and returns focus', async () => {
     render(<CoachPanel/>)
-    const bubble = screen.getByRole('button', { name: 'Ask the Coach' })
+    const bubble = screen.getByRole('button', { name: 'Ask the Sage' })
     expect(bubble.getAttribute('aria-expanded')).toBe('false')
     bubble.focus()
     fireEvent.click(bubble)
-    const dialog = await screen.findByRole('dialog', { name: 'Coach' })
+    const dialog = await screen.findByRole('dialog', { name: 'The Sage' })
     expect(bubble.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getByText(/Ask me anything about your money/)).toBeTruthy()
+    expect(screen.getByText(COACH_GREETING)).toBeTruthy()
+    expect(COACH_GREETING.trim().split(/\s+/).length).toBeLessThanOrEqual(25)
+    expect(screen.getByRole('img', { name: 'The Sage' }).getAttribute('data-sprite')).toBe('windows/keepers/coach')
     for (const chip of COACH_CHIPS) expect(screen.getByRole('button', { name: chip })).toBeTruthy()
     expect(screen.getByRole('textbox', { name: 'Your question' })).toBeTruthy()
     fireEvent(dialog, new Event('cancel', { bubbles: false, cancelable: true }))
@@ -36,7 +38,7 @@ describe('Coach panel', () => {
   it('sends a typed question (Enter or Ask), shows the answer with the offline tag when the gateway is down, and keeps history in the store', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('offline'))))
     render(<CoachPanel/>)
-    fireEvent.click(screen.getByRole('button', { name: 'Ask the Coach' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ask the Sage' }))
     const input = await screen.findByRole('textbox', { name: 'Your question' })
     const ask = screen.getByRole('button', { name: 'Ask' })
     expect((ask as HTMLButtonElement).disabled).toBe(true)
@@ -65,7 +67,7 @@ describe('Coach panel', () => {
     vi.stubGlobal('fetch', fetchMock)
     useGameStore.setState({ openBuildingId: 'hospital' })
     render(<CoachPanel/>)
-    fireEvent.click(screen.getByRole('button', { name: 'Ask the Coach' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ask the Sage' }))
     const chip = await screen.findByRole('button', { name: COACH_CHIPS[2] })
     await act(async () => { fireEvent.click(chip) })
     await screen.findByText('Your plan costs $180 a month.')

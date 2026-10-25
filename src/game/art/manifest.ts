@@ -1046,6 +1046,16 @@ const sprites = {
     ],
     "speed": 900
   },
+  "windows/keepers/coach": {
+    "src": "/art/windows/keepers/coach.png",
+    "w": 24,
+    "h": 24,
+    "frames": [
+      "0",
+      "1"
+    ],
+    "speed": 900
+  },
   "windows/keepers/home": {
     "src": "/art/windows/keepers/home.png",
     "w": 24,

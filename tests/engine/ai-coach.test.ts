@@ -31,7 +31,7 @@ describe('coach gateway', () => {
     expect(u).toMatch(/^Player question: Pay the card or save\?/);
     expect(u).toContain('bank window open');
     expect(u).toContain('- Player: hi');
-    expect(u).toContain('- Coach: Hello.');
+    expect(u).toContain('- Sage: Hello.');
     expect(u).toContain('"Credit card" (credit card): $2,351 at 24% APR');
     expect(u).toContain('savings earn 4% a year');
     expect(u).toContain('$180/mo premium, $4,000 deductible');
@@ -63,6 +63,10 @@ describe('coach gateway', () => {
     expect(coach.system).toMatch(/can't decide/);
     expect(coach.system).toMatch(/two-word fragments/);
     expect(coach.system).toMatch(/Never invent rates/);
+    expect(coach.system).toMatch(/You are the Sage/);
+    expect(coach.system).toMatch(/At most ONE short exclamation/);
+    expect(coach.system).toMatch(/more than two exclamation marks/);
+    expect(coach.system).toMatch(/Never repeat a greeting/);
     expect(coach.responseSchema.safeParse({ text: 'x'.repeat(601) }).success).toBe(false);
   });
 
@@ -124,6 +128,8 @@ describe('offline coach', () => {
         expect(t).not.toMatch(/\b[A-Z][a-z]+ [a-z]+\. [A-Z][a-z]+ [a-z]+\./); // no "Card wins. Savings lose." fragments
         expect(t).not.toMatch(/NaN|\$-|undefined/);
         expect(t.split(/(?<=[.!?])\s+/).length).toBeGreaterThanOrEqual(3);
+        expect((t.match(/!/g) ?? []).length, `${q}: exclamation marks`).toBeLessThanOrEqual(2); // the Sage is warm, not yappy
+        expect(t).not.toMatch(/you've got this|welcome|hello/i);
       }
     }
   });
