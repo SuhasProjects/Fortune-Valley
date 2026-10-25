@@ -26,7 +26,7 @@ const notices: GameNotification[] = [
 ]
 
 describe('flow components', () => {
-  it('prioritizes decisions, opens their building, and expires ordinary toasts', () => {
+  it('prioritizes decisions, opens their building, and expires every toast after ten seconds', () => {
     vi.useFakeTimers()
     const dismiss = vi.fn()
     const open = vi.fn()
@@ -36,12 +36,12 @@ describe('flow components', () => {
     expect(summaries).toEqual(['Choose a job', 'Repair bill', 'Payday'])
     fireEvent.click(screen.getByRole('button', { name: 'Go to Town Office' }))
     expect(open).toHaveBeenCalledWith('office')
-    vi.advanceTimersByTime(5_999)
+    vi.advanceTimersByTime(9_999)
     expect(dismiss).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(dismiss).toHaveBeenCalledWith('old')
     expect(dismiss).toHaveBeenCalledWith('new')
-    expect(dismiss).not.toHaveBeenCalledWith('decision')
+    expect(dismiss).toHaveBeenCalledWith('decision') // the building badge still marks the waiting choice
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss Choose a job' }))
     expect(dismiss).toHaveBeenCalledWith('decision')
   })

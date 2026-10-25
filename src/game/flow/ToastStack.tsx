@@ -6,7 +6,7 @@ import { useSettings } from '../settings'
 import { notificationIcons } from './ActivityWindow'
 import './flow.css'
 
-export const TOAST_LIFETIME_MS = 6_000
+export const TOAST_LIFETIME_MS = 10_000
 
 interface ToastProps {
   notification: GameNotification
@@ -20,7 +20,7 @@ function Toast({ notification: item, dismiss, openBuilding, reduceMotion }: Toas
   const remaining = useRef(TOAST_LIFETIME_MS)
   const started = useRef(0)
   useEffect(() => {
-    if (item.kind === 'decision' || hovered) return
+    if (hovered) return
     started.current = Date.now()
     const timeout = window.setTimeout(() => dismiss(item.id), remaining.current)
     return () => {
@@ -40,7 +40,7 @@ function Toast({ notification: item, dismiss, openBuilding, reduceMotion }: Toas
   </div>
 }
 
-/** Up to three unread notices under the HUD. Decisions sort first and never expire; the rest fade after six seconds. */
+/** Up to three unread notices under the HUD. Decisions sort first; every toast fades after ten seconds (hover holds it). A waiting decision keeps its building badge. */
 export function ToastStack({ notifications, onOpenBuilding, onViewAll, onDismiss }: { notifications: GameNotification[]; onOpenBuilding?: ToastProps['openBuilding']; onViewAll: () => void; onDismiss: (id: string) => void }) {
   const { reduceMotion } = useSettings()
   const visible = notifications.filter(item => !item.read).sort((a, b) => Number(b.kind === 'decision') - Number(a.kind === 'decision') || b.monthIndex - a.monthIndex).slice(0, 3)
