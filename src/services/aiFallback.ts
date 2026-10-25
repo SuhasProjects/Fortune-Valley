@@ -6,9 +6,10 @@
  * Nothing here computes finance: every number is either copied from the
  * summary, rounded for display, or a fixed illustrative offer bounded by BOUNDS.
  */
-import type { ArchetypeId, BuildingId, EventEffect, OpportunityProposal, PersonalizedInput, ScenarioProposal, StateSummary } from '@/types/domain';
+import type { ArchetypeId, BuildingId, EventEffect, OpportunityProposal, PersonalizedInput, ScenarioProposal, ShockFlavour, ShockFlavourInput, StateSummary } from '@/types/domain';
 import { hashSeed } from '@/engine/rng';
 import { BOUNDS } from '@/config/defaults';
+import { pickFlavour } from './flavourTable';
 
 const clampNum = (n: number | undefined, min: number, max: number): number | undefined =>
   n === undefined || !Number.isFinite(n) ? undefined : Math.min(max, Math.max(min, n));
@@ -606,3 +607,6 @@ export function fallbackExplanation(s: StateSummary, mc?: Mc, question?: string)
   const asked = topic !== 'general' && (question ?? '').trim().length > 0;
   return [...(asked ? [...levers, ...happened] : [...happened, ...levers]), whatIfSentence(topic, s), DISCLAIMER].join(' ');
 }
+
+/** Offline news-wire scene for a shock (table in ./flavourTable.ts). */
+export function fallbackFlavour(input: ShockFlavourInput, seed: number | string): ShockFlavour { return pickFlavour(input, seed); }

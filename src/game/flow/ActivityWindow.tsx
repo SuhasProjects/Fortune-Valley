@@ -11,7 +11,8 @@ export function ActivityWindow({ notifications, onClose, onMarkAllRead, onOpenBu
   return <Modal title="Town activity" onClose={onClose} headerExtra={<Button size="sm" icon="check" onClick={onMarkAllRead} disabled={notifications.every(item => item.read)}>Mark all read</Button>}>
     {items.length ? <ol className="fv-journal">{items.map(item => <li key={item.id} className={item.read ? 'is-read' : 'is-unread'}>
       <span className="fv-journal__meta"><Icon name={notificationIcons[item.kind]} compact/>Month {item.monthIndex} · {item.kind}{!item.read && <Tag tone="gold">New</Tag>}</span>
-      <h3>{item.summary}</h3>
+      <h3>{item.flavour?.headline ?? item.summary}</h3>
+      {item.flavour && <p className="fv-journal__scene">{item.flavour.scene}</p>}
       {item.details && <p>{item.details}</p>}
       {(item.amountSigned !== undefined || item.relatedBuilding) && <span className="fv-journal__row">
         {item.amountSigned !== undefined ? <Money value={item.amountSigned} signed/> : <span/>}

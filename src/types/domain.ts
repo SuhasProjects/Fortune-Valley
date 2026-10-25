@@ -234,6 +234,25 @@ export interface GameNotification {
   /** Optional headline amount for the toast (display only; ledger is the source of truth). */
   amountSigned?: number;
   read: boolean;
+  /** Set on shock notices so the UI can ask for a news-wire scene (AI kind `flavour`). */
+  shockKind?: ShockKind;
+  /** Type A event id, so the matching timeline entry can carry the same scene. */
+  eventId?: string;
+  flavour?: ShockFlavour;
+}
+
+/** Short wire-service scene for a shock; the amount always comes from the engine. */
+export interface ShockFlavour { headline: string; scene: string; source?: 'ai' | 'fallback' }
+
+/** PII-free input for the `flavour` kind. */
+export interface ShockFlavourInput {
+  kind: ShockKind;
+  amount: number;
+  monthLabel: string;
+  archetype?: ArchetypeId;
+  housingKind: HousingKind;
+  hasCar: boolean;
+  employment: EmploymentStatus;
 }
 
 export type TimelineEntryType = 'choice' | 'shock' | 'milestone' | 'policy_change' | 'ai_event';
@@ -248,6 +267,8 @@ export interface TimelineEntry {
   action?: GameAction;
   /** Net worth right after this entry. */
   netWorthAfter: number;
+  /** News-wire scene for a shock entry, copied from the matching notification once it arrives. */
+  flavour?: ShockFlavour;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -568,7 +589,8 @@ export interface PersonalizedInput {
 export type AiRequest =
   | { kind: 'scenario'; input: PersonalizedInput }
   | { kind: 'opportunity'; summary: StateSummary }
-  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> };
+  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> }
+  | { kind: 'flavour'; shock: ShockFlavourInput };
 
 /** The scenario the AI maps a prompt onto. Engine turns it into a GameConfig. */
 export interface ScenarioProposal {
@@ -604,7 +626,8 @@ export interface OpportunityProposal {
 export type AiResponse =
   | { kind: 'scenario'; source: 'ai' | 'fallback'; proposal: ScenarioProposal; warnings: string[] }
   | { kind: 'opportunity'; source: 'ai' | 'fallback'; proposal: OpportunityProposal | null; warnings: string[] }
-  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
+  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] }
+  | { kind: 'flavour'; source: 'ai' | 'fallback'; headline: string; scene: string; warnings: string[] };
 
 export interface AiErrorResponse {
   error: string;

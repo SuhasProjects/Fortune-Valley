@@ -32,9 +32,9 @@ function Toast({ notification: item, dismiss, openBuilding, reduceMotion }: Toas
   return <div className={`fv-toast__enter${reduceMotion ? ' fv-toast__enter--still' : ''}`} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
     <Board as="article" className={`fv-toast fv-toast--${item.kind} notice notice--${item.kind}`}>
       <div className="fv-toast__head"><Icon name={notificationIcons[item.kind]} compact/><span>Month {item.monthIndex}</span><IconButton size="sm" variant="ghost" icon="close" label={`Dismiss ${item.summary}`} onClick={() => dismiss(item.id)}/></div>
-      <strong>{item.summary}</strong>
+      <strong>{item.flavour?.headline ?? item.summary}</strong>
       {item.amountSigned !== undefined && <Money value={item.amountSigned} signed/>}
-      {item.details && <p>{item.details}</p>}
+      {item.flavour ? <p className="fv-toast__scene">{item.flavour.scene}</p> : item.details && <p>{item.details}</p>}
       {building && openBuilding && <Button size="sm" variant={item.kind === 'decision' ? 'primary' : 'wood'} iconRight="arrow-right" onClick={() => openBuilding(building)}>{item.kind === 'decision' ? `Go to ${BUILDINGS[building].title}` : `Open ${BUILDINGS[building].title}`}</Button>}
     </Board>
   </div>

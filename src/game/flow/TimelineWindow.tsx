@@ -22,6 +22,7 @@ export function TimelineWindow({ entries, startMonth, onClose }: { entries: Time
     <Tabs tabs={filters} value={filter} onChange={value => setFilter(value as Filter)}>
       {visible.length ? <ol className="fv-journal">{visible.map(entry => <li key={entry.id}>
         <span className="fv-journal__meta"><Icon name={icons[entry.type]} compact/>{monthLabel(startMonth, entry.monthIndex)} · {labels[entry.type]}</span>
+        {entry.flavour && <p className="fv-journal__scene"><strong>{entry.flavour.headline}.</strong> {entry.flavour.scene}</p>}
         <p>{entry.description}</p>
         <span className="fv-journal__row"><span>Net worth after</span><Money value={entry.netWorthAfter}/></span>
       </li>)}</ol> : <p className="fv-journal-empty">Your story starts here…</p>}
