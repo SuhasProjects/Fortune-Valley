@@ -14,16 +14,16 @@
   --bar-top: calc(25 * var(--px));
 }
 
-/* Phones: the HUD is two rows (brand + date / four values) and the control bar two rows; see hud.css. */
+/* Phones: the HUD is two rows (brand + date / Timeline, then the four values) and the control bar two rows of
+   22-art-px (44 CSS px) buttons; see hud.css. Notch and home-bar insets push both inward (viewport-fit=cover). */
 @media (max-width: 639px) {
   .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
-    --hud-bottom: calc(47 * var(--px));
-    --bar-top: calc(49 * var(--px));
+    --hud-bottom: calc(55 * var(--px) + env(safe-area-inset-top, 0px));
+    --bar-top: calc(69 * var(--px) + env(safe-area-inset-bottom, 0px));
     /* UI zoom is 2 on phones, which would make the art-px font tokens 9-16 px; floor them at readable sizes. */
     --fs-label: 11px; --fs-body: 14px; --fs-value: 15px; --fs-heading: 18px;
   }
 }
-
 /* Every town window (building windows, timeline, activity, pause, options, guide, confirms) sits between the HUD
    and the control bar, centred in that gap. Its body scrolls; the header stays visible. */
 .fv-stage[aria-label='Fortune Valley town'] .fv-modal {
@@ -33,4 +33,23 @@
 }
 .fv-stage[aria-label='Fortune Valley town'] .fv-modal > .fv-window {
   max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
+}
+
+/* Landscape phones (zoom 2, 390-480 px tall): one-row HUD and bar with 44 px buttons, the same readable font floor,
+   and every window takes the full height (the gap between HUD and bar is too short to read in). */
+@media (max-height: 480px) and (orientation: landscape) {
+  .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
+    --hud-bottom: calc(27 * var(--px) + env(safe-area-inset-top, 0px));
+    --bar-top: calc(35 * var(--px) + env(safe-area-inset-bottom, 0px));
+    --fs-label: 11px; --fs-body: 14px; --fs-value: 15px; --fs-heading: 18px;
+  }
+  .fv-stage[aria-label='Fortune Valley town'] .fv-modal {
+    top: calc(2 * var(--px) + env(safe-area-inset-top, 0px));
+    bottom: calc(2 * var(--px) + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - 4 * var(--px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  .fv-stage[aria-label='Fortune Valley town'] .fv-modal > .fv-window {
+    max-height: calc(100dvh - 4 * var(--px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 8 * var(--px) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  }
 }

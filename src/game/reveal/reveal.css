@@ -69,7 +69,7 @@
 @media (max-width:1099px) { .fv-comparison-charts { grid-template-columns:minmax(0,1fr); } }
 @media (max-width:639px) {
   /* Phones run the stage at zoom 1; the ledger reads at 3 px like the title's reading surfaces. */
-  .fv-reveal-ui { --px:3px; padding:calc(2 * var(--px)) calc(1 * var(--px)); }
+  .fv-reveal-ui { --px:3px; padding:calc(2 * var(--px) + env(safe-area-inset-top, 0px)) calc(1 * var(--px) + env(safe-area-inset-right, 0px)) calc(2 * var(--px) + env(safe-area-inset-bottom, 0px)) calc(1 * var(--px) + env(safe-area-inset-left, 0px)); }
   .fv-reveal-ledger { width:100%; font-size:calc(5 * var(--px)); }
   .fv-what-if-fields,.fv-change-tiles { grid-template-columns:1fr; }
   .fv-reveal-heading h1 { font-size:calc(6 * var(--px)); } .fv-reveal-heading h1 strong { font-size:calc(8 * var(--px)); }
@@ -84,3 +84,9 @@
 .fv-reveal-recap { margin:calc(2 * var(--px)) auto calc(3 * var(--px)); max-width:72ch; text-align:center; }
 .fv-reveal-recap .fv-tag { font-size:calc(4.5 * var(--px)); }
 .fv-reveal-recap-text { margin:calc(1.5 * var(--px)) 0 0; font-size:calc(5.5 * var(--px)); line-height:1.4; }
+/* Touch: disclosures, legend rows, Ask and the play-again button are 44 px targets; text boxes stay at 16 px. */
+@media (pointer:coarse) {
+  .fv-chart-table summary, .fv-reveal-details summary { line-height:44px; }
+  .fv-chart-legend button, .fv-ask-row .fv-button, .fv-play-again .fv-button { min-height:44px; }
+  .fv-ask-row .fv-button { min-width:44px; }
+}

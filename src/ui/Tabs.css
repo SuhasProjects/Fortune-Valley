@@ -4,3 +4,5 @@
 .fv-tab[aria-selected='true'] { border-image-source: url('/art/ui/frames/tab-active.png'); }
 .fv-tabs [role='tabpanel'] { padding: calc(3 * var(--px)); background: var(--c-parchment); font: var(--fs-body)/1.1 var(--font-body); color: var(--c-outline); }
 .fv-tabs [role='tabpanel']:focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); }
+/* Touch: tabs are 44 px tall. */
+@media (pointer: coarse) { .fv-tab { min-height: 44px; } }

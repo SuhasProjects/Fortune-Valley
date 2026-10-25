@@ -108,3 +108,10 @@
   .ft-keeper__portrait { flex-basis: calc(24 * var(--px)); }
   .ft-sheet__popover { right: calc(4 * var(--px)); width: calc(100vw - 16 * var(--px)); }
 }
+/* Touch: disclosure rows and plan cards are thumb-sized; the help popover keeps clear of the phone's edges. */
+@media (pointer: coarse) {
+  .ft-sheet summary { min-height: 44px; display: flex; align-items: center; gap: calc(2 * var(--px)); }
+  .ft-sheet summary::before { content: '\25B8'; font-size: 0.8em; } .ft-sheet details[open] > summary::before { content: '\25BE'; }
+  .ft-sheet summary::-webkit-details-marker, .ft-sheet summary::marker { display: none; content: ''; }
+  .ft-sheet .fv-button, .ft-notice .fv-button { min-height: 44px; }
+}
