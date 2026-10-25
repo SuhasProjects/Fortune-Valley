@@ -25,15 +25,15 @@
 .ft-sheet__popover { position: fixed; z-index: 2; top: calc(25 * var(--px)); right: calc(7 * var(--px)); width: min(calc(105 * var(--px)), calc(100vw - 28 * var(--px))); max-height: calc(100dvh - 50 * var(--px)); overflow: auto; color: var(--c-outline); font: var(--fs-body)/1.2 var(--font-body); }
 .ft-sheet__popover::before { content: ''; display: block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); margin: 0 auto calc(-2 * var(--px)); position: relative; z-index: 1; }
 .ft-sheet__help-heading { margin-bottom: calc(2 * var(--px)); }
-.ft-window-hint { grid-area: hint; margin: 0; color: var(--c-paper); font: var(--fs-label)/1.1 var(--font-body); }
-/* The world also calls its floating signs fv-plaque; keep kit header plaques in flow. */
-.fv-window__header > h2 > .fv-plaque { position: static; inset: auto; display: inline-block; text-align: left; pointer-events: auto; }
+.ft-window-hint { grid-area: hint; margin: 0; color: var(--c-paper); font: var(--fs-label)/1.1 var(--font-body); text-align: center; justify-self: center; }
+/* The world also calls its floating signs fv-plaque; keep kit header plaques in flow and centred. */
+.fv-window__header > h2 > .fv-plaque { position: static; inset: auto; display: inline-block; text-align: center; pointer-events: auto; }
 .fv-window:has(.ft-building-portrait) { --building-roof: var(--c-roof-red); --building-roof-dark: var(--c-roof-red-dark); max-width: calc(100vw - 10 * var(--px)); }
 .fv-window:has([data-building='bank']) { --building-roof: var(--c-roof-blue); --building-roof-dark: var(--c-roof-blue-dark); }
 .fv-window:has([data-building='office']) { --building-roof: var(--c-roof-teal); --building-roof-dark: var(--c-roof-teal-dark); }
 .fv-window:has([data-building='market']) { --building-roof: var(--c-roof-green); --building-roof-dark: var(--c-roof-green-dark); }
-.fv-window:has(.ft-building-portrait) > .fv-window__header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: 'portrait title help close' 'portrait hint help close'; background: var(--building-roof); border-bottom: var(--px) solid var(--building-roof-dark); padding: calc(2 * var(--px)); }
-.fv-window:has(.ft-building-portrait) > .fv-window__header > h2 { grid-area: title; }
+.fv-window:has(.ft-building-portrait) > .fv-window__header { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: 'portrait title help close' 'portrait hint help close'; align-items: center; background: var(--building-roof); border-bottom: var(--px) solid var(--building-roof-dark); padding: calc(2 * var(--px)); }
+.fv-window:has(.ft-building-portrait) > .fv-window__header > h2 { grid-area: title; text-align: center; justify-self: center; }
 .fv-window:has(.ft-building-portrait) > .fv-window__header > .fv-icon-button { grid-area: close; }
 .ft-building-portrait { grid-area: portrait; display: flex; align-items: center; justify-content: center; }
 .ft-building-portrait .fv-sprite { flex-shrink: 0; }
@@ -51,13 +51,11 @@
 @keyframes ft-keeper-blink { 0%, 94%, 100% { background-position: 0 0; } 95%, 99% { background-position: calc(-24 * var(--px)) 0; } }
 [data-reduce-motion='true'] .ft-keeper__portrait, .ft-keeper[data-reduce-motion] .ft-keeper__portrait { animation: none; }
 @media (prefers-reduced-motion: reduce) { .ft-keeper__portrait { animation: none; } }
-.ft-money-field { position: relative; }
-.ft-money-field > span { position: absolute; left: calc(4 * var(--px)); top: calc(8 * var(--px)); z-index: 1; }
-.ft-money-field input { padding-left: calc(6 * var(--px)); }
-.ft-allocation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(2 * var(--px)); }
-.ft-allocation > div { min-width: 0; }
-.ft-allocation small { display: block; overflow-wrap: anywhere; }
-.ft-asset-chip { display: inline-block; width: calc(3 * var(--px)); height: calc(2 * var(--px)); }
+.ft-money-field { min-width: 0; }
+.ft-allocation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(2 * var(--px)); align-items: start; }
+.ft-allocation > div { min-width: 0; display: flex; flex-direction: column; gap: var(--px); }
+.ft-allocation small { display: block; overflow-wrap: anywhere; line-height: 1.15; }
+.ft-asset-chip { display: inline-block; width: calc(3 * var(--px)); height: calc(2 * var(--px)); vertical-align: middle; }
 .ft-asset-chip--stock { background: var(--c-roof-red); }
 .ft-asset-chip--bond { background: var(--c-roof-blue); }
 .ft-asset-chip--etf { background: var(--c-roof-green); }
@@ -65,7 +63,7 @@
 .ft-allocation-bar > span { flex-shrink: 0; }
 .ft-plan-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(2 * var(--px)); }
 .ft-plan-card { display: flex; flex-direction: column; position: relative; gap: var(--px); padding: calc(2 * var(--px)); border: var(--px) solid var(--c-parchment-shadow); background: var(--c-paper); cursor: pointer; }
-.ft-plan-card[data-selected='true'] { border-color: var(--c-gold); }
+.ft-plan-card[data-selected='true'] { border-color: var(--c-gold); box-shadow: inset 0 0 0 var(--px) var(--c-gold); }
 .ft-plan-card:has(:focus-visible) { outline: calc(2 * var(--px)) solid var(--c-gold); }
 .ft-plan-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .ft-plan-card dl > div { display: block; }
@@ -83,19 +81,20 @@
 .ft-cash-bars { display: flex; align-items: end; gap: var(--px); height: calc(12 * var(--px)); margin: calc(2 * var(--px)) 0; }
 .ft-cash-bars > span { flex: 1; background: var(--c-money-up); min-width: var(--px); }
 .ft-cash-bars > span[data-negative='true'] { background: var(--c-money-down); }
-.ft-notice { position: relative; margin-bottom: calc(3 * var(--px)); }
-.ft-notice h2 { font: 700 var(--fs-heading)/1.1 var(--font-heading); margin: calc(2 * var(--px)) 0; }
-.ft-notice p { margin: calc(2 * var(--px)) 0; }
-.ft-notice__pin { position: absolute; top: calc(-2 * var(--px)); right: calc(4 * var(--px)); width: calc(2 * var(--px)); height: calc(3 * var(--px)); background: var(--c-gold); border-bottom: var(--px) solid var(--c-wood-dark); }
+.ft-notice, .ft-notice.event-card { position: relative; margin: 0 0 calc(3 * var(--px)); padding: calc(3 * var(--px)); background: var(--c-parchment); color: var(--c-outline); font: var(--fs-body)/1.15 var(--font-body); box-shadow: inset 0 calc(2 * var(--px)) 0 var(--c-wood), 0 calc(2 * var(--px)) 0 color-mix(in srgb, var(--c-ink) 35%, transparent); }
+.ft-notice h2, .ft-notice.event-card h2 { font: 700 var(--fs-heading)/1.1 var(--font-heading); margin: calc(2 * var(--px)) 0; color: var(--c-ink); }
+.ft-notice p, .ft-notice.event-card p { margin: calc(2 * var(--px)) 0; font-size: var(--fs-body); color: var(--c-outline); }
+.ft-notice__pin { position: absolute; top: calc(-1 * var(--px)); left: 50%; transform: translateX(-50%); width: calc(3 * var(--px)); height: calc(3 * var(--px)); background: var(--c-gold); border: var(--px) solid var(--c-outline); border-bottom-color: var(--c-wood-dark); }
 .ft-notice__learning { display: flex; align-items: start; gap: calc(2 * var(--px)); }
 .ft-notice .event-actions { display: flex; flex-wrap: wrap; gap: calc(3 * var(--px)); margin: calc(3 * var(--px)) 0; }
-.ft-notice .event-actions > div { flex: 1; min-width: calc(32 * var(--px)); }
-.ft-notice .event-actions small { display: block; margin-top: var(--px); }
-.ft-receipt { padding: calc(2 * var(--px)); background: var(--c-paper); border-bottom: var(--px) dashed var(--c-outline); }
+.ft-notice .event-actions > div { flex: 1; min-width: calc(36 * var(--px)); display: flex; flex-direction: column; align-items: flex-start; gap: var(--px); }
+.ft-notice .event-actions small, .ft-notice.event-card small { display: block; margin-top: var(--px); font-size: var(--fs-label); line-height: 1.15; color: var(--c-outline); }
+.ft-receipt { padding: calc(2 * var(--px)); background: var(--c-paper); border: var(--px) solid var(--c-parchment-shadow); border-bottom: var(--px) dashed var(--c-outline); }
 .ft-stress { padding: calc(4 * var(--px)); }
 .ft-stress > section { margin-bottom: calc(8 * var(--px)); }
 .ft-stress .ft-sheet { max-width: calc(205 * var(--px)); margin-bottom: calc(4 * var(--px)); }
 .ft-sheet :focus-visible, .ft-notice :focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); outline-offset: var(--px); }
+.ft-sheet .fv-field-control:focus-visible, .ft-sheet .fv-slider:focus-visible { outline-offset: 0; }
 @media (max-width: 719px) {
   .ft-sheet__body { grid-template-columns: minmax(0, 1fr); }
   .ft-sheet__status dl { grid-template-columns: minmax(0, 1fr); }
