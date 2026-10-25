@@ -71,7 +71,12 @@ export const GEMINI_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 
  */
 export function resolveEnv(env: HandlerEnv): HandlerEnv {
   const set = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ''));
-  if (env.GEMINI_API_KEY) return { ...GEMINI_DEFAULTS, ...set, AI_API_KEY: env.GEMINI_API_KEY };
+  if (env.GEMINI_API_KEY) {
+    // Gemini key present: force Gemini's provider + endpoint even if stale AI_PROVIDER/AI_BASE_URL (e.g. Luminal) are still
+    // configured on the host; only a Gemini model name may override the default model.
+    const model = env.AI_MODEL && /^gemini/i.test(env.AI_MODEL) ? env.AI_MODEL : GEMINI_DEFAULTS.AI_MODEL;
+    return { ...set, ...GEMINI_DEFAULTS, AI_MODEL: model, AI_AUTH_HEADER: 'bearer', AI_API_KEY: env.GEMINI_API_KEY };
+  }
   if (env.AI_API_KEY) return env;
   if (env.LUMINAL_API_KEY) return { ...LUMINAL_DEFAULTS, ...set, AI_API_KEY: env.LUMINAL_API_KEY };
   return env;
