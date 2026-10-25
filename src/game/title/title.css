@@ -135,4 +135,16 @@
   .fv-title--subscreen .fv-sign-wrap { top:calc(10px); width:calc(120 * var(--px)); max-width:70%; }
   .fv-picker header { margin-top:calc(2 * var(--px)); } .fv-letter { margin-top:calc(2 * var(--px)); }
   .fv-title-content .fv-back { position:sticky; top:0; margin-bottom:calc(2 * var(--px)); }
+  .fv-title-corners { bottom:calc(4 * var(--px) + env(safe-area-inset-bottom, 0px)); left:calc(4 * var(--px) + env(safe-area-inset-left, 0px)); right:calc(4 * var(--px) + env(safe-area-inset-right, 0px)); }
+  .fv-title-content { bottom:calc(40px + env(safe-area-inset-bottom, 0px)); }
+}
+/* Landscape phones: the Back button stays put while the picker or letter scrolls under it. */
+@media (max-height:480px) and (orientation:landscape) {
+  .fv-title-content .fv-back { position:sticky; top:0; margin-bottom:calc(2 * var(--px)); }
+  .fv-title-corners { bottom:calc(2 * var(--px) + env(safe-area-inset-bottom, 0px)); left:calc(4 * var(--px) + env(safe-area-inset-left, 0px)); right:calc(4 * var(--px) + env(safe-area-inset-right, 0px)); }
+}
+/* Touch: menu, corner, Back and example buttons are at least 44 px tall; the numbers disclosure gets a thumb-sized row. */
+@media (pointer:coarse) {
+  .fv-title-menu > .fv-button, .fv-title-corners .fv-button, .fv-title-content .fv-back, .fv-examples .fv-button, .fv-actions .fv-button { min-height:44px; }
+  .fv-letter-numbers summary, .fv-guide-page summary { line-height:44px; }
 }

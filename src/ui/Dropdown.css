@@ -15,3 +15,9 @@
 .fv-dropdown__option[aria-selected='true']::before { content: ''; position: absolute; left: calc(1.5 * var(--px)); top: 50%; width: calc(2 * var(--px)); height: calc(2 * var(--px)); margin-top: calc(-1 * var(--px)); background: var(--c-outline); }
 .fv-dropdown__option--active { background: var(--c-parchment); box-shadow: inset 0 0 0 var(--px) var(--c-gold); }
 @media (prefers-reduced-motion: reduce) { .fv-dropdown__button > .fv-icon { transition: none; } }
+/* Touch: the combobox button and each option are 44 px tall and 16 px text (no page zoom). */
+@media (pointer: coarse) {
+  .fv-dropdown__button { min-height: 44px; font-size: max(16px, var(--fs-body)) !important; }
+  .fv-dropdown__list { font-size: max(16px, var(--fs-body)) !important; max-height: min(calc(70 * var(--px)), 40dvh); }
+  .fv-dropdown__option { min-height: 44px; display: flex; align-items: center; }
+}

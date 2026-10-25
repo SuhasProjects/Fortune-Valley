@@ -25,3 +25,15 @@ textarea.fv-field-control { min-height: calc(24 * var(--px)); resize: vertical; 
 .fv-slider__ticks { position: relative; display: block; height: calc(6 * var(--px)); margin: 0 calc(4.5 * var(--px)); font-size: var(--fs-label); line-height: 1; color: var(--c-outline); }
 .fv-slider__tick { position: absolute; top: 0; left: calc(100% * var(--fv-fraction, 0)); transform: translateX(-50%); padding-top: calc(2 * var(--px)); white-space: nowrap; }
 .fv-slider__tick::before { content: ''; position: absolute; top: 0; left: 50%; width: var(--px); height: var(--px); margin-left: calc(-0.5 * var(--px)); background: var(--c-outline); }
+/* Touch: text boxes are 16 px (iOS zooms the page for anything smaller) and 44 px tall; sliders get a 44 px hit box
+   with a 4x thumb on a plain track (the 9-slice track art cannot stretch to that height); toggles are 44 px. The
+   font-size is !important because a few screens (what-if, ask row) size the control from --px. */
+@media (pointer: coarse) {
+  .fv-field-control { font-size: max(16px, var(--fs-body)) !important; min-height: 44px; }
+  .fv-slider { height: 44px; margin: 0; border: 0; border-image: none; background: linear-gradient(var(--c-parchment-shadow), var(--c-parchment-shadow)) center / calc(100% - 4px) 4px no-repeat, linear-gradient(var(--c-outline), var(--c-outline)) center / 100% 8px no-repeat; }
+  .fv-slider::-webkit-slider-thumb { width: 20px; height: 28px; }
+  .fv-slider::-moz-range-thumb { width: 20px; height: 28px; }
+  .fv-slider__fill { left: 2px; top: calc(50% - 2px); height: 4px; width: calc((100% - 20px) * var(--fv-fraction, 0) + 8px); }
+  .fv-slider__ticks { margin: 0 10px; }
+  .fv-toggle { min-height: 44px; min-width: 44px; }
+}

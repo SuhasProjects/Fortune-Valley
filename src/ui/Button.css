@@ -22,3 +22,9 @@
 .fv-button:focus-visible, .fv-tab:focus-visible, .fv-toggle:focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); outline-offset: var(--px); }
 .fv-field-control:focus-visible, .fv-slider:focus-visible { outline: calc(2 * var(--px)) solid var(--c-gold); outline-offset: 0; }
 .fv-icon-button { width: calc(var(--button-height) * var(--px)); padding: 0; flex: none; white-space: nowrap; }
+/* Touch: buttons inside windows, the title and the ending are at least 44 CSS px tall; icon buttons 44 square. The
+   HUD and control bar set their own thumb sizes in hud.css (their boards are sized in art px). */
+@media (pointer: coarse) {
+  .fv-modal .fv-button, .fv-title .fv-button, .fv-reveal-ui .fv-button { min-height: 44px; }
+  .fv-modal .fv-icon-button, .fv-title .fv-icon-button, .fv-modal .fv-window__header .fv-button { width: auto; min-width: 44px; min-height: 44px; }
+}
