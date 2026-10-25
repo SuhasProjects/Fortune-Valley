@@ -93,6 +93,14 @@ const sprites = {
       "0"
     ]
   },
+  "title/sign-large": {
+    "src": "/art/title/sign-large.png",
+    "w": 240,
+    "h": 64,
+    "frames": [
+      "0"
+    ]
+  },
   "title/sign-small": {
     "src": "/art/title/sign-small.png",
     "w": 120,
@@ -121,15 +129,15 @@ const sprites = {
   "title/vine-side": {
     "src": "/art/title/vine-side.png",
     "w": 16,
-    "h": 28,
+    "h": 72,
     "frames": [
       "0"
     ]
   },
   "title/vine-top": {
     "src": "/art/title/vine-top.png",
-    "w": 32,
-    "h": 16,
+    "w": 256,
+    "h": 18,
     "frames": [
       "0"
     ]

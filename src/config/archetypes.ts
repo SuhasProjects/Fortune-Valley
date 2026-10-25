@@ -28,7 +28,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
   college_student: {
     id: 'college_student',
     title: 'College Student',
-    description: 'Part-time job, dorm housing, student loans deferred until you graduate. Learn budgeting and the cost of credit.',
+    description: 'A part-time job, dorm housing and student loans deferred until graduation teach budgeting and the real cost of credit.',
     narrativeFocus: ['budgeting', 'credit_cards', 'emergency_fund'],
     initialState: base({
       cash: 800,
@@ -46,7 +46,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
   entry_worker: {
     id: 'entry_worker',
     title: 'Entry-Level Worker',
-    description: 'First salaried job, renting alone, a car loan and student loans. Learn about take-home pay, insurance and starting to invest.',
+    description: 'A first salaried job, renting alone with a car loan and student loans, teaches take-home pay, insurance and how to start investing.',
     narrativeFocus: ['taxes', 'insurance', 'investing_basics', 'debt_payoff'],
     initialState: base({
       cash: 2200,
@@ -64,7 +64,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
   professional: {
     id: 'professional',
     title: 'Established Professional',
-    description: 'Solid income, meaningful investments, higher lifestyle costs. Learn about allocation, concentration risk and protecting what you have.',
+    description: 'A solid income with meaningful investments and higher lifestyle costs teaches allocation, concentration risk and protecting what you have.',
     narrativeFocus: ['allocation', 'concentration_risk', 'insurance', 'tax_awareness'],
     initialState: base({
       cash: 6000,
@@ -80,7 +80,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeDefinition> = {
   young_family: {
     id: 'young_family',
     title: 'Young Family',
-    description: 'Two dependents, one income, tight margins and real exposure to shocks. Learn about emergency funds, coverage and trade-offs.',
+    description: 'Two dependents on one income with tight margins and real exposure to shocks teach emergency funds, coverage and trade-offs.',
     narrativeFocus: ['emergency_fund', 'insurance', 'budgeting', 'debt_payoff'],
     initialState: base({
       cash: 3000,

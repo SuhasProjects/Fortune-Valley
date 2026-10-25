@@ -23,31 +23,37 @@ const pine = (x: number, y: number): Placed => ({ sprite: 'world/extra/pine-tree
 const tree = (x: number, y: number): Placed => ({ sprite: 'world/props/tree-round', x, y, animate: true })
 const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x, y, animate: true })
 
+/**
+ * Every desktop viewport shows the 320x180 core (art px 80..400 wide; 1366x768 shows 69..411, 1440x900 60..420).
+ * Standalone props sit fully inside the core or fully outside x 58..422 so no viewport cuts one in half; the pine
+ * line leaves a gap over those edge bands for the same reason.
+ */
 const forest: Placed[] = []
-for (let x = -6; x < MAP_W; x += 20) {
-  if (x > 214 && x < 262) continue // the path leaves the meadow here
-  const step = Math.round((x + 6) / 20)
+for (let x = 2; x < MAP_W; x += 20) {
+  if (x >= 216 && x <= 244) continue // the path leaves the meadow here
+  if ((x + 18 > 60 && x < 80) || (x + 18 > 400 && x < 420)) continue // edge bands
+  const step = Math.round((x - 2) / 20)
   forest.push(pine(x, 118 + (step % 3) * 3))
-  if (step % 4 === 1) forest.push(tree(x + 9, 126))
+  if (step % 4 === 1 && x + 31 <= 400) forest.push(tree(x + 9, 126))
 }
 
 const PROPS: Placed[] = [
   ...forest,
-  { sprite: 'world/buildings/home', x: 72, y: 150 },
-  { sprite: 'world/buildings/market', x: 352, y: 168 },
-  { sprite: 'world/extra/mailbox', x: 148, y: 184 },
-  { sprite: 'world/extra/fence-post', x: 92, y: 176 }, { sprite: 'world/extra/fence-h', x: 99, y: 180 }, { sprite: 'world/extra/fence-h', x: 115, y: 180 }, { sprite: 'world/extra/fence-h', x: 131, y: 180 }, { sprite: 'world/extra/fence-post', x: 147, y: 176 },
-  { sprite: 'world/extra/fence-post', x: 362, y: 228 }, { sprite: 'world/extra/fence-h', x: 369, y: 232 }, { sprite: 'world/extra/fence-h', x: 385, y: 232 }, { sprite: 'world/extra/fence-h', x: 401, y: 232 }, { sprite: 'world/extra/fence-h', x: 417, y: 232 }, { sprite: 'world/extra/fence-post', x: 433, y: 228 },
-  { sprite: 'world/extra/hay-bale', x: 302, y: 172 }, { sprite: 'world/extra/hay-bale', x: 316, y: 174 }, { sprite: 'world/extra/hay-bale', x: 346, y: 173 },
-  { sprite: 'world/extra/well', x: 296, y: 232 },
+  { sprite: 'world/buildings/home', x: 84, y: 150 },
+  { sprite: 'world/buildings/market', x: 312, y: 168 },
+  { sprite: 'world/extra/mailbox', x: 162, y: 184 },
+  { sprite: 'world/extra/fence-post', x: 166, y: 176 }, { sprite: 'world/extra/fence-h', x: 173, y: 180 }, { sprite: 'world/extra/fence-h', x: 189, y: 180 }, { sprite: 'world/extra/fence-post', x: 205, y: 176 },
+  { sprite: 'world/extra/fence-post', x: 320, y: 220 }, { sprite: 'world/extra/fence-h', x: 327, y: 224 }, { sprite: 'world/extra/fence-h', x: 343, y: 224 }, { sprite: 'world/extra/fence-h', x: 359, y: 224 }, { sprite: 'world/extra/fence-h', x: 375, y: 224 }, { sprite: 'world/extra/fence-post', x: 391, y: 220 },
+  { sprite: 'world/extra/hay-bale', x: 278, y: 190 }, { sprite: 'world/extra/hay-bale', x: 292, y: 194 }, { sprite: 'world/extra/hay-bale', x: 284, y: 202 },
+  { sprite: 'world/extra/well', x: 296, y: 214 },
   { sprite: 'world/extra/signpost', x: 258, y: 214 },
-  { sprite: 'world/extra/rock', x: 60, y: 252 }, { sprite: 'world/extra/rock', x: 440, y: 256 }, { sprite: 'world/extra/stump', x: 150, y: 242 },
-  bush(14, 150), bush(458, 150), bush(130, 216), bush(404, 206), bush(236, 266),
-  { sprite: 'world/props/flowers-white', x: 60, y: 206, animate: true }, { sprite: 'world/props/flowers-mixed', x: 172, y: 262, animate: true },
+  { sprite: 'world/extra/rock', x: 44, y: 252 }, { sprite: 'world/extra/rock', x: 440, y: 256 }, { sprite: 'world/extra/stump', x: 150, y: 242 },
+  bush(14, 150), bush(458, 150), bush(130, 216), bush(386, 198), bush(236, 266),
+  { sprite: 'world/props/flowers-white', x: 96, y: 204, animate: true }, { sprite: 'world/props/flowers-mixed', x: 172, y: 262, animate: true },
   { sprite: 'world/props/flowers-white', x: 334, y: 262, animate: true }, { sprite: 'world/props/flowers-mixed', x: 444, y: 212, animate: true },
-  { sprite: 'world/props/flowers-mixed', x: 200, y: 246, animate: true }, { sprite: 'world/props/flowers-white', x: 300, y: 214, animate: true },
+  { sprite: 'world/props/flowers-mixed', x: 200, y: 246, animate: true }, { sprite: 'world/props/flowers-white', x: 300, y: 198, animate: true },
   { sprite: 'world/props/lilypad', x: 104, y: 220, animate: true }, { sprite: 'world/props/lilypad', x: 128, y: 228, animate: true }, { sprite: 'world/props/lilypad', x: 118, y: 216, animate: true },
-  tree(0, 232), tree(452, 196), tree(20, 196), tree(176, 220),
+  tree(0, 232), tree(452, 196), tree(20, 196), tree(176, 208),
 ]
 
 export function TitleScene({ dusk = false }: { dusk?: boolean }) {
