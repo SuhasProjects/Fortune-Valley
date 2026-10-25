@@ -8,7 +8,7 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 
 | Variable | Meaning |
 |---|---|
-| `GEMINI_API_KEY` | Google AI Studio key. Selects Gemini's OpenAI-compatible endpoint (`gemini-3.5-flash`). Wins over every other key, including `AI_API_KEY`. |
+| `GEMINI_API_KEY` | Google AI Studio key. Selects Gemini's OpenAI-compatible endpoint (`gemini-3.5-flash-lite`). Wins over every other key, including `AI_API_KEY`. |
 | `LUMINAL_API_KEY` | On its own selects Luminal's DeepSeek endpoint. |
 | `AI_API_KEY` | Generic provider key, used only when `GEMINI_API_KEY` is absent; needs explicit `AI_PROVIDER`/`AI_BASE_URL`/`AI_MODEL`. Never `VITE_`-prefixed. No key at all → 503 `disabled`. |
 | `AI_PROVIDER` | `anthropic` (default) or `openai_compatible`. |
@@ -21,7 +21,7 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 
 Where they come from: under `npm run dev`, `server/aiDevMiddleware.ts` reads `.env` / `.env.local` / `.env.development*` from the project root (`loadEnv`, all prefixes) and merges `process.env` on top, so `cp .env.example .env` + a key is enough; Vite itself never copies `.env` into `process.env`. On Vercel, `api/ai.ts` reads `process.env`, so set the same names as project environment variables. Nothing is ever read from `import.meta.env` on the server, and no `AI_*` value reaches the client bundle.
 
-Current default (`.env.example`): Google Gemini through its OpenAI-compatible chat-completions API → `AI_PROVIDER=openai_compatible`, `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL=gemini-3.5-flash`; just `GEMINI_API_KEY=…` is enough. Luminal's DeepSeek endpoint stays available via `LUMINAL_API_KEY`. `tests/engine/ai-gateway.test.ts` parses `.env.example` and asserts the resulting request URL, model and `Authorization: Bearer` header, so changing the example without the code (or vice versa) fails the unit tests.
+Current default (`.env.example`): Google Gemini through its OpenAI-compatible chat-completions API → `AI_PROVIDER=openai_compatible`, `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `AI_MODEL=gemini-3.5-flash-lite`; just `GEMINI_API_KEY=…` is enough. Luminal's DeepSeek endpoint stays available via `LUMINAL_API_KEY`. `tests/engine/ai-gateway.test.ts` parses `.env.example` and asserts the resulting request URL, model and `Authorization: Bearer` header, so changing the example without the code (or vice versa) fails the unit tests.
 
 ## 1. scenario — personalized prompt → ScenarioProposal
 

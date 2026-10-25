@@ -63,7 +63,7 @@ export function makeAnthropicClient(env: HandlerEnv): ModelClient {
 
 export const LUMINAL_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://flash.luminal.cloud', AI_MODEL: 'deepseek-ai/DeepSeek-V4.1-Flash' } as const;
 
-export const GEMINI_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-3.5-flash' } as const;
+export const GEMINI_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-3.5-flash-lite' } as const;
 
 /**
  * Resolve the key and provider. GEMINI_API_KEY always wins (Gemini defaults, explicit AI_PROVIDER/AI_BASE_URL/AI_MODEL still
