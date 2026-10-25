@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { archetypeConfig } from '@/config/archetypes';
 import { advanceMonth, applyAction, changedPolicyLog, createGame, listDecisions, runMonteCarlo, runWhatIf } from '@/engine';
 import { replayPath } from '@/engine/monteCarlo';
-import type { GameConfig, GameState, PolicyLogEntry, WhatIfInput } from '@/types/domain';
+import type { GameConfig, GameEvent, GameState, PolicyLogEntry, WhatIfInput } from '@/types/domain';
 import { playRandom } from './helpers/randomPlay';
 
 const PATHS = 40;
@@ -128,5 +128,31 @@ describe('what-if API edge cases', () => {
     const r = runWhatIf(input);
     expect(r.delta).toEqual({ p10: 0, median: 0, p90: 0, yourEvents: 0, spread: 0 });
     expect(r.yourEventsComparable).toBe(true);
+  });
+});
+
+describe('offers are not nagged twice', () => {
+  it('enqueue_event records offered templates, the summary exposes them, and the offline generator never repeats an insurance offer', async () => {
+    const { fallbackOpportunity } = await import('@/services/aiFallback');
+    const { summarizeForAi } = await import('@/engine');
+    const config = archetypeConfig('entry_worker', 5, { durationMonths: 12 });
+    let s = createGame(config);
+    s = advanceMonth(s);
+    const planId = s.assumptions.insurancePlans.find((p) => p.line === 'health' && p.id !== s.insurance.health)!.id;
+    const ev: GameEvent = { id: 'EVB_t_1', type: 'B', createdAtMonth: s.monthIndex, buildingTarget: 'hospital', source: 'fallback', title: 'Open enrollment', body: 'Switch plans?', options: [
+      { id: 'a', label: 'Switch', description: 'd', effect: { template: 'change_insurance' as const, line: 'health' as const, planId } },
+      { id: 'b', label: 'Keep', description: 'd', effect: { template: 'none' as const } },
+    ] };
+    const r = applyAction(s, { type: 'enqueue_event', event: ev });
+    expect(r.ok).toBe(true);
+    s = r.state;
+    expect(s.offeredTemplates).toEqual(['change_insurance']);
+    s = applyAction(s, { type: 'apply_event_option', eventId: ev.id, optionId: 'b' }).state;
+    const summary = { ...summarizeForAi(s, ['insurance'], 'entry_worker'), recentShocks: ['medical' as const] };
+    expect(summary.seenOffers).toEqual(['change_insurance']);
+    for (let m = 0; m < 12; m++) {
+      const p = fallbackOpportunity({ ...summary, monthIndex: m, insurance: { ...summary.insurance, health: null } });
+      if (p) expect(p.options.every((o) => o.effect.template !== 'change_insurance')).toBe(true);
+    }
   });
 });

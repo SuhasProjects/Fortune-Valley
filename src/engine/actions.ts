@@ -119,6 +119,7 @@ export function applyAction(input: GameState, action: GameAction): ActionResult 
         if (err) return reject(input, 'invalid_effect', `Option ${o.id}: ${err}`);
       }
       s.activeEvents.push(structuredClone(ev));
+      s.offeredTemplates = [...new Set([...(s.offeredTemplates ?? []), ...ev.options.map((o) => o.effect.template).filter((t) => t !== 'none')])];
       s.notifications.push({ id: makeId('N', s, s.notifications.length), monthIndex: s.monthIndex, kind: 'decision', summary: ev.title, details: ev.body, relatedBuilding: ev.buildingTarget, read: false });
       return { ok: true, state: s };
     }

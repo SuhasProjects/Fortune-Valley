@@ -22,6 +22,7 @@ Task: you are the narrative director. Given a compact state summary, propose at 
 Rules:
 - Be concrete: name the offer, the dollar amounts and the trade-off in the body, using the summary's own numbers for comparison (current salary, rent, contributions, coverage).
 - Keep the body short: at most 22 words (about 150 characters) in one or two complete sentences. It is shown in a small notification card; put further detail in the option descriptions, never in fragments.
+- seenOffers lists effect templates the player has already been offered this run (accepted or declined). NEVER propose any of those templates again; an insurance offer (change_insurance) happens at most once per run. Pick a different kind of offer, or return null if nothing fresh fits.
 - Vary across months: the summary includes monthIndex and recentShocks. Do not repeat the same kind of offer the player has plausibly just seen; rotate among a job offer, side gig, lease renewal or cheaper place, insurance switch, lifestyle/budget choice, small loan, savings or investing contribution nudge, consolidation offer.
 - Tie the lesson to narrativeFocus (e.g. emergency_fund → buffer and budget choices; insurance → premium vs deductible; allocation / investing_basics → contribution split; debt_payoff / credit_cards → loans and payments; taxes → after-tax pay of a raise).
 - Use ONLY the whitelisted effect templates: none, offer_job, change_housing, change_insurance, budget_choice, loan_choice, contribution_choice. Each option's numbers must be plausible relative to the summary (a raise or cut within ±25% of current salary, rent within ±40%, loan principal ≤ 100,000 and ≤ 2× annual salary, APR ≤ 0.35, contributions ≤ 40% of gross monthly income).
@@ -75,7 +76,7 @@ export function buildExplainUser(req: Extract<AiRequestParsed, { kind: 'explain'
 export function buildOpportunityUser(req: Extract<AiRequestParsed, { kind: 'opportunity' }>): string {
   const s = req.summary;
   return [
-    `Month ${s.monthIndex} (${s.monthLabel}); archetype ${s.archetype ?? 'custom'}; complexity ${s.complexityLevel}; focus: ${s.narrativeFocus.join(', ') || 'none'}; recent shocks: ${s.recentShocks.join(', ') || 'none'}.`,
+    `Month ${s.monthIndex} (${s.monthLabel}); archetype ${s.archetype ?? 'custom'}; complexity ${s.complexityLevel}; focus: ${s.narrativeFocus.join(', ') || 'none'}; recent shocks: ${s.recentShocks.join(', ') || 'none'}; already offered (do not repeat): ${s.seenOffers?.join(', ') || 'none'}.`,
     'Propose one concrete opportunity for this month (or null), with 2–3 options including exactly one decline option {"template":"none"}.',
     'State summary (JSON):',
     JSON.stringify(s),

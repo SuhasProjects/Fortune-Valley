@@ -45,6 +45,7 @@ export const StateSummarySchema = z.object({
     extraDebtPaymentPerMonth: money(50_000),
   }),
   recentShocks: z.array(z.enum(['medical', 'auto', 'home', 'job_loss'])).max(12),
+  seenOffers: z.array(z.enum(['none', 'offer_job', 'change_housing', 'change_insurance', 'budget_choice', 'loan_choice', 'contribution_choice'])).max(12).optional(),
   monthsOfEssentialsCovered: z.number().finite(),
   narrativeFocus: z.array(z.string().max(40)).max(8),
   complexityLevel: z.union([z.literal(1), z.literal(2), z.literal(3)]),

@@ -8,6 +8,9 @@ import { describeShock, explainOutcome, generateScenario, proposeOpportunity, pr
 
 /** One flavour request per shock or life-event notification, keyed by scenario + notification id; survives store resets within a session. */
 const flavourRequested = new Set<string>();
+
+/** Offer templates a player sees at most once per run, however the model is prompted. */
+const ONE_SHOT_OFFERS = new Set<string>(['change_insurance', 'loan_choice']);
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 import { INSURANCE_PLANS } from '@/config/defaults';
 import { askCoach } from '@/services/aiClient';
@@ -196,6 +199,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (!current.game || current.requestVersion !== requestVersion || current.game.scenarioId !== scenarioId || current.game.monthIndex !== monthIndex || current.game.status === 'finished') return;
       set({ aiStatus: result.source === 'ai' ? 'online' : 'offline' });
       if (!result.proposal || current.game.activeEvents.some((event) => event.type === 'B')) return;
+      // Hard guard behind the prompt: an offer the player already saw (insurance especially) is never shown twice.
+      const seen = new Set(current.game.offeredTemplates ?? []);
+      if (result.proposal.options.some((o) => o.effect.template !== 'none' && seen.has(o.effect.template) && ONE_SHOT_OFFERS.has(o.effect.template))) return;
       const event = proposalToEvent(result.proposal, current.game, result.source);
       if (event) get().dispatchAction({ type: 'enqueue_event', event });
     } catch {

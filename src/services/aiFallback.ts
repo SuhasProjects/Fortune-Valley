@@ -480,11 +480,14 @@ export function fallbackOpportunity(s: StateSummary): OpportunityProposal | null
   if (s.recentShocks.includes('home') && s.insurance.renters === null) urgent.push('renters_flyer');
   // Nag about a thin buffer at most every third month so it does not crowd out everything else.
   if (s.monthsOfEssentialsCovered < 1.5 && s.monthIndex % 3 === 0) urgent.push('tight_month');
+  // Offers already shown this run (insurance especially) are never repeated, matching the gateway's rule for the model.
+  const seen = new Set(s.seenOffers ?? []);
+  const fresh = (t: OppTemplate) => !t.build(s).options.some((o) => o.effect.template !== 'none' && seen.has(o.effect.template));
   for (const id of urgent) {
     const t = byId(id);
-    if (t.eligible(s)) return t.build(s);
+    if (t.eligible(s) && fresh(t)) return t.build(s);
   }
-  const eligible = TEMPLATES.filter((t) => t.id !== 'return_to_work' && t.id !== 'tight_month' && t.eligible(s));
+  const eligible = TEMPLATES.filter((t) => t.id !== 'return_to_work' && t.id !== 'tight_month' && t.eligible(s) && fresh(t));
   if (eligible.length === 0) return null;
   // One rotation over every eligible template, focus-relevant ones first, so the
   // archetype's lessons come early and consecutive months never repeat a template.

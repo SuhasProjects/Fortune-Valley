@@ -80,6 +80,7 @@ export function summarizeForAi(s: GameState, narrativeFocus: string[], archetype
       extraDebtPaymentPerMonth: s.policy.extraDebtPaymentPerMonth,
     },
     recentShocks: s.realizedShocks.filter((r) => r.monthIndex >= s.monthIndex - 3).map((r) => r.shock.kind),
+    seenOffers: [...(s.offeredTemplates ?? [])],
     monthsOfEssentialsCovered: selectMonthsOfEssentialsCovered(s),
     narrativeFocus,
     complexityLevel: selectComplexityLevel(s),

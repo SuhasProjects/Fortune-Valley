@@ -521,6 +521,8 @@ export interface GameState {
   realizedShocks: { monthIndex: number; shock: RealizedShock }[];
   /** Realized life events (signed: gift > 0, cost < 0); kept in Monte Carlo paths too so the net cap can be enforced. */
   lifeEvents: RealizedLifeEvent[];
+  /** Effect templates every Type B opportunity so far has put on the table (declined or not), so the same offer is not nagged again. */
+  offeredTemplates?: EventEffect['template'][];
 }
 
 export interface RealizedLifeEvent { monthIndex: number; amountSigned: number; eventId: string }
@@ -591,6 +593,8 @@ export interface StateSummary {
   insurance: InsuranceState;
   policy: Pick<Policy, 'savingsContributionPerMonth' | 'investmentContributionPerMonth' | 'targetAllocation' | 'extraDebtPaymentPerMonth'>;
   recentShocks: ShockKind[];
+  /** Offer templates already shown this run; the model must not propose them again (insurance in particular is one-shot). */
+  seenOffers?: EventEffect['template'][];
   monthsOfEssentialsCovered: number;
   narrativeFocus: string[];
   /** 1 = beginner, 2 = intermediate, 3 = advanced; chosen by the engine from play so far. */
