@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { scenarios } from '../data/scenarios';
 import { fixtureEventB } from '../fixtures';
 import { useGameStore } from './useGameStore';
+import type { GameNotification } from '../types/domain';
 
 beforeEach(() => useGameStore.getState().resetGame());
 
@@ -30,10 +31,15 @@ describe('game store', () => {
   it('posts one unique notification set for a month without duplicates', () => {
     useGameStore.getState().startGame(scenarios[0]!);
     const initialCount = useGameStore.getState().game!.notifications.length;
-    useGameStore.getState().advanceOneMonth();
+    // Months post notices for events only (no monthly summary), so play until one lands.
+    let newlyPosted: GameNotification[] = [];
+    while (newlyPosted.length === 0 && useGameStore.getState().game!.monthIndex < 12) {
+      const before = useGameStore.getState().game!.notifications.length;
+      useGameStore.getState().advanceOneMonth();
+      newlyPosted = useGameStore.getState().game!.notifications.slice(before);
+    }
     const notifications = useGameStore.getState().game!.notifications;
-    const newlyPosted = notifications.slice(initialCount);
-    expect(notifications.length).toBeGreaterThan(0);
+    expect(notifications.length).toBeGreaterThan(initialCount);
     expect(new Set(notifications.map((item) => item.id)).size).toBe(notifications.length);
     expect(newlyPosted.length).toBeGreaterThan(0);
     expect(newlyPosted.every((item) => item.monthIndex === useGameStore.getState().game!.monthIndex - 1)).toBe(true);

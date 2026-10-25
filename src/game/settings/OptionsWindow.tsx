@@ -3,7 +3,7 @@ import { setSetting, useSettings } from './useSettings'
 import '../flow/flow.css'
 
 const autoOptions = [
-  { value: '0', label: 'Off' }, { value: '30', label: '30 seconds' }, { value: '60', label: '60 seconds' }, { value: '120', label: '120 seconds' },
+  { value: '0', label: 'Off' }, { value: '15', label: '15 seconds' }, { value: '30', label: '30 seconds' }, { value: '60', label: '60 seconds' }, { value: '120', label: '120 seconds' },
 ]
 
 /**
@@ -14,7 +14,7 @@ export function OptionsWindow({ onClose, onDeleteSave }: { onClose: () => void; 
   const settings = useSettings()
   return <div className="fv-options">
     <Select label="Auto-advance" value={String(settings.autoAdvanceSeconds)} options={autoOptions} onChange={value => {
-      const seconds = Number(value) as 0 | 30 | 60 | 120
+      const seconds = Number(value) as 0 | 15 | 30 | 60 | 120
       setSetting('autoAdvanceSeconds', seconds)
       if (seconds) setSetting('lastAutoAdvanceSeconds', seconds)
     }}/>

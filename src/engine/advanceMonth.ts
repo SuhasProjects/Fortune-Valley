@@ -235,11 +235,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     notes.push({ kind: 'positive', summary: 'Emergency fund: 3 months of essentials covered', building: 'bank' });
   }
   if (!lean) {
-    const net = round2(grossPay - withheld - (h.housingMonthly + h.essentialsMonthly + carCosts + h.discretionaryMonthly) - premiums - debtPaid);
-    notes.unshift({
-      kind: 'info',
-      summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + carCosts + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
-    });
+    // No monthly summary notice: the town screen reads the month's ledger lines for its recap banner; notices are for events only.
     notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}), ...(n.templateId ? { templateId: n.templateId } : {}), ...(n.variant ? { variant: n.variant } : {}) }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));
   }

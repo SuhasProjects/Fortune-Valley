@@ -4,8 +4,8 @@ import { z } from 'zod'
 export const SETTINGS_STORAGE_KEY = 'fortune-valley-settings-v1'
 
 const SettingsSchema = z.object({
-  autoAdvanceSeconds: z.union([z.literal(0), z.literal(30), z.literal(60), z.literal(120)]),
-  lastAutoAdvanceSeconds: z.union([z.literal(30), z.literal(60), z.literal(120)]),
+  autoAdvanceSeconds: z.union([z.literal(0), z.literal(15), z.literal(30), z.literal(60), z.literal(120)]),
+  lastAutoAdvanceSeconds: z.union([z.literal(15), z.literal(30), z.literal(60), z.literal(120)]),
   sound: z.boolean(),
   reduceMotion: z.boolean(),
   tips: z.boolean(),
@@ -19,8 +19,8 @@ const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
 
 const defaults = (): Settings => ({
-  autoAdvanceSeconds: 60,
-  lastAutoAdvanceSeconds: 60,
+  autoAdvanceSeconds: 15,
+  lastAutoAdvanceSeconds: 15,
   sound: true,
   reduceMotion: prefersReducedMotion(),
   tips: true,

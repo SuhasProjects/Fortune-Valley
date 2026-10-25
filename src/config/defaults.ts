@@ -105,6 +105,6 @@ export const BOUNDS = {
   allocationTolerance: 0.001,
 } as const;
 
-/** Default playable horizon. 24 months keeps a session short; Monte Carlo replays whatever horizon was played. */
-export const DEFAULT_DURATION_MONTHS = 24;
+/** Default playable horizon for every archetype and the custom story (24/48/60 stay allowed via `durationMonths`). Monte Carlo and what-if replay whatever horizon was played. */
+export const DEFAULT_DURATION_MONTHS = 36;
 export const DEFAULT_MONTE_CARLO_PATHS = 1000;

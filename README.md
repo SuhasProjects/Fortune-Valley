@@ -4,7 +4,7 @@ A cozy pixel-art life sim about money, in the browser. Fictional educational sim
 
 **How a game goes:** a Stardew-style title screen (New Story, Custom Story, Continue) → a sunny top-down town built from
 tiles and sprites, with five buildings where you make your money decisions (Pine Bank, Town Office, Health House, Your
-Home, Market Hall) → time passes month by month (24 months by default; Type A shocks and AI/offline Type B opportunities
+Home, Market Hall) → time passes month by month (36 months by default, one month every 15 s on auto-time; Type A shocks and AI/offline Type B opportunities
 along the way) → **the ending**: the same town at dusk under a parchment ledger showing where 1,000 replays of your
 strategy landed, as straight lines from your starting net worth to the 10th percentile ("unlucky"), median ("typical")
 and 90th percentile ("lucky") endings plus a gold line for what actually happened, and a **what-if**: change any one of

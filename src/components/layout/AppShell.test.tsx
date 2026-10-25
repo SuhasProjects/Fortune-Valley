@@ -31,7 +31,8 @@ describe('integrated app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'New Story' }))
     fireEvent.click(screen.getByRole('button', { name: /Entry-Level Worker/ }))
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'View all activity' }))
+    // A quiet month posts no notices (no monthly summary toast), so open the journal by its shortcut.
+    fireEvent.keyDown(window, { key: 'a' })
     expect(screen.getByRole('dialog', { name: 'Town activity' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Close panel' }))
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))

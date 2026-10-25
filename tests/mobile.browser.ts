@@ -69,7 +69,7 @@ test.describe('Mobile layout (390x844)', () => {
     }
 
     // 4. Next month advances
-    await expect(page.getByText('Month 0 / 24')).toBeVisible()
+    await expect(page.getByText('Month 0 / 36')).toBeVisible()
     await page.getByRole('button', { name: /Next month/ }).click()
     await expect(page.getByText(/^Month 1 \/ \d+$/)).toBeVisible()
 

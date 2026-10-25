@@ -19,7 +19,7 @@ beforeEach(() => {
 describe('settings', () => {
   it('uses defaults and persists valid changes', () => {
     const { result } = renderHook(() => useSettings())
-    expect(result.current.autoAdvanceSeconds).toBe(60)
+    expect(result.current.autoAdvanceSeconds).toBe(15)
     act(() => setSetting('autoAdvanceSeconds', 30))
     expect(result.current.autoAdvanceSeconds).toBe(30)
     expect(JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY)!).autoAdvanceSeconds).toBe(30)
@@ -29,7 +29,7 @@ describe('settings', () => {
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, '{bad json')
     act(refreshSettings)
     const { result } = renderHook(() => useSettings())
-    expect(result.current.autoAdvanceSeconds).toBe(60)
+    expect(result.current.autoAdvanceSeconds).toBe(15)
     expect(result.current.sound).toBe(true)
   })
 })

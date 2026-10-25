@@ -70,7 +70,7 @@ test('shortcuts, pause menu, options persist, save & continue, finish early', as
   expect(errors).toEqual([])
 })
 
-test('natural completion at month 24 offers Review your story above the HUD and reaches the reveal', async ({ page }) => {
+test('natural completion at month 36 offers Review your story above the HUD and reaches the reveal', async ({ page }) => {
   await page.route('**/api/ai', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"disabled"}' }))
   await openTitle(page)
   await page.getByRole('button', { name: 'Options', exact: true }).click()
@@ -79,9 +79,9 @@ test('natural completion at month 24 offers Review your story above the HUD and 
   await startStory(page, 'College Student')
   await expect(page.getByText('Auto-time off')).toBeVisible()
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
-  for (let month = 0; month < 24; month++) {
+  for (let month = 0; month < 36; month++) {
     await page.keyboard.press('n')
-    await expect(page.getByText(new RegExp(`^Month ${month + 1} / 24$`))).toBeVisible()
+    await expect(page.getByText(new RegExp(`^Month ${month + 1} / 36$`))).toBeVisible()
   }
   await expect(page.getByText('STORY COMPLETE', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: /Next month/ })).toBeDisabled()
@@ -111,7 +111,8 @@ test('timeline and activity journals open by keyboard and decision toasts lead t
   for (let month = 0; month < 3; month++) await page.keyboard.press('n')
   await expect(page.getByText(/^Month 3 \/ \d+$/)).toBeVisible()
   const toasts = page.getByRole('region', { name: 'Recent financial activity' })
-  await expect(toasts.locator('.notice')).toHaveCount(3)
+  // No monthly summary toast any more: the recap banner carries the month; toasts are events only.
+  await expect(page.getByRole('status', { name: 'Month recap' })).toContainText(/^Month 3 · /)
   await expect(page.getByRole('button', { name: /Decision waiting/ }).first()).toBeVisible()
   const decision = toasts.getByRole('button', { name: /^Go to / })
   await expect(decision).toBeVisible()

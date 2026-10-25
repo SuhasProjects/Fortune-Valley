@@ -370,7 +370,7 @@ export function BuildingWindow(props: { building: BuildingId; onClose: () => voi
 //   renders Modal + header + that building's pending events + its panel; reads the store itself
 
 // Agent 4: src/game/settings/
-export function useSettings(): Settings   // { autoAdvanceSeconds: 0|30|60|120, sound: boolean, reduceMotion: boolean, tips: boolean } persisted
+export function useSettings(): Settings   // { autoAdvanceSeconds: 0|15|30|60|120 (default 15), sound: boolean, reduceMotion: boolean, tips: boolean } persisted
 export function OptionsWindow(props: { onClose: () => void }): JSX.Element
 // Agent 4: src/game/audio/sfx.ts
 export function sfx(name: 'click'|'open'|'close'|'coin'|'month'|'alert'|'reveal'): void   // no-op when sound is off
@@ -494,7 +494,7 @@ Selectors: `selectNetWorth`, `selectDebtTotal`, `selectPendingEvent`. `advanceOn
 `notifications: GameNotification[]` (`{id, monthIndex, kind:'info'|'positive'|'negative'|'decision', summary, details?, relatedBuilding?, amountSigned?, read}`),
 `timeline: TimelineEntry[]` (`{id, monthIndex, type:'choice'|'shock'|'milestone'|'policy_change'|'ai_event', description, netWorthAfter}`),
 `netWorthHistory: number[]`, `ledger`, `policyLog`, `startMonth` ("YYYY-MM"). `GameConfig` has `title`, `archetype`,
-`durationMonths` (24), `startMonth`, `narrativeFocus`.
+`durationMonths` (36 by default for every archetype and the custom story; 24/48/60 allowed), `startMonth`, `narrativeFocus`.
 
 **Engine** (`@/engine`, owner Agent 1, frozen except bug fixes): `createGame`, `advanceMonth`, `applyAction`,
 `runMonteCarlo`, `compareWithBaseline`, `histogram`, `quantile`, `previewMonth`, `previewHorizon(state, overrides, months)`,

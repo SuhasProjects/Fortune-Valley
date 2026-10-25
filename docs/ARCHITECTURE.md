@@ -33,7 +33,7 @@ main.tsx
    │     ├─ Hud                                      src/game/hud/   (reads the store)
    │     ├─ StatusTag · "Saved" Tag · pause IconButton
    │     ├─ ControlBar                               auto countdown, Pause/Resume, Next month, Finish & reveal
-   │     ├─ <main> coach tips, month banner, action errors
+   │     ├─ <main> coach tips, month recap strip (MonthRecap), action errors
    │     │  ├─ PanelHost(building) → EventCard* + ConnectedBuildingPanel   src/components/panels/
    │     │  ├─ TimelineWindow · ActivityWindow · ConfirmDialog              src/game/flow/
    │     │  ├─ pause menu · OptionsWindow · guide · finish confirm          (PanelHost = Modal from src/ui)

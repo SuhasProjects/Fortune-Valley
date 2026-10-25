@@ -74,26 +74,34 @@ moment before the results, and small retro sound effects. You don't draw art or 
   them. `App` no longer needs `panels`/`renderReveal` props; update `AppShell.test.tsx` accordingly (keep what it proves).
 - `lastActionError` shows as a red toast (auto-clears after 5 s or on next action; add a `clearActionError()` store
   action).
-- Natural end (`status === 'finished'`, no payload): a centred parchment card "Your 24 months are complete" with a primary
+- Natural end (`status === 'finished'`, no payload): a centred parchment card "Your 36 months are complete" with a primary
   `Review your story` button that runs the finish sequence (§6).
 
 ---
 
 ## 3. Clock and time
 
-- Auto-advance interval comes from `useSettings().autoAdvanceSeconds` (30/60/120, default 60; 0 = off, which shows
-  `Auto-time off`). `Auto on/off` in the control bar toggles between off and the last non-zero value.
+- Auto-advance interval comes from `useSettings().autoAdvanceSeconds` (15/30/60/120, default 15; 0 = off, which shows
+  `Auto-time off`). The control bar countdown shows the seconds left. `Auto on/off` in the control bar toggles between off and the last non-zero value.
 - **Countdown is blocked** while any active event exists (as today) **or** any window/menu is open (building, timeline,
-  activity, pause, options, confirm). The player shouldn't lose a month while reading. The label reads `Decision waiting`
-  only for events; otherwise it stays paused silently.
-- Month advance feedback: `MonthBanner` (a parchment ribbon "Month 5 · Jun 2026" that drops in under the HUD for ~1.2 s,
-  stepped animation), `sfx('month')`, coins `sfx('coin')` if net cash rose. Reduced motion → no movement.
+  activity, pause, options, guide, coach, confirm) **or** the tab is hidden (`visibilitychange`, inside `useGameClock`).
+  The player shouldn't lose a month while reading; the countdown keeps its remaining seconds and resumes on close when
+  auto is on. The label reads `Decision waiting` only for events; otherwise it stays paused silently.
+- Month advance feedback (auto or `Next month`): `MonthRecap` (`src/game/flow/MonthRecap.tsx`), a slim parchment strip
+  under the HUD for ~5 s (stepped drop-in/slide-away, replaced when the next month lands): line 1 "Month 7 · Jul 2026 ·
+  Net worth -$12,340 (▲ $180)", line 2 signed chips from that month's ledger grouped by `recapChips.ts` (job, investments,
+  home, insurance, essentials, spending, debt, car, shock, gift/life event, event; non-zero only, max 8, green +/red −,
+  wraps on narrow stages; phones: two fixed lines). Host is `role="status"` `aria-live="polite"` named `Month recap`,
+  never focusable. There is **no monthly summary toast**: toasts are for events only. Plus `sfx('month')`, coins
+  `sfx('coin')` if net cash rose. Reduced motion → no movement.
 - Keep `useGameClock` tests green; add: blocked while a window is open; interval follows the setting.
 
 ---
 
 ## 4. Toasts (`src/game/flow/ToastStack.tsx`, replaces `NotificationStack` usage)
 
+- Toasts are for real events only: shocks, life events, opportunities (decisions), milestones (raise, back to work,
+  debt paid off, emergency fund), funding/trim notices. The month's numbers live in the recap strip (§3) and the journals.
 - Right edge under the HUD (below the status tag height), stacked downward, max 3 visible, region
   `aria-label="Recent financial activity"`, `aria-live="polite"`. Each toast is a small kit `Board` with a pin, the month,
   `summary`, optional `Money` (signed), and an icon per kind (info book, positive coin, negative crack-coin, decision bell).
@@ -118,7 +126,7 @@ moment before the results, and small retro sound effects. You don't draw art or 
   to title` (`saveGame()` then `resetGame()`), `Restart this story` (confirm, then `startGame(freshScenario(...))` for premade
   archetypes, or `startGame(config)` for custom ones). Opening the pause menu also pauses the game (`setPaused(true)`); Resume
   restores the previous state.
-- **OptionsWindow** (dialog `Options`): Auto-advance (Off / 30 s / 60 s / 120 s as `Tabs` or `Select`), Sound (`Toggle`), Reduce
+- **OptionsWindow** (dialog `Options`): Auto-advance (Off / 15 s / 30 s / 60 s / 120 s as `Tabs` or `Select`), Sound (`Toggle`), Reduce
   motion (`Toggle`, defaulting to the OS setting), Tips (`Toggle`), `Delete saved game` (confirm → `clearSavedGame`). Used by
   the pause menu and by Agent 5's title screen.
 - **ConfirmDialog** (generic, `src/game/flow/ConfirmDialog.tsx`): `{ title, body, confirmLabel, onConfirm, onCancel, danger? }`.
@@ -131,7 +139,7 @@ moment before the results, and small retro sound effects. You don't draw art or 
 ## 6. Finish sequence
 
 `Finish & reveal` (or natural end):
-1. If `game.monthIndex < config.durationMonths`, ConfirmDialog "Finish early? You've played 6 of 24 months. Results will
+1. If `game.monthIndex < config.durationMonths`, ConfirmDialog "Finish early? You've played 6 of 36 months. Results will
    use the months you played." (`Finish now` / `Keep playing`).
 2. Show a full-screen **FinishOverlay**: the world stays visible, darkened, with a central parchment card "Counting 1,000
    possible futures…" and a stepped animation (coin stack filling or hourglass, drawn by Agent 2 as an icon sheet, or ask
