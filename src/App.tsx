@@ -5,6 +5,7 @@ import { TitleScreen } from './game/title/TitleScreen'
 import { GameScreen } from './game/GameScreen'
 import { RotateGuard } from './game/stage/RotateOverlay'
 import { Board } from './ui'
+import { isDemoMode } from './demo/demoMode'
 
 // The ending and the dev routes load on demand so the title and town start fast.
 const RevealScreen = lazy(() => import('./game/reveal/RevealScreen').then(m => ({ default: m.RevealScreen })))
@@ -18,7 +19,7 @@ export interface AppProps {
 }
 export default function App(props: AppProps) {
   const store = useGameStore()
-  useEffect(() => { store.refreshSavedGame() }, [store.refreshSavedGame])
+  useEffect(() => { store.refreshSavedGame(); isDemoMode() /* /demo or ?demo=1 arms the scripted run for this tab */ }, [store.refreshSavedGame])
   const dev = new URLSearchParams(window.location.search).get('dev')
   if (dev === 'engine') return <Suspense fallback={loading}><EngineHarness/></Suspense>
   if (dev === 'ui') return <Suspense fallback={loading}><UiGallery/></Suspense>

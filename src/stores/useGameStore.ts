@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, hasCar, monthLabel, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
 import { describeShock, explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+import { demoConfig, isDemoMode } from '@/demo/demoMode';
 
 /** One flavour request per shock or life-event notification, keyed by scenario + notification id; survives store resets within a session. */
 const flavourRequested = new Set<string>();
@@ -168,7 +169,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ game: next });
     get().saveGame();
     for (const n of next.notifications) if (n.shockKind && !n.flavour && n.monthIndex === game.monthIndex) void get().requestShockFlavour(n.id);
-    if (shouldRequestOpportunity(game, next)) {
+    if (!next.script?.exclusive && shouldRequestOpportunity(game, next)) {
       void get().requestOpportunity();
     }
   },
@@ -335,6 +336,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!clean) throw new Error('Describe the situation you want to explore.');
     const requestVersion = get().requestVersion + 1;
     set({ personalizationLoading: true, personalizationError: null, requestVersion });
+    if (isDemoMode()) {
+      // The /demo route: whatever the letter says, the valley answers with the scripted run (no AI call, no template tag).
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      if (get().requestVersion === requestVersion) set({ personalizationLoading: false, aiStatus: 'online' });
+      return { config: demoConfig(), fallback: false, warnings: [] };
+    }
     try {
       const res = await generateScenario({ freeText: clean.slice(0, 2000), ...numbers });
       const seed = (Date.now() ^ 0x5bd1e995) >>> 0;

@@ -1,3 +1,13 @@
 {
-  "functions": { "api/ai.ts": { "maxDuration": 30 } }
+  "functions": {
+    "api/ai.ts": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/demo",
+      "destination": "/index.html"
+    }
+  ]
 }

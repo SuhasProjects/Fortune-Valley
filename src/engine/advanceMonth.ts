@@ -17,11 +17,11 @@
  *
  * Deterministic given (seed, monthIndex). Never mutates the input unless opts.inPlace.
  */
-import type { GameEvent, GameState, LedgerCategory, ShockKind } from '@/types/domain';
+import type { GameEvent, GameState, LedgerCategory, RealizedLifeEvent, ShockFlavour, ShockKind } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
 import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
 import { carBand, carRunningCost, hasCar, premiumFor } from './car';
-import { activePlan, chooseShockVariant, rollEmployment, rollLifeEvent, rollShocks } from './events';
+import { activePlan, applyScriptedLife, applyScriptedShock, chooseShockVariant, rollEmployment, rollLifeEvent, rollShocks, scriptedThisMonth } from './events';
 import { lifeEventLabel } from './lifeEvents';
 import { monthRng, type Rng } from './rng';
 
@@ -58,7 +58,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const m = s.monthIndex;
   const rng = opts.rng ?? { market: monthRng(s.seed, m, 'market'), shocks: monthRng(s.seed, m, 'shocks'), employment: monthRng(s.seed, m, 'employment') };
   const lifeRng = rng.life ?? monthRng(s.seed, m, 'life');
-  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string; templateId?: string; variant?: string }[] = [];
+  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string; templateId?: string; variant?: string; flavour?: ShockFlavour }[] = [];
   const timeline: { type: 'shock' | 'milestone'; description: string; eventId?: string }[] = [];
   const nwBefore = netWorthOf(s);
   if (s.status === 'setup') s.status = 'playing';
@@ -191,14 +191,22 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   }
 
   // ── 6. Shocks ───────────────────────────────────────────────────────────────
-  const shockEvents = rollShocks(s, rng.shocks, lean);
+  // A scripted run lands its own events this month; an exclusive script also silences the random rolls.
+  const scripted = scriptedThisMonth(s);
+  const exclusive = s.script?.exclusive === true;
+  const shockEvents = exclusive ? [] : rollShocks(s, rng.shocks, lean);
+  for (const e of scripted) {
+    if (e.kind !== 'shock') continue;
+    const ev = applyScriptedShock(s, e, lean, shockEvents.length);
+    if (ev) shockEvents.push(ev);
+  }
   for (const ev of shockEvents) {
     s.activeEvents.push(ev);
     const sh = ev.shock!;
     notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id, variant: sh.variant });
     timeline.push({ type: 'shock', description: `${ev.title}: cost $${sh.grossCost.toLocaleString()}, insurer paid $${sh.insurerPaid.toLocaleString()}, out of pocket $${sh.outOfPocket.toLocaleString()}`, eventId: ev.id });
   }
-  if (rollEmployment(s, rng.employment)) {
+  if (!exclusive && rollEmployment(s, rng.employment)) {
     const variant = chooseShockVariant(s, 'job_loss');
     const ev: GameEvent = {
       id: makeId('EVJ', s, 0), type: 'A', title: 'Job loss', source: 'engine', buildingTarget: 'office', createdAtMonth: m, expiresAtMonth: m + 2,
@@ -212,13 +220,19 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     timeline.push({ type: 'shock', description: `Job loss; ${s.employment.monthsUnemployedRemaining} months of reduced income`, eventId: ev.id });
   }
 
-  const life = rollLifeEvent(s, lifeRng, lean);
-  if (life) {
+  const lifeToday: { ev: RealizedLifeEvent; label?: string; flavour?: ShockFlavour }[] = [];
+  const rolled = exclusive ? null : rollLifeEvent(s, lifeRng, lean);
+  if (rolled) lifeToday.push({ ev: rolled });
+  for (const e of scripted) {
+    if (e.kind !== 'life') continue;
+    lifeToday.push({ ev: applyScriptedLife(s, e, lean), label: e.label, ...(e.scene ? { flavour: { headline: e.headline ?? e.label, scene: e.scene, source: 'fallback' as const } } : {}) });
+  }
+  for (const { ev: life, label, flavour } of lifeToday) {
     const gift = life.amountSigned > 0;
     const abs = Math.abs(life.amountSigned).toLocaleString();
-    const what = lifeEventLabel(life.templateId, s.householdProfile, life.amountSigned);
+    const what = label ?? lifeEventLabel(life.templateId, s.householdProfile, life.amountSigned);
     const cap = what.charAt(0).toUpperCase() + what.slice(1);
-    notes.push({ kind: gift ? 'positive' : 'negative', summary: gift ? `${cap}: $${abs}` : `${cap}: $${abs}`, details: gift ? `A ${what} brought in $${abs}; it went straight into your cash.` : `A ${what} took $${abs} out of your cash; no insurance covers this kind of thing.`, building: 'home', amountSigned: life.amountSigned, shockKind: 'life', eventId: life.eventId, templateId: life.templateId });
+    notes.push({ kind: gift ? 'positive' : 'negative', summary: gift ? `${cap}: $${abs}` : `${cap}: $${abs}`, details: gift ? `A ${what} brought in $${abs}; it went straight into your cash.` : `A ${what} took $${abs} out of your cash; no insurance covers this kind of thing.`, building: 'home', amountSigned: life.amountSigned, shockKind: 'life', eventId: life.eventId, templateId: life.templateId, flavour });
     timeline.push({ type: 'shock', description: gift ? `Small gift: $${abs} received (${what})` : `Small cost: $${abs} paid (${what})`, eventId: life.eventId });
   }
 
@@ -236,7 +250,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   }
   if (!lean) {
     // No monthly summary notice: the town screen reads the month's ledger lines for its recap banner; notices are for events only.
-    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}), ...(n.templateId ? { templateId: n.templateId } : {}), ...(n.variant ? { variant: n.variant } : {}) }));
+    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}), ...(n.templateId ? { templateId: n.templateId } : {}), ...(n.variant ? { variant: n.variant } : {}), ...(n.flavour ? { flavour: n.flavour } : {}) }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));
   }
   s.monthIndex = m + 1;

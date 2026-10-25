@@ -39,6 +39,7 @@ export function createGame(config: GameConfig): GameState {
     realizedShocks: [],
     lifeEvents: [],
     householdProfile: deriveHouseholdProfile(config),
+    ...(config.script ? { script: structuredClone(config.script) } : {}),
   };
   if (!state.car.owned && state.insurance.auto !== null) { // no car → no auto plan (configs predating car ownership)
     state.insurance = { ...state.insurance, auto: null };

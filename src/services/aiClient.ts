@@ -8,6 +8,7 @@ import { fallbackExplanation, fallbackFlavour, fallbackOpportunity, fallbackScen
 import { fallbackRecap, fallbackWhatIf } from './aiFallback';
 import type { BuildingId, CoachFacts, CoachTurn } from '@/types/domain';
 import { fallbackCoach } from './aiFallback';
+import { isDemoMode } from '@/demo/demoMode';
 
 export interface AiClientOptions {
   endpoint?: string;
@@ -34,8 +35,12 @@ export type WhatIfLineResult = Extract<AiResponse, { kind: 'whatif' }>;
 export type RecapResult = Extract<AiResponse, { kind: 'recap' }>;
 export type CoachResult = Extract<AiResponse, { kind: 'coach' }>;
 
+/** On the /demo route the Sage, the letter and offers stay offline so a recording is deterministic; scenes and the ending still use the model. */
+const DEMO_OFFLINE_KINDS: ReadonlySet<AiRequest['kind']> = new Set(['coach', 'scenario', 'opportunity']);
+
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;
+  if (DEMO_OFFLINE_KINDS.has(req.kind) && isDemoMode()) return null;
   const f = opts.fetchImpl ?? (typeof fetch === 'function' ? fetch : undefined);
   if (!f) return null;
   const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : undefined;

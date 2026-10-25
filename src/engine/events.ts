@@ -2,7 +2,7 @@
  * Type A shocks (engine-owned randomness) and whitelisted effect application.
  * Insurance changes payout, never incidence. Owner: Agent 1.
  */
-import type { EventEffect, GameEvent, GameState, InsurancePlan, LifeEventAssumptions, RealizedLifeEvent, RealizedShock, ShockAssumption, ShockKind } from '@/types/domain';
+import type { EventEffect, GameEvent, GameState, InsurancePlan, LifeEventAssumptions, RealizedLifeEvent, RealizedShock, ShockAssumption, ShockKind, ScriptedEvent } from '@/types/domain';
 import { DEFAULT_LIFE_EVENTS } from '@/config/defaults';
 import { hashSeed, type Rng } from './rng';
 import { coverShortfall, makeId, post, round2 } from './accounting';
@@ -78,31 +78,60 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
     if (a.coveredBy === 'auto' && !hasCar(s)) continue; // no car, no car accident (draws already consumed, streams stay aligned)
     const median = shockMedianFor(a.coveredBy, a.costMedian, carBand(s)); // a nicer car costs more to fix
     const grossCost = round2(Math.min(a.costMax, Math.max(a.costMin, median * Math.exp(a.costSigma * z))));
-    const plan = activePlan(s, a.coveredBy);
-    const { insurerPaid, outOfPocket } = settleClaim(grossCost, plan);
-    post(s, 'cash', 'shock_cost', -grossCost, `${a.label}: total cost`, lean);
-    if (insurerPaid > 0) post(s, 'cash', 'insurance_claim', insurerPaid, `${plan?.name ?? 'Insurance'} paid claim`, lean);
-    const fundedFrom = coverShortfall(s, a.label.toLowerCase(), lean);
-    const variant = chooseShockVariant(s, a.kind);
-    const shock: RealizedShock = { kind: a.kind, variant, grossCost, insurerPaid, outOfPocket, planId: plan?.id ?? null, fundedFrom };
-    s.realizedShocks.push({ monthIndex: s.monthIndex, shock });
-    const n = events.length;
-    events.push({
-      id: makeId('EVA', s, n),
-      type: 'A',
-      title: a.label,
-      body: plan
-        ? `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}; your ${plan.name} paid $${insurerPaid.toLocaleString()} and you paid $${outOfPocket.toLocaleString()} after the deductible and coinsurance.`
-        : `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}, and with no ${a.coveredBy} coverage you paid the full amount.`,
-      buildingTarget: a.coveredBy === 'health' ? 'hospital' : a.coveredBy === 'auto' ? 'hospital' : 'home',
-      options: [{ id: 'ack', label: 'Got it', description: 'Acknowledge', effect: { template: 'none' } }],
-      createdAtMonth: s.monthIndex,
-      expiresAtMonth: s.monthIndex + 2,
-      source: 'engine',
-      shock,
-    });
+    events.push(realizeShock(s, a, grossCost, chooseShockVariant(s, a.kind), lean, events.length));
   }
   return events;
+}
+
+/** Book one shock of `grossCost`: claim settlement with the active plan, cash shortfall cover, realized record, event. */
+export function realizeShock(s: GameState, a: ShockAssumption, grossCost: number, variant: string, lean: boolean, n: number): GameEvent {
+  const plan = activePlan(s, a.coveredBy);
+  const { insurerPaid, outOfPocket } = settleClaim(grossCost, plan);
+  post(s, 'cash', 'shock_cost', -grossCost, `${a.label}: total cost`, lean);
+  if (insurerPaid > 0) post(s, 'cash', 'insurance_claim', insurerPaid, `${plan?.name ?? 'Insurance'} paid claim`, lean);
+  const fundedFrom = coverShortfall(s, a.label.toLowerCase(), lean);
+  const shock: RealizedShock = { kind: a.kind, variant, grossCost, insurerPaid, outOfPocket, planId: plan?.id ?? null, fundedFrom };
+  s.realizedShocks.push({ monthIndex: s.monthIndex, shock });
+  return {
+    id: makeId('EVA', s, n),
+    type: 'A',
+    title: a.label,
+    body: plan
+      ? `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}; your ${plan.name} paid $${insurerPaid.toLocaleString()} and you paid $${outOfPocket.toLocaleString()} after the deductible and coinsurance.`
+      : `A ${a.label.toLowerCase()} cost $${grossCost.toLocaleString()}, and with no ${a.coveredBy} coverage you paid the full amount.`,
+    buildingTarget: a.coveredBy === 'health' ? 'hospital' : a.coveredBy === 'auto' ? 'hospital' : 'home',
+    options: [{ id: 'ack', label: 'Got it', description: 'Acknowledge', effect: { template: 'none' } }],
+    createdAtMonth: s.monthIndex,
+    expiresAtMonth: s.monthIndex + 2,
+    source: 'engine',
+    shock,
+  };
+}
+
+/** The script's events for this month (empty when the run has no script). */
+export function scriptedThisMonth(s: Pick<GameState, 'script' | 'monthIndex'>): ScriptedEvent[] {
+  return (s.script?.events ?? []).filter((e) => e.monthIndex === s.monthIndex);
+}
+
+/** A scripted shock: same bookkeeping as a rolled one, with the given gross cost (the plan still decides who pays). */
+export function applyScriptedShock(s: GameState, e: Extract<ScriptedEvent, { kind: 'shock' }>, lean: boolean, n: number): GameEvent | null {
+  const a = s.assumptions.shocks.find((x) => x.kind === e.shockKind);
+  if (!a) return null;
+  if (a.coveredBy === 'auto' && !hasCar(s)) return null;
+  const grossCost = round2(Math.max(0, e.grossCost));
+  const variant = e.variant ?? chooseShockVariant(s, a.kind);
+  return realizeShock(s, a, grossCost, variant, lean, n);
+}
+
+/** A scripted life event: posted like a rolled one, labelled by the script (`templateId` = `scripted:<label>`). */
+export function applyScriptedLife(s: GameState, e: Extract<ScriptedEvent, { kind: 'life' }>, lean: boolean): RealizedLifeEvent {
+  const amountSigned = round2(e.amountSigned);
+  post(s, 'cash', 'life_event', amountSigned, amountSigned > 0 ? `Life event: ${e.label}` : `Life event: ${e.label}`, lean);
+  if (amountSigned < 0) coverShortfall(s, e.label, lean);
+  if (!s.lifeEvents) s.lifeEvents = [];
+  const ev: RealizedLifeEvent = { monthIndex: s.monthIndex, amountSigned, eventId: makeId('EVL', s, s.lifeEvents.length), templateId: `scripted:${e.label}` };
+  s.lifeEvents.push(ev);
+  return ev;
 }
 
 export function lifeEventAssumptions(s: Pick<GameState, 'assumptions'>): LifeEventAssumptions {

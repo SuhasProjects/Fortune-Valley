@@ -4,6 +4,7 @@ import { Board, Button, Field, Modal, Tag } from '../../ui'
 import { Sprite } from '../art/Sprite'
 import { sfx } from '../audio/sfx'
 import './coach.css'
+import { isDemoMode } from '@/demo/demoMode'
 
 export const COACH_CHIPS = ['What happens if I save more?', 'Pay the card or save?', 'What does this insurance do?'] as const
 export const COACH_QUESTION_MAX = 300
@@ -48,7 +49,7 @@ function CoachWindow({ onClose }: { onClose: () => void }) {
   const onKey = (event: KeyboardEvent<HTMLInputElement>) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); send(draft) } }
   const offline = history.some(turn => turn.role === 'coach' && turn.source === 'fallback')
 
-  return <Modal title="The Sage" width="sm" onClose={onClose} headerExtra={offline ? <Tag>Offline</Tag> : undefined}>
+  return <Modal title="The Sage" width="sm" onClose={onClose} headerExtra={offline && !isDemoMode() ? <Tag>Offline</Tag> : undefined}>
     <div className="fv-coach__chat">
       <ol className="fv-coach__log" ref={log} aria-label="Conversation with the Sage" aria-live="polite">
         {history.length === 0 && <li className="fv-coach__turn fv-coach__turn--coach">

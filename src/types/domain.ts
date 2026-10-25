@@ -502,6 +502,13 @@ export interface InitialState {
   car?: CarState;
 }
 
+/** A scripted happening for a demo or lesson run: lands exactly on `monthIndex` instead of a random roll. */
+export type ScriptedEvent =
+  | { monthIndex: number; kind: 'life'; amountSigned: number; label: string; headline?: string; scene?: string }
+  | { monthIndex: number; kind: 'shock'; shockKind: Exclude<ShockKind, 'life' | 'job_loss'>; grossCost: number; variant?: string };
+/** Run script: events placed by hand; `exclusive` also silences the random shock, job-loss, life-event and offer rolls. */
+export interface RunScript { events: ScriptedEvent[]; exclusive?: boolean }
+
 export interface GameConfig {
   scenarioId: string;
   title: string;
@@ -518,6 +525,8 @@ export interface GameConfig {
   narrativeFocus: string[];
   /** Which fields came from labeled defaults vs the player (personalized mode). */
   defaultsApplied?: string[];
+  /** Scripted happenings (demo / lesson runs); copied onto the state so Monte Carlo and what-if replays see them too. */
+  script?: RunScript;
 }
 
 export interface GameState {
@@ -557,6 +566,8 @@ export interface GameState {
   lifeEvents: RealizedLifeEvent[];
   /** Effect templates every Type B opportunity so far has put on the table (declined or not), so the same offer is not nagged again. */
   offeredTemplates?: EventEffect['template'][];
+  /** Scripted happenings for this run (see GameConfig.script); absent on ordinary runs. */
+  script?: RunScript;
   /** Pet, birthday, relatives, hobby, commute: fixed per run so events and scenes never contradict each other. */
   householdProfile: HouseholdProfile;
 }

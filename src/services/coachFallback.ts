@@ -57,6 +57,13 @@ export function fallbackCoach(s: StateSummary, question: string, openBuilding: B
       return `Look here, my friend! Debt charges you interest; savings pay you interest, and the debt rate is almost always the bigger one. Your savings earn about ${pct(apy)} a year, so $100 saved earns about ${saveEarns} dollars a month, while $100 paid off a loan stops its interest. The trade-off is a cushion: yours covers ${cover}. Past that, the ${usd(s.debtTotal)} of debt is where each dollar does most.`;
     case 'insurance': {
       const h = plan(s.insurance.health);
+      // "What is the difference / premium vs deductible / low or high?" → the trade-off itself, with both health plans' numbers (≤ 70 words).
+      if (/differ|premium|deductible|coinsurance|low|high|cheap|expensive|which|better|vs|versus|compare|mean/.test(question.toLowerCase())) {
+        const basic = plan('health_basic'), plus = plan('health_plus');
+        const short = (name: string) => name.replace(/\s*\(.*\)$/, '');
+        const lines = basic && plus ? ` ${short(basic.name)} is ${usd(basic.monthlyPremium)} a month, ${usd(basic.deductible)} deductible, ${pct(basic.coinsurance)} after. ${short(plus.name)} is ${usd(plus.monthlyPremium)} a month, ${usd(plus.deductible)} deductible, ${pct(plus.coinsurance)} after. Cheaper keeps ${usd(plus.monthlyPremium - basic.monthlyPremium)} a month in calm months; dearer shrinks a big bill.` : '';
+        return `Ah, the oldest trade in the valley! The premium is the fee you pay every month. The deductible is the first slice of a bill that is yours; coinsurance is your share of the rest.${lines}`;
+      }
       const have = h ? `${h.name} costs ${usd(h.monthlyPremium)} a month, and a hospital bill costs you the ${usd(h.deductible)} deductible plus ${pct(h.coinsurance)} of the rest` : 'you have no health plan, so a medical shock is paid in full from your cash';
       return `Ah, insurance! It swaps a small, steady cost for protection against a big surprise. ${have[0]!.toUpperCase()}${have.slice(1)}. A cheaper plan saves premiums in calm months but makes a bad month cost more; a fuller plan does the reverse. You hold ${usd(s.cash + s.savings)}; that is the size of surprise you could cover alone.`;
     }
