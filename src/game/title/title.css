@@ -28,7 +28,7 @@
 .fv-ropes { position:absolute; left:14%; right:14%; bottom:92%; height:50dvh; border-left:calc(2 * var(--px)) solid var(--c-wood); border-right:calc(2 * var(--px)) solid var(--c-wood); }
 .fv-ropes::before,.fv-ropes::after { content:''; position:absolute; bottom:0; width:calc(2 * var(--px)); height:100%; left:calc(-3 * var(--px)); border-left:var(--px) solid var(--c-wood-dark); } .fv-ropes::after { left:auto; right:calc(-3 * var(--px)); border-left:0; border-right:var(--px) solid var(--c-wood-dark); }
 .fv-sign { position:relative; width:100%; height:calc(64 * var(--px)); background:url('/art/title/sign-large.png') center / calc(240 * var(--px)) calc(64 * var(--px)) no-repeat; display:flex; align-items:center; justify-content:center; animation:fv-bob 1.2s steps(2,end) infinite alternate; }
-.fv-sign h1 { margin:0; white-space:nowrap; text-transform:uppercase; font-size:calc(19 * var(--px)); line-height:1; color:var(--c-paper); text-shadow:var(--px) 0 var(--c-outline),calc(-1 * var(--px)) 0 var(--c-outline),0 var(--px) var(--c-outline),0 calc(-1 * var(--px)) var(--c-outline),var(--px) var(--px) var(--c-outline),calc(-1 * var(--px)) var(--px) var(--c-outline),var(--px) calc(-1 * var(--px)) var(--c-outline),calc(-1 * var(--px)) calc(-1 * var(--px)) var(--c-outline),0 calc(2 * var(--px)) var(--c-wood-dark),0 calc(3 * var(--px)) var(--c-wood-dark); }
+.fv-sign h1 { margin:0; white-space:nowrap; text-transform:uppercase; font-size:calc(25 * var(--px)); line-height:1; color:var(--c-paper); text-shadow:var(--px) 0 var(--c-outline),calc(-1 * var(--px)) 0 var(--c-outline),0 var(--px) var(--c-outline),0 calc(-1 * var(--px)) var(--c-outline),var(--px) var(--px) var(--c-outline),calc(-1 * var(--px)) var(--px) var(--c-outline),var(--px) calc(-1 * var(--px)) var(--c-outline),calc(-1 * var(--px)) calc(-1 * var(--px)) var(--c-outline),0 calc(2 * var(--px)) var(--c-wood-dark),0 calc(3 * var(--px)) var(--c-wood-dark); }
 .fv-vine { position:absolute; pointer-events:none; z-index:1; animation:fv-drift 1.8s steps(2,end) infinite alternate; }
 /* Vines are single non-repeating runs (256x18 and 16x72) generated with irregular leaves, so no segment tiles. */
 .fv-vine--top { left:calc(-8 * var(--px)); right:calc(-8 * var(--px)); top:calc(-12 * var(--px)); height:calc(18 * var(--px)); background:url('/art/title/vine-top.png') left top / calc(256 * var(--px)) calc(18 * var(--px)) no-repeat; }
@@ -39,7 +39,9 @@
 .fv-title-menu { position:absolute; top:70%; left:50%; transform:translateX(-50%); display:flex; gap:calc(6 * var(--px)); width:max-content; max-width:94%; }
 .fv-title-menu > .fv-button { position:relative; height:auto; min-height:calc(18 * var(--px)); min-width:calc(68 * var(--px)); padding:calc(2 * var(--px)) calc(5 * var(--px)); white-space:normal; font-size:calc(7 * var(--px)); }
 .fv-title-menu > .fv-button .fv-button__content > span { display:flex; flex-direction:column; align-items:center; gap:var(--px); }
-.fv-title-menu > .fv-button:disabled { background:var(--c-parchment); }
+/* Menu buttons are plank boards: the sign's own wood behind the frame, paper lettering outlined like the title. */
+.fv-title-menu > .fv-button { border-image-slice:4; background:var(--c-wood) url('/art/title/sign-large.png') center / calc(240 * var(--px)) calc(64 * var(--px)); color:var(--c-paper); text-shadow:var(--px) 0 var(--c-outline),calc(-1 * var(--px)) 0 var(--c-outline),0 var(--px) var(--c-outline),0 calc(-1 * var(--px)) var(--c-outline),var(--px) var(--px) var(--c-outline),calc(-1 * var(--px)) var(--px) var(--c-outline),var(--px) calc(-1 * var(--px)) var(--c-outline),calc(-1 * var(--px)) calc(-1 * var(--px)) var(--c-outline); }
+.fv-title-menu > .fv-button:disabled { background-image:none; background-color:var(--c-wood-dark); color:var(--c-parchment); }
 .fv-title-menu small { font:calc(4.5 * var(--px))/1 var(--font-body); max-width:calc(90 * var(--px)); white-space:nowrap; }
 /* Pointer: 6 art px square, 2 art px left of the hovered button's border, vertically centred (same at every breakpoint). */
 .fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { content:''; position:absolute; top:calc(50% - 3 * var(--px)); left:calc(-8 * var(--px)); width:calc(6 * var(--px)); height:calc(6 * var(--px)); background:url('/art/title/pointer.png') center / 100% 100%; image-rendering:pixelated; }
@@ -49,7 +51,7 @@
 /* Sub-screens: the sign switches to its small sprite; content scrolls inside the stage. */
 .fv-title--subscreen .fv-sign-wrap { top:calc(11 * var(--px)); width:calc(120 * var(--px)); }
 .fv-sign--small { height:calc(24 * var(--px)); background-image:url('/art/title/sign-small.png'); background-size:calc(120 * var(--px)) calc(24 * var(--px)); }
-.fv-sign--small h1 { font-size:calc(9 * var(--px)); }
+.fv-sign--small h1 { font-size:calc(11 * var(--px)); }
 .fv-title--subscreen .fv-vine--left,.fv-title--subscreen .fv-vine--right { height:calc(30 * var(--px)); }
 .fv-title-content { position:absolute; inset:calc(37 * var(--px)) calc(9 * var(--px)) calc(16 * var(--px)); overflow:auto; overscroll-behavior:contain; padding:calc(2 * var(--px)); font-size:calc(5 * var(--px)); }
 .fv-title-content .fv-back { position:absolute; top:calc(2 * var(--px)); left:calc(2 * var(--px)); z-index:1; }

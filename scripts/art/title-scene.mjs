@@ -114,6 +114,54 @@ write('art-src/title/scene/hills.txt', mountains({ seed: 37, h: 44, base: 22, am
       for (let j = 0; j < len && gx + j < w - 4; j++) if (rows[gy][gx + j] === 'w') rows[gy][gx + j] = r() < 0.5 ? 'b' : 'W';
     }
   }
+  // Weathering: chipped corners and edge notches (transparent, re-outlined), cracks running in from the edges,
+  // rusty nail heads at the plank ends and worn pale streaks. The middle band (x 36..204, rows 10..54) stays clean
+  // for the lettering.
+  const inText = (x, y) => x >= 36 && x <= 204 && y >= 10 && y <= 54;
+  const chip = (cells) => { for (const [x, y] of cells) if (x >= 0 && y >= 0 && x < w && y < h) rows[y][x] = '.'; };
+  chip([[0, 0], [1, 0], [2, 0], [3, 0], [0, 1], [1, 1], [0, 2]]);                                // top-left corner
+  chip([[w - 1, 0], [w - 2, 0], [w - 1, 1]]);                                                    // top-right nick
+  chip([[0, h - 1], [1, h - 1], [0, h - 2]]);                                                    // bottom-left nick
+  chip([[w - 1, h - 1], [w - 2, h - 1], [w - 3, h - 1], [w - 4, h - 1], [w - 5, h - 1], [w - 1, h - 2], [w - 2, h - 2], [w - 3, h - 2], [w - 1, h - 3], [w - 2, h - 3], [w - 1, h - 4]]); // bottom-right corner
+  chip([[58, h - 1], [59, h - 1], [60, h - 1], [59, h - 2]]);                                     // bottom notch
+  chip([[171, 0], [172, 0]]);                                                                      // top notch
+  chip([[0, 38], [0, 39], [1, 39], [0, 40]]);                                                      // left edge bite
+  chip([[w - 1, 21], [w - 1, 22], [w - 2, 22], [w - 1, 23]]);                                      // right edge bite
+  // Re-outline every opaque cell that now touches a transparent one.
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (rows[y][x] === '.') continue;
+    const edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => rows[y + dy]?.[x + dx] === '.' || x + dx < 0 || x + dx >= w || y + dy < 0 || y + dy >= h);
+    if (edge) rows[y][x] = 'k';
+  }
+  // Cracks: jagged dark lines wandering in from an edge, each with a lighter split-wood highlight beside it.
+  const crack = (x0, y0, dy, len, seed) => {
+    const cr = rng(seed);
+    let x = x0;
+    for (let i = 0; i < len; i++) {
+      const y = y0 + i * dy;
+      if (y < 1 || y >= h - 1 || inText(x, y)) break;
+      if (rows[y][x] !== '.') rows[y][x] = i < 2 ? 'k' : 'W';
+      if (rows[y][x + 1] === 'w') rows[y][x + 1] = 'b';
+      if (i % 3 === 2) x += cr() < 0.5 ? -1 : 1;
+    }
+  };
+  crack(26, 1, 1, 13, 301);
+  crack(214, h - 2, -1, 11, 302);
+  crack(9, h - 2, -1, 9, 303);
+  crack(228, 1, 1, 8, 304);
+  crack(118, 1, 1, 7, 305);
+  // Rusty nail heads where the planks meet the cross-battens, two per plank end.
+  for (const [top, bottom] of planks) {
+    const ny = top + Math.floor((bottom - top) / 2);
+    for (const nx of [6, 13, w - 8, w - 15]) if (rows[ny][nx] !== '.') { rows[ny][nx] = 'K'; rows[ny][nx + 1] = 'k'; rows[ny + 1][nx] = 'k'; }
+  }
+  // Sun-bleached streaks and dark weather stains, away from the lettering.
+  for (let i = 0; i < 40; i++) {
+    const x = Math.floor(r() * (w - 8)) + 4, y = Math.floor(r() * (h - 6)) + 3, len = 3 + Math.floor(r() * 7);
+    if (inText(x, y) || inText(x + len, y)) continue;
+    const key = r() < 0.5 ? 'b' : 'W';
+    for (let j = 0; j < len; j++) if (rows[y][x + j] === 'w') rows[y][x + j] = key;
+  }
   write('art-src/title/sign-large.txt', rows);
 }
 
