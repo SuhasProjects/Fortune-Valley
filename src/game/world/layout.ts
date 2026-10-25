@@ -76,10 +76,10 @@ export const CORE_PROPS: PlacedSprite[] = [
   bush(278, 78), mixedFlowers(280, 90), tuft(278, 100), tuft2(286, 104), rock(282, 112), shrooms(286, 120),
   tuft(386, 88), tuft2(368, 96), bush(378, 100), shrooms(372, 112), rock(368, 122), whiteFlowers(376, 124),
   // Right of the Market Hall, under the corner tree.
-  rock(360, 154), tree(370, 158), tuft(350, 168), mixedFlowers(356, 172), tuft(348, 180), bush(382, 186), whiteFlowers(378, 198),
+  rock(360, 154), tree(366, 158), tuft(350, 168), mixedFlowers(356, 172), tuft(348, 180), bush(382, 186), whiteFlowers(378, 198),
   stump(382, 212), shrooms(366, 214), rock(384, 222), bush(350, 222), tuft2(362, 226), log(348, 230), tuft2(304, 214), rock(336, 222),
   // Below Pine Bank, above the lake, and the bottom-left corner of the core by the river mouth.
-  tree(126, 152), bush(94, 154), mixedFlowers(106, 152), rock(108, 160), tuft(100, 164), tuft2(140, 158),
+  tree(120, 152), bush(94, 154), mixedFlowers(106, 152), rock(108, 160), tuft(100, 164), tuft2(140, 158),
   tuft2(92, 206), bush(88, 222), rock(102, 228), shrooms(118, 206),
 ]
 
@@ -99,9 +99,9 @@ export const RING_PROPS: PlacedSprite[] = [
   { sprite: 'world/ring/scarecrow', x: 30, y: 84 },
   tuft(4, 128), mixedFlowers(20, 126), tuft2(40, 130),
   lily(10, 163), lily(36, 167), lily(44, 172),
-  pine(30, 196), pine(8, 214), tree(30, 238), rock(10, 250), pine(6, 258), rock(40, 266), tuft(6, 196), shrooms(26, 226), tuft2(42, 262),
+  pine(30, 196), pine(8, 214), tree(27, 238), rock(10, 250), pine(6, 258), rock(40, 266), tuft(6, 196), shrooms(26, 226), tuft2(42, 262),
   // Right: a well, pines, and the pond (water x 418–460, y 141–161) with rocks and a bench.
-  { sprite: 'world/extra/well', x: 428, y: 64 }, tree(452, 56), pine(460, 84), tree(430, 100), rock(456, 112), shrooms(464, 118),
+  { sprite: 'world/extra/well', x: 428, y: 64 }, tree(450, 56), pine(460, 84), tree(430, 100), rock(456, 112), shrooms(464, 118),
   { sprite: 'world/props/bench', x: 426, y: 166 }, { sprite: 'world/extra/signpost', x: 468, y: 138 },
   rock(458, 164), lily(430, 146), lily(444, 150),
   bush(460, 170), pine(430, 180), pine(456, 186), tree(432, 206), stump(458, 214), tuft2(448, 230), log(428, 232),
