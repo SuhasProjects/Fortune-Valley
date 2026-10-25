@@ -35,7 +35,6 @@ for (let x = -10; x < MAP_W; x += 10) {
   const step = Math.round((x + 10) / 10)
   // One dense row hugging the horizon; trunk bases (y + 28) land on the top of the meadow, not the farmland.
   forest.push(pine(x + 5, 118 + (step % 2) * 2))
-  forest.push(pine(x, 120 + (step % 3)))
 }
 
 const PROPS: Placed[] = [
