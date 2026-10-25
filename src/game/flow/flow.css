@@ -15,6 +15,7 @@
 /* Bodies show in full (no clamp): copy is trimmed at the source to about 22 words, which is four lines at most here. */
 .fv-toast strong, .fv-toast p { white-space: normal; overflow-wrap: anywhere; }
 .fv-toast .fv-button { justify-self: start; }
+.fv-toast__scene, .fv-journal__scene { font-style: italic; }
 .fv-toast--decision { outline: var(--px) solid var(--c-gold); outline-offset: calc(-1 * var(--px)); }
 .fv-toast--negative .fv-toast__head { color: var(--c-money-down); }
 .fv-toast--positive .fv-toast__head { color: var(--c-money-up); }

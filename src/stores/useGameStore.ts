@@ -3,8 +3,11 @@
  * during integration — no math lives here). Calls engine functions only.
  */
 import { create } from 'zustand';
-import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
-import { explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, hasCar, monthLabel, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
+import { describeShock, explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
+
+/** One flavour request per shock notification, keyed by scenario + notification id; survives store resets within a session. */
+const flavourRequested = new Set<string>();
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 
 export interface FinishPayload {
@@ -44,6 +47,8 @@ export interface GameStore {
   closeTimeline(): void;
   setHistoryOpen(open: boolean): void;
   markNotificationRead(id: string): void;
+  /** Ask the AI (or offline table) for a news-wire scene for one shock notification; fire-and-forget, never blocks the month. */
+  requestShockFlavour(notificationId: string): Promise<void>;
   markAllNotificationsRead(): void;
   clearActionError(): void;
   requestOpportunity(): Promise<void>;
@@ -114,6 +119,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const next = advanceMonth(game);
     set({ game: next });
     get().saveGame();
+    for (const n of next.notifications) if (n.shockKind && !n.flavour && n.monthIndex === game.monthIndex) void get().requestShockFlavour(n.id);
     if (shouldRequestOpportunity(game, next)) {
       void get().requestOpportunity();
     }
@@ -135,6 +141,29 @@ export const useGameStore = create<GameStore>((set, get) => ({
   closeTimeline: () => set({ timelineOpen: false }),
   setHistoryOpen: (historyOpen) => set({ historyOpen }),
   markNotificationRead: (id) => set((s) => (s.game ? { game: { ...s.game, notifications: s.game.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) } } : s)),
+  requestShockFlavour: async (notificationId) => {
+    const { game, config, requestVersion } = get();
+    const n = game?.notifications.find((x) => x.id === notificationId);
+    if (!game || !config || !n?.shockKind || n.flavour) return;
+    const key = `${game.scenarioId}:${notificationId}`;
+    if (flavourRequested.has(key)) return;
+    flavourRequested.add(key);
+    const input = { kind: n.shockKind, amount: Math.max(0, -(n.amountSigned ?? 0)), monthLabel: monthLabel(game.startMonth, n.monthIndex), archetype: config.archetype, housingKind: game.household.housingKind, hasCar: hasCar(game), employment: game.employment.status };
+    try {
+      const r = await describeShock(input, notificationId);
+      const current = get();
+      if (!current.game || current.requestVersion !== requestVersion || current.game.scenarioId !== game.scenarioId) return;
+      const flavour = { headline: r.headline, scene: r.scene, source: r.source };
+      set({
+        game: {
+          ...current.game,
+          notifications: current.game.notifications.map((x) => (x.id === notificationId ? { ...x, flavour } : x)),
+          timeline: n.eventId ? current.game.timeline.map((t) => (t.eventId === n.eventId && t.type === 'shock' ? { ...t, flavour } : t)) : current.game.timeline,
+        },
+        ...(r.source === 'ai' ? { aiStatus: 'online' as const } : {}),
+      });
+    } catch { /* toast keeps the engine text */ }
+  },
   markAllNotificationsRead: () => { get().dispatchAction({ type: 'mark_notifications_read' }); },
   clearActionError: () => set({ lastActionError: null }),
 

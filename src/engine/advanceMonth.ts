@@ -15,7 +15,7 @@
  *
  * Deterministic given (seed, monthIndex). Never mutates the input unless opts.inPlace.
  */
-import type { GameEvent, GameState, LedgerCategory } from '@/types/domain';
+import type { GameEvent, GameState, LedgerCategory, ShockKind } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
 import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
 import { activePlan, rollEmployment, rollShocks } from './events';
@@ -53,7 +53,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const lean = opts.lean === true;
   const m = s.monthIndex;
   const rng = opts.rng ?? { market: monthRng(s.seed, m, 'market'), shocks: monthRng(s.seed, m, 'shocks'), employment: monthRng(s.seed, m, 'employment') };
-  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget'] }[] = [];
+  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string }[] = [];
   const timeline: { type: 'shock' | 'milestone'; description: string; eventId?: string }[] = [];
   const nwBefore = netWorthOf(s);
   if (s.status === 'setup') s.status = 'playing';
@@ -184,7 +184,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   for (const ev of shockEvents) {
     s.activeEvents.push(ev);
     const sh = ev.shock!;
-    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget });
+    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id });
     timeline.push({ type: 'shock', description: `${ev.title}: cost $${sh.grossCost.toLocaleString()}, insurer paid $${sh.insurerPaid.toLocaleString()}, out of pocket $${sh.outOfPocket.toLocaleString()}`, eventId: ev.id });
   }
   if (rollEmployment(s, rng.employment)) {
@@ -196,7 +196,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     };
     s.activeEvents.push(ev);
     s.realizedShocks.push({ monthIndex: m, shock: ev.shock! });
-    notes.push({ kind: 'negative', summary: 'You lost your job', details: ev.body, building: 'office' });
+    notes.push({ kind: 'negative', summary: 'You lost your job', details: ev.body, building: 'office', shockKind: 'job_loss', eventId: ev.id });
     timeline.push({ type: 'shock', description: `Job loss; ${s.employment.monthsUnemployedRemaining} months of reduced income`, eventId: ev.id });
   }
 
@@ -218,7 +218,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
       kind: 'info',
       summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
     });
-    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false }));
+    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}) }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));
   }
   s.monthIndex = m + 1;

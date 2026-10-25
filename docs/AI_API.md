@@ -64,6 +64,22 @@ Framing (system prompt): the reveal draws straight lines from the start to the u
 
 Offline fallback (`fallbackExplanation(summary, monteCarlo?, question?)`): 4–7 sentences in the same shape, keyed on the question (`classifyQuestion` → savings | debt | investing | insurance | spending | advice | general): the three endings and the actual ending with its percentile plus the two probabilities, two or three lever sentences (principle + trade-off) built from the summary's cash/savings/debt/spending/policy/coverage, one what-if pointer, then the 7-word note. A topic question puts its levers first; "what should I do" lists the buffer, highest-rate-debt and steadier-mix levers with their trade-offs instead of refusing. No arithmetic beyond formatting.
 
+## 4. flavour — shock → news-wire headline and scene
+
+Request: `{ "kind": "flavour", "shock": { "kind": "medical" | "auto" | "home" | "job_loss", "amount": 4200, "monthLabel": "2027-02", "archetype": "young_family", "housingKind": "own", "hasCar": true, "employment": "employed" } }` — `amount` is the engine's gross cost (0 for `job_loss`). No free text, no PII.
+
+Response (200): `{ "kind": "flavour", "source": "ai", "headline": "Wrist broken on ice", "scene": "A fall on ice outside the house in February broke a wrist and needed surgery. The hospital billed $4,200.", "warnings": [] }`
+
+Prompt (`api/_lib/kinds/flavour.ts`, one self-contained module exporting `requestSchema`, `responseSchema`, `system`, `user(req)`): plain wire-desk reporting, past tense, concrete nouns, the figure quoted once exactly as given, no exclamation marks, no "you", no jokes or moral, no "X. Y." fragments; headline 3–5 words in sentence case, scene ≤ 2 sentences / ≤ 32 words (schema caps: headline 60 chars, scene 260). `maxTokens` is 400 because the Flash model spends tokens before the JSON; 200 produced intermittent `schema_mismatch`. The model never changes numbers: the engine writes the shock notification with its own summary and `amountSigned` (−gross cost), the toast shows that immediately and swaps in `headline` + `scene` when the reply lands, keeping the `Money` line. `useGameStore.advanceOneMonth` fires one `requestShockFlavour(id)` per new shock notice (fire-and-forget, never blocks the month; cached by `scenarioId:notificationId`); the result is stored as `notification.flavour` and mirrored onto the matching `timeline` entry (`eventId`), so the Town activity and Your timeline windows show it too.
+
+Offline fallback (`fallbackFlavour` → `src/services/flavourTable.ts`): three hand-written scenes per shock kind with an `{amount}` slot, picked by `hashSeed(notificationId, kind, monthLabel)`; `tests/engine/ai-flavour.test.ts` lints every row (no "!", ≤ 32 words, ≤ 2 sentences, headline 2–5 words, no "you") and checks the gateway, the client fallback and determinism; `src/game/flow/flavourToast.test.tsx` covers the toast swap and the store wiring.
+
+Live samples (2026-10-24, Luminal DeepSeek-V4.1-Flash, via `curl` to the dev server):
+- auto $1,800 → "Car damaged in parking lot" / "A delivery truck backed into the parked car in a lot on 12th Street, crushing the rear door and quarter panel. The repair estimate came to $1,800."
+- medical $4,200 → "Wrist broken on ice" / "A fall on ice outside the house in February broke a wrist and needed surgery. The hospital billed $4,200."
+- home $650 (dorm) → "Laptop taken from dorm room" / "A laptop was taken from a dorm room overnight while the resident was at the dining hall. The loss came to $650."
+- job_loss → "Firm cuts analyst position" / "The firm eliminated the analyst position on the fourteenth of May, and pay stopped at the end of that pay period."
+
 ## Smoke test with a real key (about 2 minutes)
 
 The whole path is unit-tested with a mocked upstream (`tests/engine/ai-gateway.test.ts`: success, fenced/invalid JSON, 401/403/429/500/503, timeout, rate limit, `.env` loading, dev-middleware = Vercel parity), but only a live call proves the key, endpoint and model name. Steps for someone holding the key:
@@ -84,11 +100,16 @@ The whole path is unit-tested with a mocked upstream (`tests/engine/ai-gateway.t
    curl -s http://127.0.0.1:5195/api/ai -H 'content-type: application/json' -d "{\"kind\":\"explain\",\"summary\":$(cat /tmp/fv-summary.json),\"question\":\"What do these results mean?\",\"monteCarlo\":{\"median\":1200,\"p10\":-8400,\"p90\":2000,\"probabilityNegativeNetWorth\":0.54,\"probabilityLiquidityShortfall\":0.06,\"observedNetWorth\":-171,\"percentileOfObserved\":0.41}}"
    ```
    Expect `{"kind":"opportunity","source":"ai","proposal":{…2–3 options, one with "template":"none"}}` (or `"proposal":null`) and `{"kind":"explain","source":"ai","text":"…"}` of at most ~110 words: what happened, 2–3 general levers with trade-offs, a what-if pointer, a short note.
+   Flavour needs no summary:
+   ```sh
+   curl -s http://127.0.0.1:5195/api/ai -H 'content-type: application/json' -d '{"kind":"flavour","shock":{"kind":"auto","amount":1800,"monthLabel":"2026-11","archetype":"entry_worker","housingKind":"rent","hasCar":true,"employment":"employed"}}'
+   ```
 5. Negative checks (each should take under a second): empty `AI_API_KEY` → 503 `{"code":"disabled"}`; a wrong key → 502 `{"error":"AI credentials rejected","code":"upstream_error"}`; `curl -X GET` → 405. Any of these in the browser becomes `source:'fallback'` and `aiStatus:'offline'` in the store.
 6. In the app (same dev server): write a custom story on the title screen, then play to the ending; `useGameStore` sets `aiStatus: 'online'` only when the gateway answered with `source:'ai'`.
 
 | Date | Kind | HTTP | source | Notes |
 |---|---|---|---|---|
+| 2026-10-24 | flavour | 200 | ai | Luminal DeepSeek-V4.1-Flash via dev server on 5242; 4 kinds, outputs quoted in §4. |
 | 2026-10-24 | scenario / opportunity / explain | — | — | Not run: no key in the integration environment. Endpoint reachability checked without a key: `POST https://flash.luminal.cloud/v1/chat/completions` → 401 (path exists). Fill this row in after the steps above. |
 
 ## Error codes

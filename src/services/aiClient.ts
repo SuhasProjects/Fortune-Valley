@@ -3,8 +3,8 @@
  * Every call resolves — on any failure it returns the offline fallback with
  * source:'fallback' and a warning, so UI never needs a try/catch to stay usable.
  */
-import type { AiErrorResponse, AiRequest, AiResponse, MonteCarloResult, PersonalizedInput, StateSummary } from '@/types/domain';
-import { fallbackExplanation, fallbackOpportunity, fallbackScenario } from './aiFallback';
+import type { AiErrorResponse, AiRequest, AiResponse, MonteCarloResult, PersonalizedInput, ShockFlavourInput, StateSummary } from '@/types/domain';
+import { fallbackExplanation, fallbackFlavour, fallbackOpportunity, fallbackScenario } from './aiFallback';
 
 export interface AiClientOptions {
   endpoint?: string;
@@ -26,6 +26,7 @@ const defaultOffline = (): boolean => {
 export type ScenarioResult = Extract<AiResponse, { kind: 'scenario' }>;
 export type OpportunityResult = Extract<AiResponse, { kind: 'opportunity' }>;
 export type ExplainResult = Extract<AiResponse, { kind: 'explain' }>;
+export type FlavourResult = Extract<AiResponse, { kind: 'flavour' }>;
 
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;
@@ -62,6 +63,13 @@ export async function explainOutcome(summary: StateSummary, question: string, mo
   const r = await call({ kind: 'explain', summary, question, monteCarlo: mc }, opts);
   if (r && r.kind === 'explain') return r;
   return { kind: 'explain', source: 'fallback', text: fallbackExplanation(summary, mc, question), warnings: ['AI gateway unavailable; used template explanation.'] };
+}
+
+/** News-wire scene for a shock; `seed` (usually the notification id) picks the offline line. */
+export async function describeShock(shock: ShockFlavourInput, seed: number | string, opts: AiClientOptions = {}): Promise<FlavourResult> {
+  const r = await call({ kind: 'flavour', shock }, opts);
+  if (r && r.kind === 'flavour') return r;
+  return { kind: 'flavour', source: 'fallback', ...fallbackFlavour(shock, seed), warnings: ['AI gateway unavailable; used offline scene.'] };
 }
 
 export { scenarioToConfig, proposalToEvent } from './scenarioMapper';
