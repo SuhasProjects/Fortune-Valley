@@ -506,8 +506,12 @@ export interface InitialState {
 export type ScriptedEvent =
   | { monthIndex: number; kind: 'life'; amountSigned: number; label: string; headline?: string; scene?: string }
   | { monthIndex: number; kind: 'shock'; shockKind: Exclude<ShockKind, 'life' | 'job_loss'>; grossCost: number; variant?: string };
-/** Run script: events placed by hand; `exclusive` also silences the random shock, job-loss, life-event and offer rolls. */
-export interface RunScript { events: ScriptedEvent[]; exclusive?: boolean }
+/**
+ * Run script: events placed by hand. `exclusive: true` silences the random shock, job-loss, life-event and offer rolls
+ * everywhere; `'played'` silences them only in the played run: Monte Carlo and what-if paths keep the scripted life
+ * events but swap the scripted shocks for random ones (`simulationShocks` when given, else the run's own assumptions).
+ */
+export interface RunScript { events: ScriptedEvent[]; exclusive?: boolean | 'played'; simulationShocks?: ShockAssumption[] }
 
 export interface GameConfig {
   scenarioId: string;

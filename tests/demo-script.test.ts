@@ -32,7 +32,7 @@ describe('demo config', () => {
     expect(c.initialState.household.housingMonthly).toBe(340);
     expect(c.initialState.insurance.health).toBe('health_plus');
     expect(INSURANCE_PLANS.find((p) => p.id === 'health_plus')?.monthlyPremium).toBe(340);
-    expect(c.script?.exclusive).toBe(true);
+    expect(c.script?.exclusive).toBe('played');
   });
 });
 
@@ -70,14 +70,27 @@ describe('scripted events', () => {
     expect(s.lifeEvents.some((e) => e.templateId?.startsWith('scripted:'))).toBe(false);
   });
 
-  it('the script survives Monte Carlo replays, so every path has the month-12 emergency', () => {
+  it('simulated futures keep the scripted life events but roll their own hospital luck instead of the scripted bills', () => {
     const c = demoConfig();
-    for (const seed of [1, 2, 3]) {
-      const out = replayPath(c, [], seed, 36);
-      expect(out.history).toHaveLength(37);
-    }
+    let s = createGame(c);
+    for (let m = 0; m < 36; m++) s = advanceMonth(s, { lean: true, inPlace: true });
+    expect(s.lifeEvents.map((e) => e.monthIndex)).toEqual([6, 8, 16]);
+    expect(s.realizedShocks.some((r) => r.monthIndex === 12 && r.shock.grossCost === 12000)).toBe(false);
     const mc = runMonteCarlo(c, [], playThrough(36), { paths: 8 });
     expect(mc.endingNetWorths).toHaveLength(8);
+  });
+
+  it('the reveal tells the lesson: Basic earns more typically but swings about twice as wide, and the played run sits around the 10th–20th percentile', () => {
+    const c = demoConfig();
+    const played = playThrough(36, [{ monthIndex: 1, action: { type: 'set_insurance', line: 'health', planId: 'health_basic' } }]);
+    const basic = runMonteCarlo(c, played.policyLog, played, { paths: 600 });
+    const plus = runMonteCarlo(c, [], played, { paths: 600 });
+    expect(basic.median).toBeGreaterThan(plus.median);
+    expect(basic.median - plus.median).toBeLessThan(4000);
+    const widthBasic = basic.p90 - basic.p10, widthPlus = plus.p90 - plus.p10;
+    expect(widthBasic / widthPlus, `band ratio ${(widthBasic / widthPlus).toFixed(2)}`).toBeGreaterThan(1.8); // the plans' out-of-pocket caps ($8,000 vs $4,000) make ~2× the structural ratio
+    expect(basic.percentileOfObserved, 'played run is a bit unlucky').toBeGreaterThan(0.05);
+    expect(basic.percentileOfObserved).toBeLessThan(0.3);
   });
 });
 
@@ -93,10 +106,10 @@ describe('what-if: switching to the cheap plan early', () => {
     const keep = d!.alternatives.find((a) => /Plus Health/.test(a.label));
     expect(keep, 'alternative keeps the Plus plan').toBeTruthy();
     const { log } = changedPolicyLog(c, played.policyLog, d!.id, keep!.id);
-    const kept = replayPath(c, log, DEMO_SEED, 36).ending;
-    const switched = replayPath(c, played.policyLog, DEMO_SEED, 36).ending;
-    expect(kept).toBeGreaterThan(switched);
-    expect(netWorthOf(played)).toBeCloseTo(switched, 0);
+    expect(log.some((e) => e.action.type === 'set_insurance')).toBe(false); // "keep Plus" = the switch dropped from the log
+    // On the player's own two hospital bills, keeping Plus would have ended richer (the simulated futures tell the wider story).
+    expect(netWorthOf(playThrough(36))).toBeGreaterThan(netWorthOf(played));
+    expect(replayPath(c, played.policyLog, DEMO_SEED, 36).history).toHaveLength(37);
   });
 });
 

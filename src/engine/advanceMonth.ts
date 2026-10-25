@@ -193,10 +193,12 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   // ── 6. Shocks ───────────────────────────────────────────────────────────────
   // A scripted run lands its own events this month; an exclusive script also silences the random rolls.
   const scripted = scriptedThisMonth(s);
-  const exclusive = s.script?.exclusive === true;
-  const shockEvents = exclusive ? [] : rollShocks(s, rng.shocks, lean);
+  const played = s.script?.exclusive === 'played'; // simulated paths (lean) still roll shocks; the played run does not
+  const exclusive = s.script?.exclusive === true || (played && !lean);
+  const simulated = played && lean;
+  const shockEvents = exclusive ? [] : rollShocks(s, rng.shocks, lean, simulated ? s.script?.simulationShocks ?? s.assumptions.shocks : s.assumptions.shocks);
   for (const e of scripted) {
-    if (e.kind !== 'shock') continue;
+    if (e.kind !== 'shock' || simulated) continue; // simulated futures replace the scripted bills with their own luck
     const ev = applyScriptedShock(s, e, lean, shockEvents.length);
     if (ev) shockEvents.push(ev);
   }
@@ -221,7 +223,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   }
 
   const lifeToday: { ev: RealizedLifeEvent; label?: string; flavour?: ShockFlavour }[] = [];
-  const rolled = exclusive ? null : rollLifeEvent(s, lifeRng, lean);
+  const rolled = exclusive || simulated ? null : rollLifeEvent(s, lifeRng, lean); // simulated futures keep the scripted life events only
   if (rolled) lifeToday.push({ ev: rolled });
   for (const e of scripted) {
     if (e.kind !== 'life') continue;

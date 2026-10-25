@@ -69,9 +69,9 @@ export function drawShockCost(a: ShockAssumption, rng: Rng): number {
  * happen for every kind in fixed order regardless of insurance, so changing a
  * plan never changes which shocks occur (tested).
  */
-export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
+export function rollShocks(s: GameState, rng: Rng, lean: boolean, shocks: readonly ShockAssumption[] = s.assumptions.shocks): GameEvent[] {
   const events: GameEvent[] = [];
-  for (const a of s.assumptions.shocks) {
+  for (const a of shocks) {
     const u = rng.next();
     const z = rng.normal(); // always consume severity draw to keep streams aligned
     if (u >= a.monthlyIncidence) continue;

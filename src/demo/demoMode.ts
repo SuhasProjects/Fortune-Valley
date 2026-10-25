@@ -32,7 +32,12 @@ export function isDemoMode(): boolean {
 
 /** The happenings of the demo, in story order. Amounts are gross; the active health plan decides who pays the hospital. */
 export const DEMO_SCRIPT: RunScript = {
-  exclusive: true,
+  exclusive: 'played',
+  // What the 1,000 simulated futures roll instead of the scripted hospital bills: ordinary health luck, most bills
+  // modest, the odd huge one (where the plans differ most). The played run, with its two big bills, lands unlucky.
+  simulationShocks: [
+    { kind: 'medical', label: 'Medical emergency', monthlyIncidence: 0.085, costMedian: 1600, costSigma: 1.5, costMin: 100, costMax: 60000, coveredBy: 'health' },
+  ],
   events: [
     { monthIndex: 6, kind: 'life', amountSigned: -250, label: 'college textbooks', headline: 'Textbook bill lands', scene: 'The reading list for your evening course came with three required textbooks. The campus shop took $250 for the lot.' },
     { monthIndex: 8, kind: 'life', amountSigned: 200, label: 'birthday gift from your grandma', headline: 'Grandma remembers', scene: 'A card in your grandmother\'s handwriting arrived two days before your birthday with $200 folded inside.' },
@@ -59,7 +64,6 @@ export function demoConfig(): GameConfig {
   st.policy = { ...st.policy, savingsContributionPerMonth: 0, investmentContributionPerMonth: 0, extraDebtPaymentPerMonth: 0, insurancePlanIds: { health: 'health_plus', auto: null, renters: null }, minCashBuffer: 0 };
   // Nothing but the script moves: no raises, no job loss, no random shocks or life events (exclusive script above).
   cfg.assumptions.employment = { ...cfg.assumptions.employment, annualRaiseRate: 0, jobLossMonthlyIncidence: 0 };
-  cfg.assumptions.shocks = cfg.assumptions.shocks.map((a) => ({ ...a, monthlyIncidence: 0 }));
   return {
     ...cfg,
     scenarioId: 'demo:overloaded-graduate',
