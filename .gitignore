@@ -13,3 +13,4 @@ test-results/
 playwright-report/
 .art-preview/
 .claude/worktrees/
+.env*
