@@ -4,7 +4,7 @@ import type { BuildingId } from '@/types/domain'
 export const BUILDINGS: Record<BuildingId, { title: string; hint: string }> = {
   bank: { title: 'Pine Bank', hint: 'Savings & debt' },
   office: { title: 'Town Office', hint: 'Income & career' },
-  hospital: { title: 'Health House', hint: 'Hospital / Insurance' },
+  hospital: { title: 'Health House', hint: 'Health & auto insurance' },
   home: { title: 'Your Home', hint: 'Rent & everyday costs' },
   market: { title: 'Market Hall', hint: 'Investments & allocation' },
 }

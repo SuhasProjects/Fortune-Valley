@@ -196,6 +196,18 @@ describe('ending: hypothetical "from the start" decisions', () => {
     }
   });
 
+  it('offers an auto-cover hypothetical only to lives with a car, and a saved auto plan is a flippable decision', () => {
+    const student = listDecisions(config, []);
+    expect(student.some((d) => d.label.includes('Insure the car differently'))).toBe(false);
+    const worker = archetypeConfig('entry_worker', 21);
+    const auto = listDecisions(worker, []).find((d) => d.label.includes('Insure the car differently'));
+    expect(auto).toBeDefined();
+    expect(auto!.alternatives.map((a) => a.id).sort()).toEqual(['plan:auto_full', 'plan:none']);
+    const log = [{ monthIndex: 2, action: { type: 'set_insurance', line: 'auto', planId: 'auto_full' } as const }];
+    const decision = listDecisions(worker, log).find((d) => d.logIndex === 0)!;
+    expect(decision.label).toMatch(/Switch auto plan to Auto Full Coverage/);
+    expect(decision.alternatives.map((a) => a.label)).toEqual(expect.arrayContaining([expect.stringMatching(/Keep Auto Liability Only/)]));
+  });
   it('lists real decisions first, then hypotheticals', () => {
     const s = play(config, script, 'first', false);
     const decisions = listDecisions(config, s.policyLog);

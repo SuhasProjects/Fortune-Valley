@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { archetypeConfig } from '@/config/archetypes';
 import { DEFAULT_ASSUMPTIONS } from '@/config/defaults';
-import { advanceMonth, annualWithholding, applyAction, createGame, netWorthOf, runMonteCarlo, compareStrategies, settleClaim, round2 } from '@/engine';
+import { advanceMonth, annualWithholding, applyAction, createGame, hasCar, netWorthOf, runMonteCarlo, compareStrategies, settleClaim, round2 } from '@/engine';
 import { makeRng, monthRng } from '@/engine/rng';
 import type { AccountRef, GameState } from '@/types/domain';
 
@@ -167,6 +167,50 @@ describe('insurance & shocks', () => {
     const oopB = b.realizedShocks.reduce((x, r) => x + r.shock.outOfPocket, 0);
     expect(oopB).toBeGreaterThan(oopA);
     expect(b.realizedShocks.every((r) => r.shock.insurerPaid === 0)).toBe(true);
+  });
+  it('car accidents only happen to lives with a car, and skipping them keeps every other shock aligned', () => {
+    let studentAuto = 0, workerAuto = 0;
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      const student = play(start('college_student', seed, 60), 60);
+      expect(hasCar(student)).toBe(false);
+      studentAuto += student.realizedShocks.filter((r) => r.shock.kind === 'auto').length;
+      const worker = play(start('entry_worker', seed, 60), 60);
+      expect(hasCar(worker)).toBe(true);
+      workerAuto += worker.realizedShocks.filter((r) => r.shock.kind === 'auto').length;
+      // A car-less life and a car-owning life on the same seed see the same non-auto shocks: the auto draws are still consumed.
+      const nonAuto = (s: GameState) => s.realizedShocks.filter((r) => r.shock.kind !== 'auto').map((r) => `${r.monthIndex}:${r.shock.kind}`);
+      const studentWithCar = play(createGame({ ...archetypeConfig('college_student', seed, { durationMonths: 60 }), initialState: { ...archetypeConfig('college_student', seed).initialState, debts: [...archetypeConfig('college_student', seed).initialState.debts, { id: 'auto_x', name: 'Car loan', kind: 'auto_loan', balance: 0, apr: 0.05, minimumPayment: 0 }] } }), 60);
+      expect(nonAuto(studentWithCar)).toEqual(nonAuto(student));
+    }
+    expect(studentAuto).toBe(0);
+    expect(workerAuto).toBeGreaterThan(0);
+  });
+  it('a paid-off car loan still counts as a car', () => {
+    const s = start('entry_worker', 3, 12);
+    s.debts = s.debts.map((d) => (d.id === 'auto_1' ? { ...d, balance: 0 } : d));
+    const later = play(s, 3);
+    expect(later.debts.find((d) => d.id === 'auto_1')!.balance).toBe(0);
+    expect(hasCar(later)).toBe(true);
+  });
+  it('the chosen auto plan settles a car accident: full coverage pays past the deductible, liability pays nothing on your own car', () => {
+    const liability = DEFAULT_ASSUMPTIONS.insurancePlans.find((p) => p.id === 'auto_liability')!;
+    const full = DEFAULT_ASSUMPTIONS.insurancePlans.find((p) => p.id === 'auto_full')!;
+    expect(settleClaim(6000, liability)).toEqual({ insurerPaid: 0, outOfPocket: 6000 });
+    expect(settleClaim(6000, full)).toEqual({ insurerPaid: 5000, outOfPocket: 1000 });
+    expect(settleClaim(6000, null)).toEqual({ insurerPaid: 0, outOfPocket: 6000 });
+    let s = start('entry_worker', 5, 60);
+    const r = applyAction(s, { type: 'set_insurance', line: 'auto', planId: 'auto_full' });
+    expect(r.ok).toBe(true); s = r.state;
+    expect(s.policyLog.at(-1)!.action).toEqual({ type: 'set_insurance', line: 'auto', planId: 'auto_full' });
+    const played = play(s, 60);
+    const crashes = played.realizedShocks.filter((x) => x.shock.kind === 'auto');
+    expect(crashes.length).toBeGreaterThan(0);
+    for (const { shock } of crashes) {
+      expect(shock.planId).toBe('auto_full');
+      expect(shock).toMatchObject(settleClaim(shock.grossCost, full));
+    }
+    expect(applyAction(s, { type: 'set_insurance', line: 'auto', planId: 'health_plus' }).ok).toBe(false);
+    expect(applyAction(s, { type: 'set_insurance', line: 'auto', planId: 'nope' }).ok).toBe(false);
   });
   it('claim math: deductible, coinsurance, out-of-pocket max, coverage cap', () => {
     const plan = DEFAULT_ASSUMPTIONS.insurancePlans.find((p) => p.id === 'health_basic')!;

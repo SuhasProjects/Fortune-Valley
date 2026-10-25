@@ -7,6 +7,15 @@ import type { Rng } from './rng';
 import { coverShortfall, makeId, post, round2 } from './accounting';
 import { validateEffect } from './validation';
 
+/**
+ * A life has a car when it carries (or has paid off) an auto loan. Car-less lives
+ * skip auto shocks and the Health House hides auto cover. Debts stay in the list
+ * after payoff, so a car never vanishes mid-game.
+ */
+export function hasCar(s: Pick<GameState, 'debts'>): boolean {
+  return s.debts.some((d) => d.kind === 'auto_loan');
+}
+
 export function activePlan(s: GameState, line: InsurancePlan['line']): InsurancePlan | null {
   const id = s.insurance[line];
   if (!id) return null;
@@ -48,6 +57,7 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
     const u = rng.next();
     const z = rng.normal(); // always consume severity draw to keep streams aligned
     if (u >= a.monthlyIncidence) continue;
+    if (a.coveredBy === 'auto' && !hasCar(s)) continue; // no car, no car accident (draws already consumed, streams stay aligned)
     const grossCost = round2(Math.min(a.costMax, Math.max(a.costMin, a.costMedian * Math.exp(a.costSigma * z))));
     const plan = activePlan(s, a.coveredBy);
     const { insurerPaid, outOfPocket } = settleClaim(grossCost, plan);

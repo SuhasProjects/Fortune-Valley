@@ -68,6 +68,10 @@
 .ft-plan-card[data-selected='true'] { border-color: var(--c-gold); box-shadow: inset 0 0 0 var(--px) var(--c-gold); }
 .ft-plan-card:has(:focus-visible) { outline: calc(2 * var(--px)) solid var(--c-gold); }
 .ft-plan-card input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+/* Auto cover: liability / full side by side like the health pair, "no cover" as a slim row under them; the form sits under the health one. */
+.ft-plan-cards--auto > :nth-child(3) { grid-column: 1 / -1; }
+.ft-auto-form { margin-top: calc(3 * var(--px)); }
+.ft-plan-card small { font-size: var(--fs-label); line-height: 1.3; color: var(--c-outline); }
 .ft-plan-card dl > div { display: block; }
 .ft-plan-card dd { font-size: var(--fs-value); }
 .ft-plan-card strong { font-family: var(--font-heading); }

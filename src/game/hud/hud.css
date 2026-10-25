@@ -30,6 +30,9 @@
 /* The pause-menu button beside the status tag: a plain pixel pause glyph, so nobody reads it as settings. */
 .fv-pause-menu { --button-height: 9; width: calc(11 * var(--px)); padding: 0; flex: none; }
 .fv-pause-menu .fv-glyph { color: var(--c-ink); }
+/* Inside the 9 px pause-menu button the glyph is a 3x5 pair of bars (frame 1 px + 1 px padding each side), never touching the frame. */
+.fv-pause-menu .fv-glyph--pause { width: calc(3 * var(--px)); height: calc(5 * var(--px)); }
+.fv-pause-menu .fv-glyph--pause::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), calc(2 * var(--px)) 0, calc(2 * var(--px)) var(--px), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) calc(3 * var(--px)), calc(2 * var(--px)) calc(4 * var(--px)); }
 /* The status tag is a small, quiet label (one size under --fs-label) tucked top-left under the HUD. */
 .fv-status-tag .fv-tag { font-size: calc(4 * var(--px)); line-height: 1; min-height: calc(6 * var(--px)); }
 .fv-status-dot { display: inline-block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); animation: fv-pulse 900ms steps(2) infinite; }
