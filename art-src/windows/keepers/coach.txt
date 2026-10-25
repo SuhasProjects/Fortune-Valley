@@ -1,0 +1,53 @@
+size 24x24
+frames 2
+speed 900
+--- 0
+........................
+........................
+........kkkkkkkk.....kkk
+......kkffffffffkk...kOk
+.....kffzffffffzffk..kOk
+....kfffzffffffzfffk.kWk
+....kffPQQQQQQQQPffk.kWk
+....kfkPQQQQQQQQPkfk.kWk
+.....kPQQQQQQQQQQPk..kWk
+.....kPQfffQQfffQPk..kWk
+.....kPQk8kkkk8kQPk..kWk
+.....kPQQQQPPQQQQPk..kWk
+.....kPkfffQQfffkPk..kWk
+.....kfffQkkkkQfffk..kWk
+......kfffffffffzk...kWk
+.....kbkfffffffzkbk..kWk
+....kbbbkfffffzkbbbk.kWk
+...kbbbbbkfffzkbbbbbkkWk
+...kbbbbbbkfzkbbbbbbkkWk
+...kbbbbbbbkkbbbbbbbkkWk
+...knbbbbbDDbbbbbbbwkkWk
+...kkkkkkkkkkkkkkkkkkkkk
+........................
+........................
+--- 1
+........................
+........................
+........kkkkkkkk.....kkk
+......kkffffffffkk...kOk
+.....kffzffffffzffk..kik
+....kfffzffffffzfffk.kWk
+....kffPQQQQQQQQPffk.kWk
+....kfkPQQQQQQQQPkfk.kWk
+.....kPQQQQQQQQQQPk..kWk
+.....kPQfffQQfffQPk..kWk
+.....kPQkzkkkkzkQPk..kWk
+.....kPQQQQPPQQQQPk..kWk
+.....kPkfffQQfffkPk..kWk
+.....kfffQkkkkQfffk..kWk
+......kzfffffffffk...kWk
+.....kbkzfffffffkbk..kWk
+....kbbbkzfffffkbbbk.kWk
+...kbbbbbkzfffkbbbbbkkWk
+...kbbbbbbkzfkbbbbbbkkWk
+...kbbbbbbbkkbbbbbbbkkWk
+...knbbbbbDDbbbbbbbwkkWk
+...kkkkkkkkkkkkkkkkkkkkk
+........................
+........................
