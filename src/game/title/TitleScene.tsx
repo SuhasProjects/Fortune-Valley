@@ -30,11 +30,17 @@ const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x,
  */
 // A continuous tree line, as originally drawn: no gaps for the path or the screen-edge bands (a half tree at the
 // window edge reads better than a hole in the forest).
+// Deterministic jitter (seeded hash) so the line reads as a wood, not a picket fence, yet renders the same every load.
+const jitter = (i: number, salt: number, range: number): number => {
+  const h = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
+  return Math.floor((h - Math.floor(h)) * range)
+}
 const forest: Placed[] = []
 for (let x = -10; x < MAP_W; x += 10) {
   const step = Math.round((x + 10) / 10)
-  // One dense row hugging the horizon; trunk bases (y + 28) land on the top of the meadow, not the farmland.
-  forest.push(pine(x + 5, 118 + (step % 2) * 2))
+  // One ragged row hugging the horizon; trunk bases (y + 28) stay on the top of the meadow, off the farmland.
+  forest.push(pine(x + 3 + jitter(step, 1, 5), 116 + jitter(step, 2, 6)))
+  if (step % 3 === 1) forest.push(pine(x + 8 + jitter(step, 3, 3), 115 + jitter(step, 4, 3))) // odd filler so gaps vary
 }
 
 const PROPS: Placed[] = [
