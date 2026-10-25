@@ -51,6 +51,12 @@
 .fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
 .fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); }
 .fv-coach-tip--3 { right: calc(14 * var(--px)); bottom: calc(14 * var(--px)); }
+/* Zoom 1 (windows under 640 px wide or 360 tall): the UI layer runs at twice the world's scale, so a tip beside a
+   building would cover it; every tip docks above the control bar on the left instead. */
+.fv-stage[data-px='1'] :is(.fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3) { left: calc(3 * var(--px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(25 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px)); max-width: calc(160 * var(--px)); }
+/* Windows taller than the map with room under the control bar (GameScreen's CoachTip sets data-dock): the tip sits on
+   the pine border below the bar, covering nothing. */
+.fv-stage .fv-coach-tip[data-dock='below'] { top: calc(100% + 2 * var(--px)); bottom: auto; left: calc(3 * var(--px)); right: auto; transform: none; width: min(calc(100vw - 6 * var(--px)), calc(160 * var(--px))); }
 
 /* Finish sequence and natural end. */
 .fv-finish-overlay { position: absolute; inset: 0; z-index: var(--z-overlay); display: grid; place-items: center; background: color-mix(in srgb, var(--c-ink) 55%, transparent); }
@@ -82,32 +88,6 @@
 /* Short laptops (1280x720): two unclamped toasts plus "View all activity" fit between the HUD and the control bar;
    a third would sit over the bar, so it stays in "View all activity" only. */
 @media (min-width: 640px) and (max-height: 740px) { .fv-toasts > :nth-child(3):not(.fv-view-all) { display: none; } }
-@media (max-width: 639px) {
-  /* Phones: tools on the left and toasts on the right share the strip under the HUD, above the town core. */
-  .fv-toasts { width: calc(96 * var(--px)); }
-  .fv-toast p { display: none; }
-  .fv-toast strong { font: var(--fs-body)/1.05 var(--font-body); }
-  /* Only the newest toast keeps its button; older ones shrink to a one-line summary so the stack stays above
-     the town core. Every toast is still in "View all activity". */
-  .fv-toasts > :nth-child(n+2) .fv-toast strong, .fv-toasts > .fv-toast:nth-child(n+2) strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
-  .fv-toasts > :nth-child(n+2) .fv-toast > :is(.fv-button, .fv-money), .fv-toasts > .fv-toast:nth-child(n+2) > :is(.fv-button, .fv-money) { display: none; }
-  /* Narrow screens: every tip docks above the control bar so no building is covered. */
-  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(44 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); max-width: calc(160 * var(--px)); }
-  /* Only the newest toast shows in full (older ones would reach the town core now that dismiss buttons are
-     thumb-sized); every toast is still in "View all activity". */
-  .fv-toasts > :nth-child(n+2):not(.fv-view-all) { display: none; }
-  .fv-toasts { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); }
-  .fv-flow-tools { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); }
-  /* Phones: the recap spans the strip under the HUD as two fixed lines (chips in one row, overflow hidden); the
-     status tools and toasts sit below it while it shows. */
-  .fv-month-recap-host, .fv-ui:has(.fv-toasts .fv-toast) > .fv-month-recap-host { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); transform: none; width: auto; max-width: none; }
-  .fv-month-recap { height: calc(20 * var(--px)); box-sizing: border-box; gap: calc(0.5 * var(--px)); overflow: hidden; }
-  .fv-month-recap__line { font-size: var(--fs-label); overflow: hidden; text-overflow: ellipsis; }
-  .fv-month-recap__line strong { font-size: var(--fs-label); }
-  .fv-month-recap__chips { flex-wrap: nowrap; overflow: hidden; gap: var(--px); }
-  .fv-chip { font-size: 10px; }
-  .fv-ui:has(.fv-month-recap) > :is(.fv-flow-tools, .fv-toasts) { top: calc(var(--hud-bottom, calc(55 * var(--px))) + 24 * var(--px)); }
-}
 [data-reduce-motion='true'].fv-month-recap, [data-reduce-motion='true'] .fv-counter i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-month-recap, .fv-counter i { animation: none; } }
 

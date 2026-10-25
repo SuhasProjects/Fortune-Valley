@@ -1,0 +1,14 @@
+/* "Turn your phone sideways": a full-screen parchment notice over the game on phones held upright (RotateOverlay).
+   Shown only when the JS media query matches; the CSS query below is the same one so the notice never lingers. */
+.fv-rotate { --px: 3px; position: fixed; inset: 0; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; gap: calc(6 * var(--px)); padding: calc(6 * var(--px)) calc(4 * var(--px)); text-align: center; color: var(--c-outline);
+  background: var(--c-parchment) repeating-conic-gradient(var(--c-parchment-light) 0 25%, transparent 0 50%) 0 0 / calc(2 * var(--px)) calc(2 * var(--px)); touch-action: none; }
+@media (max-width: 899px) and (orientation: portrait) and (pointer: coarse), (max-device-width: 899px) and (orientation: portrait) and (hover: none) { .fv-rotate { display: flex; } }
+.fv-rotate__sign { width: calc(120 * var(--px)); max-width: none; flex: none; }
+.fv-rotate__sign h1 { font-size: calc(6 * var(--px)); }
+.fv-rotate p { margin: 0; max-width: calc(110 * var(--px)); font-size: calc(5.5 * var(--px)); line-height: 1.3; }
+/* The phone: a 10x18 art-px outline with a screen and a home button, turning a quarter in four steps and back. */
+.fv-rotate__phone { position: relative; width: calc(10 * var(--px)); height: calc(18 * var(--px)); margin-bottom: calc(4 * var(--px)); border: var(--px) solid var(--c-outline); background: var(--c-wood-dark); box-shadow: inset 0 0 0 var(--px) var(--c-wood); animation: fv-rotate-phone 2.4s steps(4, end) infinite alternate; }
+.fv-rotate__phone > span { position: absolute; left: calc(1 * var(--px)); right: calc(1 * var(--px)); top: calc(2 * var(--px)); bottom: calc(3 * var(--px)); background: var(--c-sky-high); box-shadow: inset calc(-1 * var(--px)) calc(-1 * var(--px)) 0 var(--c-sky-mid); }
+.fv-rotate__phone::after { content: ''; position: absolute; left: calc(3 * var(--px)); bottom: calc(0.5 * var(--px)); width: calc(2 * var(--px)); height: var(--px); background: var(--c-gold); }
+@keyframes fv-rotate-phone { from { transform: rotate(0deg); } to { transform: rotate(90deg); } }
+@media (prefers-reduced-motion: reduce) { .fv-rotate__phone { animation: none; transform: rotate(90deg); } }

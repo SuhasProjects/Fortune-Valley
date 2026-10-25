@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { Sprite } from '../art/Sprite'
 import { SPRITES, type SpriteName } from '../art/manifest'
 import { useStageScale } from '../stage/GameStage'
-import { MAP_H, MAP_W } from '../stage/scale'
+import { EDGE_TILE, MAP_H, MAP_W, mapWindow } from '../stage/scale'
 import { useReducedMotion } from '../world/useReducedMotion'
 import './title-scene.css'
 
@@ -11,6 +11,8 @@ import './title-scene.css'
  * snow and drifting haze, rolling hills, a pine line, and a meadow using the same ground textures, buildings,
  * trees and props as the town. Same 480x288 map and integer zoom as TownWorld.
  */
+/** Map row where the hills layer ends and the meadow begins: the border tile fills rows from here down. */
+const MEADOW_TOP = 146
 const LAYERS: [SpriteName, number][] = [
   ['title/scene/sky', 0],
   ['title/scene/mountains-far', 40],
@@ -57,18 +59,23 @@ const PROPS: Placed[] = [
 ]
 
 export function TitleScene({ dusk = false }: { dusk?: boolean }) {
-  const { px, viewW, viewH } = useStageScale()
+  const stage = useStageScale()
+  const { px } = stage
   const still = useReducedMotion()
-  const left = Math.round(((viewW - MAP_W) / 2) * px)
-  const top = Math.round(((viewH - MAP_H) / 2) * px)
+  // Centred on the map. Windows that show past it (tall or ultrawide, scale.ts) get the sky layers mirrored on either
+  // side (a mirrored copy meets its original without a seam) and the world's grass-and-pines tile below the hills.
+  const { left, top, wide, tall } = mapWindow(stage.width, stage.height, stage)
   const at = (x: number, y: number, z: number): CSSProperties => ({ left: x * px, top: y * px, zIndex: z })
+  const sides = wide ? [-MAP_W, MAP_W] : []
   return <div className={`fv-scene${still ? ' fv-still' : ''}`} aria-hidden="true" data-dusk={dusk || undefined}>
+    {(wide || tall) && <div className="fv-scene__edge" style={{ top: top + MEADOW_TOP * px, backgroundImage: `url(${SPRITES['world/edge-tile'].src})`, backgroundSize: `${EDGE_TILE * px}px ${EDGE_TILE * px}px`, backgroundPosition: `${left}px ${top}px` }}/>}
     <div className="fv-scene__map" style={{ width: MAP_W * px, height: MAP_H * px, left, top }}>
       <Sprite name="title/ground" className="fv-scene__layer" style={at(0, 0, 0)}/>
       <Sprite name="title/water" animate className="fv-scene__layer" style={at(0, 0, 1)}/>
       {LAYERS.map(([name, y], i) => <Sprite key={name} name={name} className="fv-scene__layer" style={at(0, y, 10 + i)}/>)}
-      <div className="fv-scene__haze" style={at(0, 100, 12)}/>
-      <div className="fv-scene__haze fv-scene__haze--reverse" style={at(0, 126, 14)}/>
+      {sides.map((x) => LAYERS.map(([name, y], i) => <Sprite key={`${name}${x}`} name={name} className="fv-scene__layer fv-scene__layer--mirror" style={at(x, y, 10 + i)}/>))}
+      <div className="fv-scene__haze" style={{ ...at(wide ? -MAP_W : 0, 100, 12), width: wide ? 3 * MAP_W * px : undefined }}/>
+      <div className="fv-scene__haze fv-scene__haze--reverse" style={{ ...at(wide ? -MAP_W : 0, 126, 14), width: wide ? 3 * MAP_W * px : undefined }}/>
       {PROPS.map((p, i) => <Sprite key={i} name={p.sprite} animate={p.animate} className="fv-scene__prop" style={at(p.x, p.y, 20 + p.y + SPRITES[p.sprite].h)}/>)}
       {dusk && <div className="fv-scene__dusk"/>}
     </div>

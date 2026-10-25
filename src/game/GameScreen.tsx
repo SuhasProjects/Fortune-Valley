@@ -12,7 +12,8 @@ import { TimelineWindow } from './flow/TimelineWindow'
 import { ConfirmDialog } from './flow/ConfirmDialog'
 import { OptionsWindow, setSetting, useSettings } from './settings'
 import { sfx } from './audio/sfx'
-import { GameStage } from './stage/GameStage'
+import { GameStage, useStageScale } from './stage/GameStage'
+import { uiBox } from './stage/scale'
 import { TownWorld } from './world/TownWorld'
 import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
 import { GuideWindow } from './title/GuideWindow'
@@ -32,6 +33,16 @@ const tips = [
 ] as const
 
 export interface GameScreenProps { panels?: Partial<Record<BuildingId, ReactNode>> }
+
+/**
+ * One of the three opening tips. Windows taller than the map leave a strip of pine border under the control bar; when
+ * that strip has room for a tip (70 UI art px) the tip docks there instead of over the town (flow.css `data-dock`).
+ */
+function CoachTip({ step, children }: { step: number; children: ReactNode }) {
+  const stage = useStageScale()
+  const below = uiBox(stage.width, stage.height, stage).bottom >= 70 * Math.max(2, stage.px)
+  return <Board as="aside" className={`fv-coach-tip fv-coach-tip--${step}`} data-dock={below ? 'below' : undefined} aria-label={`Tip ${step + 1} of 3`}>{children}</Board>
+}
 
 /** The town screen: Agent 1's stage and world, Agent 2's HUD, Agent 3's building panels, and the flow layer. */
 export function GameScreen({ panels = {} }: GameScreenProps) {
@@ -185,10 +196,10 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       <HudFooter/>
       <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
-      {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of ${tips.length}`}>
+      {tip && <CoachTip step={tipStep}>
         <strong>{tip[0]}</strong><p>{tip[1]}</p>
         <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === tips.length - 1 ? 'Got it' : 'Next tip'}</Button>
-      </Board>}
+      </CoachTip>}
       {game.status === 'finished' && !finishing && <Board as="section" padding="lg" className="fv-completion-banner" aria-label="Story complete">
         <p>Your {config.durationMonths} months are complete.</p>
         <Button variant="primary" size="lg" iconRight="arrow-right" onClick={() => void beginFinish()}>Review your story</Button>

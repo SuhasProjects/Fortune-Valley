@@ -3,8 +3,15 @@ import { expectReveal, leaveReveal, openTitle, startStory } from './helpers'
 
 // OWNER: Agent 4 (game flow). End-to-end smoke of a played game. Start games only through ./helpers.
 
-test('larger text fits a narrow phone without horizontal overflow', async ({ page }) => {
+test('larger text fits a narrow phone without horizontal overflow', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 740 })
+  if (testInfo.project.name.startsWith('mobile')) {
+    // An upright phone gets the "turn your phone sideways" notice (phones play in landscape); a narrow desktop window plays on.
+    await page.goto('/')
+    await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeVisible()
+    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 320)
+    return
+  }
   await openTitle(page)
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 320)
   await startStory(page, 'College Student')

@@ -5,7 +5,7 @@ import { openTitle, startStory } from './helpers'
 
 for (const [width, height, px] of [[1280, 720, 4], [1366, 768, 4], [1440, 900, 4], [1920, 1080, 6], [2000, 1100, 6], [2560, 1440, 8]] as const) {
   test(`town world fits ${width}x${height} at ${px}x zoom`, async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === 'mobile', 'laptop sizes only')
+    test.skip(testInfo.project.name.startsWith('mobile'), 'laptop sizes only')
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
     await page.setViewportSize({ width, height })

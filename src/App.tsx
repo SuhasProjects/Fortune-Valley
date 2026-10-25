@@ -3,6 +3,7 @@ import { useGameStore } from './stores/useGameStore'
 import type { BuildingId } from './types/domain'
 import { TitleScreen } from './game/title/TitleScreen'
 import { GameScreen } from './game/GameScreen'
+import { RotateGuard } from './game/stage/RotateOverlay'
 import { Board } from './ui'
 
 // The ending and the dev routes load on demand so the title and town start fast.
@@ -21,7 +22,8 @@ export default function App(props: AppProps) {
   const dev = new URLSearchParams(window.location.search).get('dev')
   if (dev === 'engine') return <Suspense fallback={loading}><EngineHarness/></Suspense>
   if (dev === 'ui') return <Suspense fallback={loading}><UiGallery/></Suspense>
-  if (!store.game) return <TitleScreen/>
-  if (store.finishPayload) return <Suspense fallback={loading}><RevealScreen payload={store.finishPayload} onPlayAgain={store.resetGame}/></Suspense>
-  return <GameScreen panels={props.panels}/>
+  // Phones held upright see "turn your phone sideways" over whichever screen is up; the screen keeps running underneath.
+  if (!store.game) return <RotateGuard><TitleScreen/></RotateGuard>
+  if (store.finishPayload) return <RotateGuard><Suspense fallback={loading}><RevealScreen payload={store.finishPayload} onPlayAgain={store.resetGame}/></Suspense></RotateGuard>
+  return <RotateGuard><GameScreen panels={props.panels}/></RotateGuard>
 }

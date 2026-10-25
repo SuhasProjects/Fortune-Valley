@@ -3,7 +3,9 @@ import { expectReveal, openTitle, startStory } from './helpers'
 
 // OWNER: mobile-pass. Phone-friendliness beyond Brief M's layout check: no horizontal overflow on any screen, thumb-sized
 // targets (44 CSS px) under a coarse pointer, 16 px text boxes (no page zoom), a finger-draggable bank slider, the
-// reveal's dropdowns, the coach's question box above the keyboard, and a landscape-phone layout. Mobile project only.
+// reveal's dropdowns, the coach's question box above the keyboard. Phones play in landscape (an upright phone gets the
+// "turn your phone sideways" notice, tests/mobile.browser.ts), so everything here runs on the mobile-landscape project
+// at 844x390 (iPhone 14), 932x430 (iPhone 14 Pro Max) and 740x360 (small Android).
 
 const stubAi = (page: Page) => page.route('**/api/ai', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"disabled"}' }))
 const viewport = (page: Page) => page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight, sw: document.documentElement.scrollWidth }))
@@ -56,15 +58,16 @@ const dismissTips = async (page: Page) => { const tip = page.getByRole('button',
 
 test.describe('Phone pass', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'mobile', 'phone layout runs on the mobile project only')
+    test.skip(testInfo.project.name !== 'mobile-landscape', 'phone layout runs on the landscape phone project only')
     await stubAi(page)
   })
 
-  for (const size of [{ width: 390, height: 844 }, { width: 430, height: 932 }]) {
+  for (const size of [{ width: 844, height: 390 }, { width: 932, height: 430 }, { width: 740, height: 360 }]) {
     test(`${size.width}x${size.height}: no sideways overflow, 44 px targets and a visible control bar on every screen`, async ({ page }) => {
       await page.setViewportSize(size)
       expect(await page.evaluate(() => matchMedia('(pointer: coarse)').matches)).toBe(true)
       await openTitle(page)
+      await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toHaveCount(0)
       await expectNoOverflow(page, 'title'); await expectTouchSizes(page, 'title')
       await page.getByRole('button', { name: 'New Story', exact: true }).click()
       await expectNoOverflow(page, 'picker'); await expectTouchSizes(page, 'picker')
@@ -91,9 +94,10 @@ test.describe('Phone pass', () => {
         const dialog = page.getByRole('dialog', { name })
         await expect(dialog).toBeVisible()
         await expectNoOverflow(page, name); await expectTouchSizes(page, name)
+        // Landscape windows take the full height (the HUD-to-bar gap is too short to read in), so only "inside" applies.
         const window = dialog.locator('.fv-window')
         const box = await expectInside(page, window, `${name} window`)
-        expect(box.y + box.height, `${name} window stays above the control bar`).toBeLessThanOrEqual(barBox.y)
+        expect(box.height, `${name} window uses the height`).toBeGreaterThan(size.height * 0.6)
         await expectInside(page, page.getByRole('button', { name: 'Close panel' }), `${name} close button`)
         await closePanel(page)
       }
@@ -151,7 +155,7 @@ test.describe('Phone pass', () => {
     await expect(input).toHaveValue(String(max))
   })
 
-  test('reveal: charts and tiles stack in one column and the what-if dropdowns open with 44 px options', async ({ page }) => {
+  test('reveal: charts stack in one column, tiles fit the screen and the what-if dropdowns open with 44 px options', async ({ page }) => {
     await openTitle(page)
     await startStory(page, 'Entry-Level Worker')
     await dismissTips(page)
@@ -180,7 +184,7 @@ test.describe('Phone pass', () => {
     await options.last().click()
     await expect(list).toHaveCount(0)
     await expect(decision).toContainText(chosen)
-    // The two comparison charts stack (same left edge) and each fits the screen; so do the change tiles.
+    // The two comparison charts stack (same left edge) and each fits the screen; every change tile fits too.
     const charts = page.locator('.fv-comparison-charts .fv-outcome-chart')
     await expect(charts).toHaveCount(2, { timeout: 15_000 })
     const [a, b] = await Promise.all([charts.nth(0).boundingBox(), charts.nth(1).boundingBox()])
@@ -190,11 +194,11 @@ test.describe('Phone pass', () => {
     const tiles = page.locator('.fv-change-tiles > *')
     await expect(tiles.first()).toBeVisible()
     const tileBoxes = await Promise.all((await tiles.all()).map(tile => tile.boundingBox()))
-    for (const tile of tileBoxes) { expect(Math.round(tile!.x)).toBe(Math.round(tileBoxes[0]!.x)); expect(tile!.x + tile!.width).toBeLessThanOrEqual(w) }
+    for (const tile of tileBoxes) { expect(tile!.x).toBeGreaterThanOrEqual(0); expect(tile!.x + tile!.width).toBeLessThanOrEqual(w) }
     await expectNoOverflow(page, 'reveal (what-if)')
   })
 
-  test('coach sheet: the question box stays visible above the control bar, also when the viewport shrinks for a keyboard', async ({ page }) => {
+  test('coach sheet: the question box stays on screen (a full-height sheet on the right in landscape), also when the viewport shrinks for a keyboard', async ({ page }) => {
     await openTitle(page)
     await startStory(page, 'College Student')
     await dismissTips(page)
@@ -203,25 +207,34 @@ test.describe('Phone pass', () => {
     await expect(input).toBeVisible()
     await expect(input).toBeFocused()
     expect(parseFloat(await input.evaluate(el => getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16)
-    const bar = page.getByRole('group', { name: 'Time controls' })
-    let inputBox = await expectInside(page, input, 'coach input')
-    let barBox = (await bar.boundingBox())!
-    expect(inputBox.y + inputBox.height).toBeLessThanOrEqual(barBox.y)
+    await expectInside(page, input, 'coach input')
     for (const chip of await page.getByRole('button', { name: /save more|card or save|insurance do/ }).all()) await expectInside(page, chip, 'coach chip')
     // Android resizes the layout viewport for the keyboard (interactive-widget=resizes-content): the sheet shrinks and
     // the question box stays on screen.
-    await page.setViewportSize({ width: 390, height: 500 })
-    inputBox = await expectInside(page, input, 'coach input (keyboard)')
-    barBox = (await bar.boundingBox())!
-    expect(inputBox.y + inputBox.height).toBeLessThanOrEqual(barBox.y)
+    await page.setViewportSize({ width: 844, height: 230 })
+    await expectInside(page, input, 'coach input (keyboard)')
     await expect(page.getByRole('dialog', { name: 'The Sage' }).getByRole('heading', { name: 'The Sage' })).toBeVisible()
     await expectNoOverflow(page, 'coach (keyboard)')
   })
 
-  test('landscape phone (844x390): one-row HUD and bar, buildings tappable, windows full height, coach reachable', async ({ page }) => {
-    await page.setViewportSize({ width: 844, height: 390 })
+  for (const size of [{ width: 844, height: 390 }, { width: 926, height: 428 }, { width: 740, height: 360 }]) test(`landscape phone (${size.width}x${size.height}): one-row HUD and bar, buildings tappable, windows full height, coach reachable`, async ({ page }) => {
+    await page.setViewportSize(size)
     await openTitle(page)
     await expectNoOverflow(page, 'title (landscape)')
+    // Picker and letter fit sideways too.
+    await page.getByRole('button', { name: 'New Story', exact: true }).click()
+    await expectNoOverflow(page, 'picker (landscape)')
+    await expectInside(page, page.locator('.fv-title-content'), 'picker surface')
+    await expectInside(page, page.getByRole('button', { name: /College Student/ }), 'first story card')
+    for (const life of ['Entry-Level Worker', 'Professional', 'Young Family']) { // the list scrolls sideways-on-a-phone: every card can be reached
+      const card = page.getByRole('button', { name: new RegExp(life) }).first()
+      await card.scrollIntoViewIfNeeded(); await expectInside(page, card, `${life} card`)
+    }
+    await page.getByRole('button', { name: 'Back' }).click()
+    await page.getByRole('button', { name: 'Custom Story' }).click()
+    await expectNoOverflow(page, 'letter (landscape)')
+    await expectInside(page, page.getByRole('button', { name: 'Back' }), 'letter back button')
+    await page.getByRole('button', { name: 'Back' }).click()
     await startStory(page, 'College Student')
     await expectNoOverflow(page, 'town (landscape)')
     const tip = page.getByRole('button', { name: /Next tip|Got it/ })
@@ -244,7 +257,7 @@ test.describe('Phone pass', () => {
     const dialog = page.getByRole('dialog', { name: 'Pine Bank' })
     await expect(dialog).toBeVisible()
     const windowBox = await expectInside(page, dialog.locator('.fv-window'), 'bank window')
-    expect(windowBox.height).toBeGreaterThan(300) // the full height, not the HUD-to-bar gap
+    expect(windowBox.height).toBeGreaterThan(size.height * 0.75) // the full height, not the HUD-to-bar gap
     await expect(dialog.getByRole('heading', { name: 'Pine Bank' })).toBeVisible()
     await expectTouchSizes(page, 'bank (landscape)')
     await closePanel(page)
@@ -257,6 +270,9 @@ test.describe('Phone pass', () => {
     await page.getByRole('button', { name: 'Pause menu' }).click()
     await expectTouchSizes(page, 'pause (landscape)')
     await page.getByRole('button', { name: 'Resume', exact: true }).click()
+    await page.getByRole('button', { name: 'Timeline' }).click()
+    await expectInside(page, page.getByRole('dialog', { name: 'Your timeline' }).locator('.fv-window'), 'timeline window')
+    await closePanel(page)
     await page.getByRole('button', { name: /Finish & reveal/ }).click()
     await expectReveal(page)
     await expectNoOverflow(page, 'reveal (landscape)')

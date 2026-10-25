@@ -129,6 +129,22 @@ Tasks:
 
 Acceptance: `npm run build` clean; all suites green on both projects; report lists removed deps and size deltas.
 
+## Brief AF — DONE (branch `aspect-fit`): odd aspect ratios and landscape-only phones
+
+Rules now in force (see `src/game/stage/scale.ts`, `GameStage.tsx`, `RotateOverlay.tsx`):
+- `--px = max(1, floor(min(w/320, h/180)))` is never raised: one step up would always cut the 320×180 core. A window
+  that shows past the 480×288 map (tall/narrow: 800×1000, 1024×1366; ultrawide: 5120×1440) gets the seamless
+  `world/edge-tile` grass-and-pines border (`art-src/world/edge-tile.txt`), never a flat colour; the title mirrors its
+  sky/mountain/hill layers beside the map and uses the same tile under the hills.
+- The UI layer (`.fv-ui`) is inset to the map's edges (`--ui-left/top/right/bottom`, `data-fit`), so the HUD, control
+  bar, toasts, tips and the coach sit on the town; town windows take the full viewport height when the map is shorter
+  than the window (`data-fit=tall|both`). Opening tips dock on the border below the bar when there is room.
+- Phones are landscape-only: `(max-width: 899px) and (orientation: portrait) and (pointer: coarse)` (plus a
+  `max-device-width`/`hover: none` fallback) shows the "Turn your phone sideways" notice (`role=dialog`, `aria-live`)
+  and makes the game inert underneath; state is kept. Tall desktop windows are not phones. The old
+  `@media (max-width: 639px)` portrait-phone blocks are gone. Playwright: `mobile` (390×844) only runs
+  `tests/mobile*.browser.ts` (notice checks); `mobile-landscape` (844×390, Pixel UA, touch) runs the whole suite.
+
 ## How to hand back
 
 Push your branch, then write a report (≤150 words): branch + head commit, what changed (files), test counts

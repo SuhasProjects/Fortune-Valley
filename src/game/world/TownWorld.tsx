@@ -3,7 +3,7 @@ import type { BuildingId } from '@/types/domain'
 import { Sprite } from '../art/Sprite'
 import { SPRITES } from '../art/manifest'
 import { useStageScale } from '../stage/GameStage'
-import { MAP_H, MAP_W } from '../stage/scale'
+import { EDGE_TILE, MAP_H, MAP_W, mapWindow } from '../stage/scale'
 import { BUILDINGS, BUILDING_IDS } from './landmarks'
 import { BADGE_GAP, BUILDING_LAYOUT, WINDOW_TOP_MAX, CLOCK, FIREFLIES, LAMP, PROPS, SMOKE, VILLAGERS, VILLAGER_STEP_MS, type Villager } from './layout'
 import { useReducedMotion } from './useReducedMotion'
@@ -61,18 +61,20 @@ export function villagerKeyframes(v: Villager): { css: string; duration: number 
  * centred on its 320x180 core and drawn at the stage's integer zoom. Everything animates by stepping frames.
  */
 export function TownWorld({ onBuildingClick, eventBuildings = [], openBuilding = null, timeOfDay = 'day', monthIndex = 0 }: TownWorldProps) {
-  const { px, viewW, viewH } = useStageScale()
+  const stage = useStageScale()
+  const { px } = stage
   const still = useReducedMotion()
   const dusk = timeOfDay === 'dusk'
   const interactive = onBuildingClick !== undefined
-  const left = Math.round(((viewW - MAP_W) / 2) * px)
-  // Centred on the core, unless that would tuck the top row of buildings under the HUD (short viewports).
-  const top = -Math.round(Math.min((MAP_H - viewH) / 2, WINDOW_TOP_MAX) * px)
+  // Centred on the core, unless that would tuck the top row of buildings under the HUD (short viewports). Tall or
+  // ultrawide windows show past the map: the grass-and-pines tile fills that border, aligned to the map's grid.
+  const { left, top, wide, tall } = mapWindow(stage.width, stage.height, stage, WINDOW_TOP_MAX)
   const place = (x: number, y: number, h: number, z = y + h): CSSProperties => ({ left: x * px, top: y * px, zIndex: z })
   const lampMeta = SPRITES['world/props/lamp']
   const walks = VILLAGERS.map((v) => ({ v, ...villagerKeyframes(v) }))
 
   return <section className={`fv-town${still ? ' fv-still' : ''}`} aria-label="Fortune Valley. Choose a building to manage your money." data-time={timeOfDay}>
+    {(wide || tall) && <div className="fv-edge" data-dusk={dusk || undefined} style={{ backgroundImage: `url(${SPRITES['world/edge-tile'].src})`, backgroundSize: `${EDGE_TILE * px}px ${EDGE_TILE * px}px`, backgroundPosition: `${left}px ${top}px` }}/>}
     <div className="fv-map" style={{ width: MAP_W * px, height: MAP_H * px, left, top }}>
       <Sprite name="world/ground" className="fv-ground"/>
       <Sprite name="world/water" animate className="fv-water"/>

@@ -14,7 +14,7 @@ const focused = (page: Page) => page.evaluate(() => {
 })
 
 test('keyboard reaches title, buildings, windows and the ending with visible focus and no console errors', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === 'mobile', 'keyboard flow is a laptop concern')
+  test.skip(testInfo.project.name.startsWith('mobile'), 'keyboard flow is a laptop concern')
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
   page.on('console', (m) => { if (m.type() === 'error' && !/503/.test(m.text())) errors.push(m.text()) }) // the stubbed AI route answers 503 on purpose

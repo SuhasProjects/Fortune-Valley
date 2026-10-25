@@ -116,28 +116,6 @@
   .fv-story-card.fv-button { font-size:calc(4.5 * var(--px)); padding-bottom:calc(3 * var(--px)); } .fv-story-card .fv-button__content { gap:var(--px); } .fv-story-card strong { font-size:calc(5.5 * var(--px)); }
   .fv-story-facts { gap:0; }
 }
-@media (max-width:639px) {
-  /* Phones run the stage at zoom 1. The title's own UI floors at 2 px (sign, menu, corners) and reading surfaces at
-     3 px (picker, letter, Guide/Options windows) so title.css's calc(N * --px) text is legible. The scene is untouched. */
-  .fv-title { --px:2px; }
-  .fv-title-content, .fv-title .fv-modal { --px:3px; }
-  /* The full sign is 200 art px (400 CSS px); let its plank ends run off a 390 px screen rather than scale it. */
-  .fv-sign-wrap { top:12%; width:calc(200 * var(--px)); max-width:none; }
-  .fv-sign:not(.fv-sign--small) { height:calc(56 * var(--px)); background-image:url('/art/title/sign.png'); background-size:calc(200 * var(--px)) calc(56 * var(--px)); } .fv-sign h1 { font-size:calc(13 * var(--px)); }
-  .fv-vine--top { top:calc(-10 * var(--px)); }
-  /* Menu below the valley scene (its band ends ~143 CSS px under the centre at zoom 1), never over it. */
-  .fv-title-menu { flex-direction:column; top:calc(50% + 150px); width:75%; gap:calc(4 * var(--px)); } .fv-title-menu > .fv-button { min-height:calc(20 * var(--px)); font-size:var(--fs-heading); }
-  .fv-title-menu small { font-size:var(--fs-label); white-space:normal; }
-  .fv-title-corners .fv-button,.fv-title-content .fv-back { font-size:var(--fs-body); }
-  .fv-title-content { inset:calc(76px) calc(2px) calc(40px); }
-  .fv-story-grid { grid-template-columns:1fr; gap:calc(3 * var(--px)); } .fv-story-card.fv-button { padding:calc(3 * var(--px)); font-size:calc(5.5 * var(--px)); } .fv-story-card strong { font-size:calc(7 * var(--px)); }
-  .fv-number-grid { grid-template-columns:1fr 1fr; }
-  .fv-title--subscreen .fv-sign-wrap { top:calc(10px); width:calc(120 * var(--px)); max-width:70%; }
-  .fv-picker header { margin-top:calc(2 * var(--px)); } .fv-letter { margin-top:calc(2 * var(--px)); }
-  .fv-title-content .fv-back { position:sticky; top:0; margin-bottom:calc(2 * var(--px)); }
-  .fv-title-corners { bottom:calc(4 * var(--px) + env(safe-area-inset-bottom, 0px)); left:calc(4 * var(--px) + env(safe-area-inset-left, 0px)); right:calc(4 * var(--px) + env(safe-area-inset-right, 0px)); }
-  .fv-title-content { bottom:calc(40px + env(safe-area-inset-bottom, 0px)); }
-}
 /* Landscape phones: the Back button stays put while the picker or letter scrolls under it. */
 @media (max-height:480px) and (orientation:landscape) {
   .fv-title-content .fv-back { position:sticky; top:0; margin-bottom:calc(2 * var(--px)); }

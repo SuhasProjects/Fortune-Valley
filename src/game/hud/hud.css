@@ -47,30 +47,6 @@
 .fv-glyph--play::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), var(--px) var(--px), var(--px) calc(2 * var(--px)), var(--px) calc(3 * var(--px)), calc(2 * var(--px)) calc(2 * var(--px)); }
 [data-reduce-motion='true'] .fv-status-dot, [data-reduce-motion='true'].fv-value-tick { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-value-tick, .fv-status-dot { animation: none; } .fv-value-delta { display: none; } }
-/* Phones (< 640 px wide, stage zoom 1, UI zoom floored at 2 by GameScreen.css). Keep in step with --hud-bottom
-   (0 + 55) and --bar-top (16 + 53) there. HUD: row 1 brand · date · Timeline, row 2 the four values. Every button is
-   22 art px (44 CSS px) tall for thumbs; notch and home-bar insets come from env() (viewport-fit=cover). */
-@media (max-width: 639px) {
-  .fv-hud { top: env(safe-area-inset-top, 0px); left: calc(2 * var(--px) + env(safe-area-inset-left, 0px)); right: calc(2 * var(--px) + env(safe-area-inset-right, 0px)); height: calc(55 * var(--px)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--px) calc(2 * var(--px)); padding: 0 var(--px); }
-  .fv-hud > .fv-divider { display: none; }
-  .fv-hud__brand { grid-area: 1 / 1 / 2 / 3; }
-  .fv-hud__date { grid-area: 1 / 3 / 2 / 4; }
-  .fv-hud > .fv-button { grid-area: 1 / 4 / 2 / 5; justify-self: end; align-self: center; min-height: calc(22 * var(--px)); padding: 0 calc(2 * var(--px)); }
-  .fv-hud__stat { grid-row: 2; align-self: stretch; justify-content: center; border-top: var(--px) solid var(--c-parchment-shadow); }
-  .fv-hud dt { height: auto; }
-  .fv-hud dd, .fv-hud__brand dd { min-width: 0; font-size: var(--fs-body); }
-  /* Control bar: countdown on the left across both rows, then Auto · Pause over Next month · Finish. */
-  .fv-control-bar { height: calc(53 * var(--px)); display: grid; grid-template-columns: auto auto auto; grid-template-rows: calc(22 * var(--px)) calc(22 * var(--px)); gap: var(--px) calc(2 * var(--px)); align-items: stretch; max-width: calc(100% - 4 * var(--px)); }
-  .fv-control-bar > .fv-divider { display: none; }
-  .fv-countdown { grid-area: 1 / 1 / 3 / 2; align-self: center; width: calc(32 * var(--px)); white-space: normal; }
-  .fv-control-bar > .fv-button { min-height: 0; height: 100%; }
-  /* The disclaimer stays (wrapped, centred, tagline dropped) and the bar sits above it. */
-  .fv-control-bar { bottom: calc(16 * var(--px) + env(safe-area-inset-bottom, 0px)); }
-  .fv-hud-footer { bottom: calc(var(--px) + env(safe-area-inset-bottom, 0px)); justify-content: center; text-align: center; white-space: normal; }
-  .fv-hud-footer span::before { left: calc(50% - 4 * var(--px)); }
-  .fv-status-tag .fv-tag { font-size: 10px; }
-  .fv-flow-tools .fv-pause-menu { --button-height: 22; width: calc(22 * var(--px)); }
-}
 /* Landscape phones (zoom 2): the laptop one-row layout with 44 px buttons; keep in step with --hud-bottom (27) and
    --bar-top (5 + 30) in GameScreen.css. The brand keeps its title only when the row has room (hidden here). */
 @media (max-height: 480px) and (orientation: landscape) {

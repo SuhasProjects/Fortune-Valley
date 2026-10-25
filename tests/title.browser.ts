@@ -39,9 +39,16 @@ test('Options and Guide restore focus and support keyboard chapters', async ({ p
   await expect(page.getByRole('button', {name:'Guide',exact:true})).toBeFocused()
 })
 
-test('title has no page scroll at laptop sizes or narrow phones', async ({ page }) => {
+test('title has no page scroll at laptop sizes or narrow phones', async ({ page }, testInfo) => {
   for (const viewport of [{width:1280,height:720},{width:1440,height:900},{width:1920,height:1080},{width:320,height:740}]) {
     await page.setViewportSize(viewport)
+    if (testInfo.project.name.startsWith('mobile') && viewport.height > viewport.width) {
+      // A phone held upright gets the "turn your phone sideways" notice instead of the title; it must not scroll either.
+      await page.goto('/')
+      await expect(page.getByRole('dialog', {name:'Turn your phone sideways'})).toBeVisible()
+      expect(await page.evaluate(() => ({width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}))).toEqual({width:viewport.width,height:viewport.height})
+      continue
+    }
     await openTitle(page)
     expect(await page.evaluate(() => ({width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight}))).toEqual({width:viewport.width,height:viewport.height})
     await page.getByRole('button', {name:'New Story',exact:true}).click()

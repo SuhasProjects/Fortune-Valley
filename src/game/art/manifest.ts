@@ -1171,6 +1171,14 @@ const sprites = {
       49
     ]
   },
+  "world/edge-tile": {
+    "src": "/art/world/edge-tile.png",
+    "w": 48,
+    "h": 48,
+    "frames": [
+      "0"
+    ]
+  },
   "world/extra/clock-hand": {
     "src": "/art/world/extra/clock-hand.png",
     "w": 7,

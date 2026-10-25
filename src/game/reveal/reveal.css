@@ -67,18 +67,6 @@
 @keyframes fv-line-extend { from { stroke-dashoffset:1; } to { stroke-dashoffset:0; } } @keyframes fv-ledger-enter { from { translate:0 calc(-6 * var(--px)); } to { translate:0 0; } }
 .fv-reveal-ui[data-reduce-motion=true] * { animation:none !important; }
 @media (max-width:1099px) { .fv-comparison-charts { grid-template-columns:minmax(0,1fr); } }
-@media (max-width:639px) {
-  /* Phones run the stage at zoom 1; the ledger reads at 3 px like the title's reading surfaces. */
-  .fv-reveal-ui { --px:3px; padding:calc(2 * var(--px) + env(safe-area-inset-top, 0px)) calc(1 * var(--px) + env(safe-area-inset-right, 0px)) calc(2 * var(--px) + env(safe-area-inset-bottom, 0px)) calc(1 * var(--px) + env(safe-area-inset-left, 0px)); }
-  .fv-reveal-ledger { width:100%; font-size:calc(5 * var(--px)); }
-  .fv-what-if-fields,.fv-change-tiles { grid-template-columns:1fr; }
-  .fv-reveal-heading h1 { font-size:calc(6 * var(--px)); } .fv-reveal-heading h1 strong { font-size:calc(8 * var(--px)); }
-  .fv-reveal-heading p { font-size:calc(5 * var(--px)); }
-  .fv-reveal-ledger h2 { font-size:calc(6 * var(--px)); }
-  .fv-outcome-chart svg, .fv-comparison-charts svg { min-width:0; }
-  .fv-reveal-futures .fv-outcome-chart { max-width:none; }
-  .fv-ask-row { flex-wrap:wrap; }
-}
 
 /* Recap under the headline: three plain sentences, tag above. */
 .fv-reveal-recap { margin:calc(2 * var(--px)) auto calc(3 * var(--px)); max-width:72ch; text-align:center; }

@@ -14,7 +14,7 @@
 
 /* The chat window docks over the corner instead of the centre: 120 art px wide (kit "sm"), about 104 tall, no dimmed
    backdrop so the town stays visible. The selector repeats GameScreen.css's so it wins the top/bottom placement. */
-.fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: auto calc(3 * var(--px)) calc(var(--bar-top) + 2 * var(--px)) auto; margin: 0; width: calc(120 * var(--px)); max-width: calc(100vw - 6 * var(--px)); max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px)); }
+.fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: auto calc(var(--ui-right, 0px) + 3 * var(--px)) calc(var(--ui-bottom, 0px) + var(--bar-top) + 2 * var(--px)) auto; margin: 0; width: calc(120 * var(--px)); max-width: calc(100vw - 6 * var(--px)); max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px)); }
 .fv-coach .fv-modal::backdrop { background: transparent; }
 .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal > .fv-window { width: 100%; height: calc(104 * var(--px)); max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px)); }
 .fv-coach .fv-window__body { padding: calc(2 * var(--px)); }
@@ -28,24 +28,18 @@
 .fv-coach__bubble--thinking { font-style: italic; }
 /* Keeper portraits are 24 art px; show the Coach at half that so a 70-word answer still fits beside it. */
 .fv-coach__portrait { --px: calc(var(--ui-px, 4px) / 2); flex: none; }
-.fv-coach__chips { display: flex; flex-wrap: wrap; gap: var(--px); }
+.fv-coach__chips { display: flex; flex-wrap: wrap; gap: var(--px); flex: 0 1 auto; min-height: 0; overflow-y: auto; } /* shrinks (and scrolls) before the question box when a keyboard shortens the sheet */
 .fv-coach__chips .fv-button { white-space: normal; text-align: left; font-weight: 400; }
 .fv-coach__form { display: flex; align-items: flex-end; gap: calc(2 * var(--px)); flex: none; }
 .fv-coach__form .fv-field { flex: 1; min-width: 0; }
 .fv-coach__form .fv-button { flex: none; min-height: calc(11 * var(--px)); }
 
-/* Phones: the bubble sits above the control bar on the right; the chat is a full-width sheet above the bar. */
-@media (max-width: 639px) {
-  .fv-coach { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); bottom: calc(var(--bar-top) + 2 * var(--px)); }
-  .fv-coach__button { --button-height: 22; width: calc(22 * var(--px)); }
-  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: auto calc(2 * var(--px)) calc(var(--bar-top) + 2 * var(--px)) calc(2 * var(--px)); width: auto; max-width: none; }
-  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal > .fv-window { height: min(calc(190 * var(--px)), calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px))); }
-}
 /* Landscape phones: the bubble is 44 px and the chat is a full-height sheet on the right, clear of the notch. */
 @media (max-height: 480px) and (orientation: landscape) {
   .fv-coach { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); bottom: calc(5 * var(--px) + env(safe-area-inset-bottom, 0px)); }
   .fv-coach__button { --button-height: 22; width: calc(22 * var(--px)); }
-  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: calc(2 * var(--px) + env(safe-area-inset-top, 0px)) calc(2 * var(--px) + env(safe-area-inset-right, 0px)) calc(2 * var(--px) + env(safe-area-inset-bottom, 0px)) auto; width: calc(170 * var(--px)); max-width: calc(100vw - 4 * var(--px)); max-height: none; }
+  /* An explicit height: a fixed dialog with auto margins sizes to its content, which would run off a keyboard-shortened viewport. */
+  .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal { inset: calc(2 * var(--px) + env(safe-area-inset-top, 0px)) calc(2 * var(--px) + env(safe-area-inset-right, 0px)) calc(2 * var(--px) + env(safe-area-inset-bottom, 0px)) auto; width: calc(170 * var(--px)); max-width: calc(100vw - 4 * var(--px)); height: calc(100dvh - 4 * var(--px) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); max-height: none; }
   .fv-stage[aria-label='Fortune Valley town'] .fv-coach .fv-modal > .fv-window { height: 100%; max-height: none; }
 }
 /* Touch: the question box never zooms the page (16 px), chips and Ask are 44 px tall. */

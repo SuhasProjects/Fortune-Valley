@@ -1,7 +1,8 @@
-/* Brief M: town-screen layout that has to hold from a 390x844 phone (stage zoom 1) to a 1280x720 laptop (zoom 4).
-   The world keeps the stage's integer zoom (`--px`); the UI layer floors it at 2 CSS px so frames, buttons and
-   boards stay tappable at zoom 1 (the kit's font tokens are absolute, so text was never the problem — the boxes
-   around it were 1 px per art px and could not hold it). */
+/* Brief M: town-screen layout that has to hold from a landscape phone (844x390, stage zoom 2) to a 1280x720 laptop
+   (zoom 4); phones held upright get the "turn your phone" overlay instead (stage/RotateOverlay). The world keeps the
+   stage's integer zoom (`--px`); the UI layer floors it at 2 CSS px so frames, buttons and boards stay tappable at
+   zoom 1 (the kit's font tokens are absolute, so text was never the problem — the boxes around it were 1 px per art
+   px and could not hold it). */
 .fv-stage[aria-label='Fortune Valley town'] > .fv-ui { --ui-px: max(2px, var(--px)); }
 
 /* Shared geometry every overlay positions against, in UI art px:
@@ -14,26 +15,25 @@
   --bar-top: calc(25 * var(--px));
 }
 
-/* Phones: the HUD is two rows (brand + date / Timeline, then the four values) and the control bar two rows of
-   22-art-px (44 CSS px) buttons; see hud.css. Notch and home-bar insets push both inward (viewport-fit=cover). */
-@media (max-width: 639px) {
-  .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
-    --hud-bottom: calc(55 * var(--px) + env(safe-area-inset-top, 0px));
-    --bar-top: calc(69 * var(--px) + env(safe-area-inset-bottom, 0px));
-    /* UI zoom is 2 on phones, which would make the art-px font tokens 9-16 px; floor them at readable sizes. */
-    --fs-label: 11px; --fs-body: 14px; --fs-value: 15px; --fs-heading: 18px;
-  }
-}
 /* Every town window (building windows, timeline, activity, pause, options, guide, confirms) sits between the HUD
-   and the control bar, centred in that gap. Its body scrolls; the header stays visible. */
+   and the control bar, centred in that gap. Its body scrolls; the header stays visible. The HUD and bar sit on the
+   map's edges, which --ui-top/--ui-bottom (GameStage) move in from the viewport's on windows taller than the map. */
 .fv-stage[aria-label='Fortune Valley town'] .fv-modal {
-  top: calc(var(--hud-bottom) + 2 * var(--px));
-  bottom: calc(var(--bar-top) + 2 * var(--px));
-  max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
+  top: calc(var(--ui-top, 0px) + var(--hud-bottom) + 2 * var(--px));
+  bottom: calc(var(--ui-bottom, 0px) + var(--bar-top) + 2 * var(--px));
+  max-height: calc(100dvh - var(--ui-top, 0px) - var(--ui-bottom, 0px) - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
 }
 .fv-stage[aria-label='Fortune Valley town'] .fv-modal > .fv-window {
-  max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
+  max-height: calc(100dvh - var(--ui-top, 0px) - var(--ui-bottom, 0px) - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
 }
+/* Windows taller than the map (portrait monitors, narrow windows: the map is centred with the pine border above and
+   below): the gap between HUD and bar is too short to read in at those zooms, so windows take the whole viewport. */
+.fv-stage[data-fit='tall'] .fv-modal, .fv-stage[data-fit='both'] .fv-modal {
+  top: calc(2 * var(--px));
+  bottom: calc(2 * var(--px));
+  max-height: calc(100dvh - 4 * var(--px));
+}
+.fv-stage[data-fit='tall'] .fv-modal > .fv-window, .fv-stage[data-fit='both'] .fv-modal > .fv-window { max-height: calc(100dvh - 4 * var(--px)); }
 
 /* Landscape phones (zoom 2, 390-480 px tall): one-row HUD and bar with 44 px buttons, the same readable font floor,
    and every window takes the full height (the gap between HUD and bar is too short to read in). */

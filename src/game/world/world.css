@@ -1,6 +1,10 @@
 /* The town map: every size is art pixels times --px (set by GameStage). Colours come from palette.css. */
 .fv-town { position: absolute; inset: 0; overflow: hidden; }
 .fv-map { position: absolute; }
+/* Border past the map (tall or ultrawide windows): the seamless world/edge-tile repeated from the map's own corner, so
+   its grass grid continues the map's; at dusk it takes the same wash as the town. */
+.fv-edge { position: absolute; inset: 0; background-repeat: repeat; image-rendering: pixelated; }
+.fv-edge[data-dusk]::after { content: ''; position: absolute; inset: 0; background: #4b3f78; mix-blend-mode: multiply; opacity: 0.65; }
 .fv-ground, .fv-water { position: absolute; left: 0; top: 0; }
 .fv-water { z-index: 1; }
 .fv-prop, .fv-building, .fv-smoke, .fv-lights, .fv-glow, .fv-firefly { position: absolute; }
