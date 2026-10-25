@@ -68,7 +68,7 @@ describe('fallbackRecap', () => {
     expect(RecapResponseSchema.safeParse({ text: t }).success).toBe(true);
     expect(t).toMatch(/^The run opened at -?\$[\d,]+, and in [A-Z][a-z]+ \d{4} the player set the investment mix\./);
     // The second sentence may end with the largest life event (a gift or an unplanned cost) folded in after a semicolon.
-    expect(t).toMatch(/A job loss in May 2026 cut pay to benefits, and a medical bill in November 2026 cost \$6,221 out of pocket; 3 more hard months followed(; (a \$\d+ gift came in|an unplanned \$\d+ cost went out))?\./);
+    expect(t).toMatch(/A job loss in May 2026 cut pay to benefits, and a medical bill in November 2026 cost \$6,221 out of pocket; 3 more hard months followed(; a \$\d+ [a-z -]+ (came in|went out))?\./);
     expect(t).toMatch(/After \d+ months the run ended at/);
   });
   it('handles a run with no decisions and no shocks', () => {

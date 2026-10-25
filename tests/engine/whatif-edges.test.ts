@@ -107,7 +107,7 @@ describe('what-if API edge cases', () => {
       expect(new Set(ids).size).toBe(ids.length);
       for (const d of decisions) expect(new Set(d.alternatives.map((a) => a.id)).size).toBe(d.alternatives.length);
     }
-  });
+  }, 20_000); // four random plays plus every what-if replay: ~5 s alone, longer under the full suite
 
   it('changedPolicyLog never mutates the given log and rejects bad ids', () => {
     const { config, state } = playRandom('entry_worker', { seed: 7, months: 8 });

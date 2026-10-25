@@ -4,6 +4,7 @@ import { requestSchema, responseSchema, system, user } from '../../api/_lib/kind
 import { describeShock } from '@/services/aiClient';
 import { fallbackFlavour } from '@/services/aiFallback';
 import { FLAVOUR_TABLE, pickFlavour } from '@/services/flavourTable';
+import { SHOCK_VARIANTS } from '@/engine/events';
 import type { ShockFlavourInput, ShockKind } from '@/types/domain';
 
 const fake = (output: unknown, stopReason = 'end_turn'): ModelClient => ({
@@ -94,11 +95,12 @@ describe('flavour kind: gateway', () => {
 });
 
 describe('flavour fallback table', () => {
-  it('covers every shock kind with 2–3 news-style scenes that pass the style lint', () => {
+  it('covers every shock kind with ≥ 2 news-style scenes per variant that pass the style lint', () => {
     for (const kind of KINDS) {
       const rows = FLAVOUR_TABLE[kind];
-      expect(rows.length).toBeGreaterThanOrEqual(2);
-      expect(rows.length).toBeLessThanOrEqual(3);
+      expect(rows.length).toBeGreaterThanOrEqual(6);
+      for (const v of SHOCK_VARIANTS[kind]) expect(rows.filter((r) => r.variant === v).length).toBeGreaterThanOrEqual(2);
+      expect(rows.every((r) => SHOCK_VARIANTS[kind].includes(r.variant))).toBe(true);
       for (const row of rows) {
         const scene = row.scene.replace('{amount}', '$4,200');
         lintScene(scene, row.headline);

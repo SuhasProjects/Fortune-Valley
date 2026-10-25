@@ -2,6 +2,7 @@ import type { GameConfig, GameState } from '@/types/domain';
 import { netWorthOf } from './accounting';
 import { validateConfig } from './validation';
 import { normalizeCar } from './car';
+import { deriveHouseholdProfile } from './household';
 
 /** Build the initial GameState from a validated config. Throws on invalid config. */
 export function createGame(config: GameConfig): GameState {
@@ -37,6 +38,7 @@ export function createGame(config: GameConfig): GameState {
     shortfallMonths: [],
     realizedShocks: [],
     lifeEvents: [],
+    householdProfile: deriveHouseholdProfile(config),
   };
   if (!state.car.owned && state.insurance.auto !== null) { // no car → no auto plan (configs predating car ownership)
     state.insurance = { ...state.insurance, auto: null };

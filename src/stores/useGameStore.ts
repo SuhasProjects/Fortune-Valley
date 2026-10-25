@@ -11,7 +11,36 @@ const flavourRequested = new Set<string>();
 
 /** Offer templates a player sees at most once per run, however the model is prompted. */
 const ONE_SHOT_OFFERS = new Set<string>(['change_insurance', 'loan_choice']);
-import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
+/**
+ * Build the `flavour` request for a shock or life-event notice: the engine's figures plus the run's
+ * household profile, the template/variant it chose, how many earlier events of that family the run
+ * had (offline no-repeat draw) and the last six headlines already shown (so the model never repeats).
+ */
+export function flavourInput(game: GameState, archetype: GameConfig['archetype'], n: GameNotification): ShockFlavourInput {
+  const kind = n.shockKind!;
+  const life = kind === 'life';
+  const lifeIdx = game.lifeEvents.findIndex((e) => e.eventId === n.eventId);
+  const occurrence = life
+    ? game.lifeEvents.slice(0, lifeIdx < 0 ? game.lifeEvents.length : lifeIdx).filter((e) => e.templateId === n.templateId).length
+    : game.realizedShocks.filter((r) => r.shock.kind === kind && r.shock.variant === n.variant && r.monthIndex < n.monthIndex).length;
+  const previousScenes = game.notifications.filter((x) => x.shockKind && x.flavour && x.id !== n.id && x.monthIndex <= n.monthIndex).slice(-6).map((x) => x.flavour!.headline.slice(0, 60));
+  return {
+    kind,
+    amount: life ? (n.amountSigned ?? 0) : Math.max(0, -(n.amountSigned ?? 0)),
+    monthLabel: monthLabel(game.startMonth, n.monthIndex),
+    archetype,
+    housingKind: game.household.housingKind,
+    hasCar: hasCar(game),
+    employment: game.employment.status,
+    ...(n.templateId ? { templateId: n.templateId } : {}),
+    ...(n.variant ? { variant: n.variant } : {}),
+    household: game.householdProfile,
+    previousScenes,
+    occurrence,
+    runSeed: game.seed,
+  };
+}
+import type { ActionResult, BuildingId, GameAction, GameConfig, GameNotification, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry, ShockFlavourInput } from '@/types/domain';
 import { INSURANCE_PLANS } from '@/config/defaults';
 import { askCoach } from '@/services/aiClient';
 import type { CoachFacts, CoachTurn } from '@/types/domain';
@@ -167,7 +196,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const key = `${game.scenarioId}:${notificationId}`;
     if (flavourRequested.has(key)) return;
     flavourRequested.add(key);
-    const input = { kind: n.shockKind, amount: n.shockKind === 'life' ? (n.amountSigned ?? 0) : Math.max(0, -(n.amountSigned ?? 0)), monthLabel: monthLabel(game.startMonth, n.monthIndex), archetype: config.archetype, housingKind: game.household.housingKind, hasCar: hasCar(game), employment: game.employment.status };
+    const input = flavourInput(game, config.archetype, n);
     try {
       const r = await describeShock(input, notificationId);
       const current = get();

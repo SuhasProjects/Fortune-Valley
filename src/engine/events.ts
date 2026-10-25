@@ -2,12 +2,34 @@
  * Type A shocks (engine-owned randomness) and whitelisted effect application.
  * Insurance changes payout, never incidence. Owner: Agent 1.
  */
-import type { EventEffect, GameEvent, GameState, InsurancePlan, LifeEventAssumptions, RealizedLifeEvent, RealizedShock, ShockAssumption } from '@/types/domain';
+import type { EventEffect, GameEvent, GameState, InsurancePlan, LifeEventAssumptions, RealizedLifeEvent, RealizedShock, ShockAssumption, ShockKind } from '@/types/domain';
 import { DEFAULT_LIFE_EVENTS } from '@/config/defaults';
-import type { Rng } from './rng';
+import { hashSeed, type Rng } from './rng';
 import { coverShortfall, makeId, post, round2 } from './accounting';
 import { validateEffect } from './validation';
 import { carBand, hasCar, shockMedianFor } from './car';
+import { GENERIC_TEMPLATE, LIFE_TEMPLATE_BY_ID, chooseTemplate, eligibilityContext, type LifeEventTemplate } from './lifeEvents';
+
+/**
+ * Shock variants: one tag per incident family. A run uses each variant of a kind once before any
+ * repeats, and never the same one twice in a row; the pick is a hash of (seed, month, kind) so the
+ * shocks RNG stream is untouched and insurance still cannot change which shocks occur.
+ */
+export const SHOCK_VARIANTS: Record<Exclude<ShockKind, 'life'>, readonly string[]> = {
+  medical: ['wrist', 'er_night', 'stitches', 'dental', 'flu'],
+  auto: ['windshield', 'rear_ended', 'transmission', 'brakes', 'flat_tyre'],
+  home: ['water_heater', 'break_in', 'burst_pipe', 'fridge', 'window'],
+  job_loss: ['shift_cut', 'department_closed', 'contract_ended'],
+};
+
+export function chooseShockVariant(s: Pick<GameState, 'seed' | 'monthIndex' | 'realizedShocks'>, kind: Exclude<ShockKind, 'life'>): string {
+  const all = SHOCK_VARIANTS[kind];
+  const used = s.realizedShocks.filter((r) => r.shock.kind === kind && r.shock.variant).map((r) => r.shock.variant!);
+  const last = used[used.length - 1];
+  const fresh = all.filter((v) => !used.includes(v));
+  const pool = fresh.length > 0 ? fresh : all.filter((v) => v !== last);
+  return pool[hashSeed(s.seed, s.monthIndex, kind, 'variant') % pool.length]!;
+}
 
 /** Car rule lives in ./car.ts: `state.car.owned`, forced on by an outstanding auto loan. */
 export { hasCar };
@@ -61,7 +83,8 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
     post(s, 'cash', 'shock_cost', -grossCost, `${a.label}: total cost`, lean);
     if (insurerPaid > 0) post(s, 'cash', 'insurance_claim', insurerPaid, `${plan?.name ?? 'Insurance'} paid claim`, lean);
     const fundedFrom = coverShortfall(s, a.label.toLowerCase(), lean);
-    const shock: RealizedShock = { kind: a.kind, grossCost, insurerPaid, outOfPocket, planId: plan?.id ?? null, fundedFrom };
+    const variant = chooseShockVariant(s, a.kind);
+    const shock: RealizedShock = { kind: a.kind, variant, grossCost, insurerPaid, outOfPocket, planId: plan?.id ?? null, fundedFrom };
     s.realizedShocks.push({ monthIndex: s.monthIndex, shock });
     const n = events.length;
     events.push({
@@ -92,32 +115,52 @@ export function lifeEventNet(s: Pick<GameState, 'lifeEvents'>): number {
 }
 
 /**
- * Life event roll on the dedicated `life` stream: a small unavoidable cost or a small gift.
- * Three draws are consumed every month (incidence, amount, sign) so streams stay aligned.
+ * Life event roll on the dedicated `life` stream: a small unavoidable cost or a small gift, shaped
+ * by a template (lifeEvents.ts) that fits the household and its cadence rules. Four draws are
+ * consumed every month (incidence, amount, sign, template pick) so streams stay aligned.
  * The sign is paired with the running net: whenever a draw would push |gifts − costs| past
  * `netCap` the sign flips, and if both signs would, the amount is trimmed so the net lands
- * exactly on the cap. Expected net ≈ $0; any single run stays within ±netCap. Not insured; a
- * cost that overdraws cash uses the normal shortfall order. Returns the realized event or null.
+ * exactly on the cap. An annual template whose month it is (birthday, holidays, tax season,
+ * back to school) takes precedence over the sign draw. Expected net ≈ $0; any single run stays
+ * within ±netCap. Not insured; a cost that overdraws cash uses the normal shortfall order.
+ * Returns the realized event (with `templateId`) or null.
  */
 export function rollLifeEvent(s: GameState, rng: Rng, lean: boolean): RealizedLifeEvent | null {
   const a = lifeEventAssumptions(s);
   const u = rng.next();
   const v = rng.next();
   const w = rng.next();
+  const p = rng.next();
   if (u >= a.monthlyIncidence) return null;
-  let amount = Math.round(a.amountMin + v * (a.amountMax - a.amountMin));
+  const ctx = eligibilityContext(s, hasCar(s));
   const net = lifeEventNet(s);
-  let sign = w < 0.5 ? -1 : 1;
-  if (Math.abs(net + sign * amount) > a.netCap) sign = -sign;
-  if (Math.abs(net + sign * amount) > a.netCap) {
+  const amountFor = (t: LifeEventTemplate): number => {
+    const lo = Math.max(a.amountMin, Math.min(a.amountMax, t.amountMin));
+    const hi = Math.max(lo, Math.min(a.amountMax, t.amountMax));
+    return Math.round(lo + v * (hi - lo));
+  };
+  const fits = (sign: 1 | -1, amount: number) => Math.abs(net + sign * amount) <= a.netCap;
+  let sign: 1 | -1 = w < 0.5 ? -1 : 1;
+  // An annual event in its month wins the sign draw (a birthday should not lose to a parking ticket).
+  const annualFirst = ([1, -1] as const).find((sg) => chooseTemplate(ctx, sg, p)?.cadence.kind === 'annual');
+  if (annualFirst !== undefined) sign = annualFirst;
+  let template = chooseTemplate(ctx, sign, p);
+  let amount = template ? amountFor(template) : 0;
+  if (!template || !fits(sign, amount)) {
+    sign = -sign as 1 | -1;
+    template = chooseTemplate(ctx, sign, p);
+    amount = template ? amountFor(template) : 0;
+  }
+  if (!template || !fits(sign, amount)) {
     sign = net >= 0 ? -1 : 1;
     amount = Math.max(1, Math.round(a.netCap + Math.abs(net)));
+    template = chooseTemplate(ctx, sign, p) ?? LIFE_TEMPLATE_BY_ID.get(GENERIC_TEMPLATE[sign])!;
   }
   const amountSigned = round2(sign * amount);
   post(s, 'cash', 'life_event', amountSigned, amountSigned > 0 ? 'Life event: small gift' : 'Life event: small cost', lean);
   if (amountSigned < 0) coverShortfall(s, 'a small unplanned cost', lean);
   if (!s.lifeEvents) s.lifeEvents = [];
-  const ev: RealizedLifeEvent = { monthIndex: s.monthIndex, amountSigned, eventId: makeId('EVL', s, s.lifeEvents.length) };
+  const ev: RealizedLifeEvent = { monthIndex: s.monthIndex, amountSigned, eventId: makeId('EVL', s, s.lifeEvents.length), templateId: template.id };
   s.lifeEvents.push(ev);
   return ev;
 }

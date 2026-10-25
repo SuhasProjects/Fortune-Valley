@@ -11,6 +11,7 @@ import { monthRng } from '@/engine/rng';
 import { scenarios } from '@/data/scenarios';
 import { fallbackRecap } from '@/services/aiFallback';
 import { LIFE_COST_TABLE, LIFE_GIFT_TABLE, lifeRows, pickFlavour } from '@/services/flavourTable';
+import { fillProfile } from '@/engine/lifeEvents';
 import { MAX_RECAP_LIFE_EVENTS, summarizeTimeline } from '@/services/summarizeTimeline';
 import type { GameConfig, GameState } from '@/types/domain';
 
@@ -150,14 +151,15 @@ describe('life events: recap, what-if, flavour', () => {
   it('summarizeTimeline includes at most the two largest life events; listDecisions ignores them', () => {
     const s = play(withSeed(42));
     const r = summarizeTimeline(s);
-    const lines = r.timeline.filter((l) => /^Small (gift|unplanned cost)/.test(l.event));
+    const lines = r.timeline.filter((l) => /^Life event: /.test(l.event));
     expect(lines.length).toBeLessThanOrEqual(MAX_RECAP_LIFE_EVENTS);
     expect(lines.length).toBe(Math.min(MAX_RECAP_LIFE_EVENTS, s.lifeEvents.length));
     const largest = [...s.lifeEvents].sort((a, b) => Math.abs(b.amountSigned) - Math.abs(a.amountSigned))[0]!;
     expect(lines.some((l) => l.amount === Math.round(largest.amountSigned))).toBe(true);
     const text = fallbackRecap(r);
     expect(text.split(/(?<=\.)\s+/).length).toBe(3);
-    expect(text).toMatch(/gift came in|cost went out/);
+    expect(text).toMatch(/came in|went out/);
+    expect(lines.every((l) => /, \$[\d,]+ (received|paid)$/.test(l.event))).toBe(true); // template label, then the figure
     // Life events are luck, not decisions: nothing in the what-if list points at a log entry.
     expect(listDecisions(withSeed(42), s.policyLog).filter((d) => d.logIndex !== null)).toEqual([]);
   });
@@ -170,13 +172,14 @@ describe('life events: recap, what-if, flavour', () => {
       expect(row.scene).toContain('{amount}');
       expect(row.scene).not.toContain('!');
       expect(row.headline).not.toContain('!');
-      expect(words(row.scene.replace('{amount}', '$120'))).toBeLessThanOrEqual(32);
-      expect(row.scene).toMatch(/\b(you|your)\b/i);
+      expect(words(fillProfile(row.scene, undefined).replace('{amount}', '$120'))).toBeLessThanOrEqual(32);
+      expect(fillProfile(row.scene, undefined)).toMatch(/\b(you|your)\b/i);
       expect(row.scene).toMatch(/\.$/);
       expect(words(row.headline)).toBeLessThanOrEqual(5);
     }
-    expect(lifeRows(-50, 'college_student').some((r) => r.fit?.includes('college_student'))).toBe(true);
-    expect(lifeRows(-50, 'college_student').some((r) => r.fit?.includes('young_family'))).toBe(false);
+    // Rows fitted to a household: a student's back-to-school pool never mentions a child, a parent's never a course.
+    expect(lifeRows(-50, 'college_student', 'back_to_school').every((r) => r.fit === 'student')).toBe(true);
+    expect(lifeRows(-50, 'young_family', 'back_to_school').every((r) => r.fit === 'kids')).toBe(true);
     expect(lifeRows(50).every((r) => !r.fit)).toBe(true);
     const gift = pickFlavour({ kind: 'life', amount: 120, monthLabel: '2026-11', archetype: 'young_family', housingKind: 'rent', hasCar: false, employment: 'employed' }, 'N_1');
     expect(gift.scene).toContain('$120');

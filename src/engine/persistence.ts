@@ -3,6 +3,7 @@
  * the store decides when to call it and where to store the string. Owner: Agent 1.
  */
 import type { GameConfig, GameState } from '@/types/domain';
+import { deriveHouseholdProfile, isHouseholdProfile } from './household';
 import { netWorthOf } from './accounting';
 import { validateAllocation, validateAssumptions, validateConfig } from './validation';
 import { normalizeCar } from './car';
@@ -57,6 +58,8 @@ export function parseSave(raw: string | null | undefined): ParsedSave {
       s.car = normalizeCar(undefined, s.debts);
       if (!s.car.owned && s.insurance.auto !== null) { s.insurance = { ...s.insurance, auto: null }; s.policy = { ...s.policy, insurancePlanIds: { ...s.policy.insurancePlanIds, auto: null } }; }
     } else if (s.car === null || typeof s.car !== 'object' || typeof s.car.owned !== 'boolean') return { ok: false, error: 'Saved car invalid' };
+    if (s.householdProfile === undefined) s.householdProfile = deriveHouseholdProfile(save.config); // saves from before household profiles existed
+    else if (!isHouseholdProfile(s.householdProfile)) return { ok: false, error: 'Saved household profile invalid' };
     else if (!Array.isArray(s.lifeEvents) || !s.lifeEvents.every((e) => isNum(e.amountSigned) && Number.isInteger(e.monthIndex))) return { ok: false, error: 'Saved life events invalid' };
     const av = validateAssumptions(s.assumptions);
     if (!av.ok) return { ok: false, error: `Saved assumptions invalid: ${av.message}` };

@@ -268,6 +268,10 @@ export interface GameNotification {
   /** Type A event id, so the matching timeline entry can carry the same scene. */
   eventId?: string;
   flavour?: ShockFlavour;
+  /** Life-event template id (e.g. `birthday_gift`) so scenes and the recap can name the event. */
+  templateId?: string;
+  /** Shock variant (e.g. medical `wrist`), chosen so a run never repeats one until all are used. */
+  variant?: string;
 }
 
 /** Short wire-service scene for a shock; the amount always comes from the engine. */
@@ -283,6 +287,18 @@ export interface ShockFlavourInput {
   housingKind: HousingKind;
   hasCar: boolean;
   employment: EmploymentStatus;
+  /** Life-event template id (life) — names the incident family and its cadence. */
+  templateId?: string;
+  /** Shock variant tag (medical/auto/home). */
+  variant?: string;
+  /** The run's fixed household facts, for continuity (same pet, same relatives). */
+  household?: HouseholdProfile;
+  /** Headlines of the last few scenes in this run; the model must not repeat an incident. */
+  previousScenes?: string[];
+  /** How many events of this template/variant came before in the run (0-based); drives the offline no-repeat draw. */
+  occurrence?: number;
+  /** Game seed; shuffles the offline scene order per run. */
+  runSeed?: number;
 }
 
 export type TimelineEntryType = 'choice' | 'shock' | 'milestone' | 'policy_change' | 'ai_event';
@@ -347,6 +363,8 @@ export interface GameEvent {
 
 export interface RealizedShock {
   kind: ShockKind;
+  /** Variant tag (e.g. medical `wrist`); absent on job loss and older saves. */
+  variant?: string;
   grossCost: number;
   insurerPaid: number;
   outOfPocket: number;
@@ -539,9 +557,33 @@ export interface GameState {
   lifeEvents: RealizedLifeEvent[];
   /** Effect templates every Type B opportunity so far has put on the table (declined or not), so the same offer is not nagged again. */
   offeredTemplates?: EventEffect['template'][];
+  /** Pet, birthday, relatives, hobby, commute: fixed per run so events and scenes never contradict each other. */
+  householdProfile: HouseholdProfile;
 }
 
-export interface RealizedLifeEvent { monthIndex: number; amountSigned: number; eventId: string }
+export interface RealizedLifeEvent { monthIndex: number; amountSigned: number; eventId: string; /** Life-event template that fired (absent in saves from before templates). */ templateId?: string }
+
+export type PetKind = 'none' | 'cat' | 'dog';
+export type CommuteKind = 'car' | 'transit' | 'bike';
+export type HobbyTag = 'running' | 'cycling' | 'music' | 'gaming' | 'photography' | 'cooking' | 'reading' | 'hiking';
+/** Names-free roles around the player; the first is an elder, the second (if any) a peer. */
+export type CircleRole = 'grandmother' | 'grandfather' | 'aunt' | 'uncle' | 'cousin' | 'roommate' | 'partner' | 'older sister' | 'older brother';
+/**
+ * Who the player is, beyond the money: derived once at createGame from (seed, archetype) so life
+ * events and their scenes stay consistent across a run (the same pet, the same relatives, one birthday).
+ */
+export interface HouseholdProfile {
+  /** Archetype the run was built from (custom scenarios carry their base archetype); drives template whitelists. */
+  archetype?: ArchetypeId;
+  /** Calendar month 1–12. */
+  birthMonth: number;
+  pet: PetKind;
+  hobby: HobbyTag;
+  hasKids: boolean;
+  commute: CommuteKind;
+  /** 1–2 roles, elder first. */
+  circle: CircleRole[];
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Monte Carlo

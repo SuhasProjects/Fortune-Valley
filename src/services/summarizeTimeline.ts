@@ -6,6 +6,7 @@
  */
 import type { AiRequest, GameAction, GameState, PolicyLogEntry } from '@/types/domain';
 import { monthLabel, netWorthOf } from '@/engine/accounting';
+import { lifeEventLabel } from '@/engine/lifeEvents';
 
 export type RecapInput = Extract<AiRequest, { kind: 'recap' }>['recap'];
 export type TimelineLine = RecapInput['timeline'][number];
@@ -36,6 +37,11 @@ const SHOCK_NAMES = { medical: 'Medical bill', auto: 'Car repair', home: 'Home r
 /** How many life events the recap may mention (the largest by amount). */
 export const MAX_RECAP_LIFE_EVENTS = 2;
 
+/** "Life event: birthday gift from your grandmother, $120 received" / "Life event: vet visit for your cat, $85 paid". */
+export function lifeLine(templateId: string | undefined, profile: GameState['householdProfile'] | undefined, amountSigned: number): string {
+  return `Life event: ${lifeEventLabel(templateId, profile, amountSigned)}, ${usd(Math.abs(amountSigned))} ${amountSigned > 0 ? 'received' : 'paid'}`;
+}
+
 /** Build the recap input. Priority when trimming to 25 lines: shocks, then decisions, then notifications, then the two largest life events. */
 export function summarizeTimeline(state: GameState): RecapInput {
   const label = (m: number) => monthLabel(state.startMonth, m);
@@ -47,7 +53,7 @@ export function summarizeTimeline(state: GameState): RecapInput {
   const notable = /^(Back to work|Paid off|Cash ran short|Emergency fund|Annual raise)/;
   const notes: TimelineLine[] = state.notifications.filter((n) => notable.test(n.summary)).map((n) => ({ month: n.monthIndex, label: label(n.monthIndex), event: clip(n.summary.replace(/!$/, '')), ...(n.amountSigned !== undefined ? { amount: Math.round(n.amountSigned) } : {}) }));
   const life: TimelineLine[] = [...(state.lifeEvents ?? [])].sort((a, b) => Math.abs(b.amountSigned) - Math.abs(a.amountSigned)).slice(0, MAX_RECAP_LIFE_EVENTS)
-    .map((e) => ({ month: e.monthIndex, label: label(e.monthIndex), event: e.amountSigned > 0 ? `Small gift of ${usd(e.amountSigned)} received` : `Small unplanned cost of ${usd(-e.amountSigned)} paid`, amount: Math.round(e.amountSigned) }));
+    .map((e) => ({ month: e.monthIndex, label: label(e.monthIndex), event: lifeLine(e.templateId, state.householdProfile, e.amountSigned), amount: Math.round(e.amountSigned) }));
   const picked = [...shocks, ...decisions, ...notes, ...life].slice(0, MAX_RECAP_LINES).sort((a, b) => a.month - b.month);
   const history = state.netWorthHistory;
   return { months: state.monthIndex, startNetWorth: Math.round(history[0] ?? netWorthOf(state)), endNetWorth: Math.round(history[state.monthIndex] ?? netWorthOf(state)), timeline: picked };

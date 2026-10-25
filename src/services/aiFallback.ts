@@ -9,6 +9,7 @@
 import type { ArchetypeId, BuildingId, EventEffect, OpportunityProposal, PersonalizedInput, ScenarioProposal, ShockFlavour, ShockFlavourInput, StateSummary } from '@/types/domain';
 import type { AiRequest } from '@/types/domain';
 import { hashSeed } from '@/engine/rng';
+import { shortLifeLabel } from '@/engine/lifeEvents';
 import { BOUNDS } from '@/config/defaults';
 import { pickFlavour } from './flavourTable';
 
@@ -660,9 +661,10 @@ const shockClause = (l: Line): string => {
 export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap']): string {
   const decisions = r.timeline.filter((l) => l.event.startsWith('Set ') || l.event.startsWith('Chose '));
   const shocks = r.timeline.filter((l) => /^(Job loss|Medical bill|Car repair|Home repair|Cash ran short)/.test(l.event));
-  const life = r.timeline.filter((l) => /^Small (gift|unplanned cost)/.test(l.event)).sort((a, b) => Math.abs(b.amount ?? 0) - Math.abs(a.amount ?? 0))[0];
-  // Folded into the second sentence so the recap stays three sentences (and the recap can mention a gift or a fee).
-  const lifeTail = life ? `; ${life.event.startsWith('Small gift') ? `a ${fmtUsd(life.amount ?? 0)} gift came in` : `an unplanned ${fmtUsd(Math.abs(life.amount ?? 0))} cost went out`}` : '';
+  const life = r.timeline.filter((l) => /^Life event: /.test(l.event)).sort((a, b) => Math.abs(b.amount ?? 0) - Math.abs(a.amount ?? 0))[0];
+  // Folded into the second sentence so the recap stays three sentences (and the recap can name the gift or the fee).
+  const lifeWhat = life ? shortLifeLabel(life.event.replace(/^Life event: /, '').replace(/, \$[\d,]+ (received|paid)$/, '')) : '';
+  const lifeTail = life ? `; a ${fmtUsd(Math.abs(life.amount ?? 0))} ${lifeWhat} ${(life.amount ?? 0) > 0 ? 'came in' : 'went out'}` : '';
   const first = decisions[0];
   const one = first
     ? `The run opened at ${fmtUsd(r.startNetWorth)}, and in ${monthWords(first.label)} the player ${shortDecision(first.event)}.`

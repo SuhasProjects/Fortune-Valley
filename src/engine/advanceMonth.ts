@@ -20,8 +20,9 @@
 import type { GameEvent, GameState, LedgerCategory, ShockKind } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
 import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
-import { activePlan, rollEmployment, rollLifeEvent, rollShocks } from './events';
 import { carBand, carRunningCost, hasCar, premiumFor } from './car';
+import { activePlan, chooseShockVariant, rollEmployment, rollLifeEvent, rollShocks } from './events';
+import { lifeEventLabel } from './lifeEvents';
 import { monthRng, type Rng } from './rng';
 
 export interface AdvanceOptions {
@@ -57,7 +58,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const m = s.monthIndex;
   const rng = opts.rng ?? { market: monthRng(s.seed, m, 'market'), shocks: monthRng(s.seed, m, 'shocks'), employment: monthRng(s.seed, m, 'employment') };
   const lifeRng = rng.life ?? monthRng(s.seed, m, 'life');
-  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string }[] = [];
+  const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string; templateId?: string; variant?: string }[] = [];
   const timeline: { type: 'shock' | 'milestone'; description: string; eventId?: string }[] = [];
   const nwBefore = netWorthOf(s);
   if (s.status === 'setup') s.status = 'playing';
@@ -194,19 +195,20 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   for (const ev of shockEvents) {
     s.activeEvents.push(ev);
     const sh = ev.shock!;
-    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id });
+    notes.push({ kind: 'negative', summary: `${ev.title}: $${sh.grossCost.toLocaleString()} (you paid $${sh.outOfPocket.toLocaleString()})`, details: ev.body, building: ev.buildingTarget, amountSigned: -sh.grossCost, shockKind: sh.kind, eventId: ev.id, variant: sh.variant });
     timeline.push({ type: 'shock', description: `${ev.title}: cost $${sh.grossCost.toLocaleString()}, insurer paid $${sh.insurerPaid.toLocaleString()}, out of pocket $${sh.outOfPocket.toLocaleString()}`, eventId: ev.id });
   }
   if (rollEmployment(s, rng.employment)) {
+    const variant = chooseShockVariant(s, 'job_loss');
     const ev: GameEvent = {
       id: makeId('EVJ', s, 0), type: 'A', title: 'Job loss', source: 'engine', buildingTarget: 'office', createdAtMonth: m, expiresAtMonth: m + 2,
       body: `Your employer cut your position, so illustrative unemployment benefits replace part of your pay for about ${s.employment.monthsUnemployedRemaining} months unless you take another offer.`,
       options: [{ id: 'ack', label: 'Understood', description: 'Acknowledge', effect: { template: 'none' } }],
-      shock: { kind: 'job_loss', grossCost: 0, insurerPaid: 0, outOfPocket: 0, planId: null, fundedFrom: [] },
+      shock: { kind: 'job_loss', variant, grossCost: 0, insurerPaid: 0, outOfPocket: 0, planId: null, fundedFrom: [] },
     };
     s.activeEvents.push(ev);
     s.realizedShocks.push({ monthIndex: m, shock: ev.shock! });
-    notes.push({ kind: 'negative', summary: 'You lost your job', details: ev.body, building: 'office', shockKind: 'job_loss', eventId: ev.id });
+    notes.push({ kind: 'negative', summary: 'You lost your job', details: ev.body, building: 'office', shockKind: 'job_loss', eventId: ev.id, variant });
     timeline.push({ type: 'shock', description: `Job loss; ${s.employment.monthsUnemployedRemaining} months of reduced income`, eventId: ev.id });
   }
 
@@ -214,8 +216,10 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   if (life) {
     const gift = life.amountSigned > 0;
     const abs = Math.abs(life.amountSigned).toLocaleString();
-    notes.push({ kind: gift ? 'positive' : 'negative', summary: gift ? `A small windfall: $${abs}` : `A small unplanned cost: $${abs}`, details: gift ? `Someone sent you $${abs}; it went straight into your cash.` : `Life happened and $${abs} left your cash; no insurance covers this kind of thing.`, building: 'home', amountSigned: life.amountSigned, shockKind: 'life', eventId: life.eventId });
-    timeline.push({ type: 'shock', description: gift ? `Small gift: $${abs} received` : `Small cost: $${abs} paid`, eventId: life.eventId });
+    const what = lifeEventLabel(life.templateId, s.householdProfile, life.amountSigned);
+    const cap = what.charAt(0).toUpperCase() + what.slice(1);
+    notes.push({ kind: gift ? 'positive' : 'negative', summary: gift ? `${cap}: $${abs}` : `${cap}: $${abs}`, details: gift ? `A ${what} brought in $${abs}; it went straight into your cash.` : `A ${what} took $${abs} out of your cash; no insurance covers this kind of thing.`, building: 'home', amountSigned: life.amountSigned, shockKind: 'life', eventId: life.eventId, templateId: life.templateId });
+    timeline.push({ type: 'shock', description: gift ? `Small gift: $${abs} received (${what})` : `Small cost: $${abs} paid (${what})`, eventId: life.eventId });
   }
 
   // ── 7. Alerts / checkpoint ──────────────────────────────────────────────────
@@ -236,7 +240,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
       kind: 'info',
       summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + carCosts + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
     });
-    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}) }));
+    notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false, ...(n.amountSigned !== undefined ? { amountSigned: n.amountSigned } : {}), ...(n.shockKind ? { shockKind: n.shockKind, eventId: n.eventId } : {}), ...(n.templateId ? { templateId: n.templateId } : {}), ...(n.variant ? { variant: n.variant } : {}) }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));
   }
   s.monthIndex = m + 1;
