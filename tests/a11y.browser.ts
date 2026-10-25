@@ -17,7 +17,7 @@ test('keyboard reaches title, buildings, windows and the ending with visible foc
   test.skip(testInfo.project.name === 'mobile', 'keyboard flow is a laptop concern')
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
+  page.on('console', (m) => { if (m.type() === 'error' && !/503/.test(m.text())) errors.push(m.text()) }) // the stubbed AI route answers 503 on purpose
   await page.route('**/api/ai', (route) => route.fulfill({ status: 503, contentType: 'application/json', body: '{"code":"disabled"}' }))
 
   await openTitle(page)
