@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
+import { useStageScale } from '../stage/GameStage'
+import { uiBox } from '../stage/scale'
 import { Button } from '@/ui'
 import { useGameStore } from '@/stores/useGameStore'
 import { TitleStage, TitleOptions, readReduceMotion, clickSound } from './contracts'
@@ -6,6 +8,19 @@ import { TitleScene } from './TitleScene'
 import { StoryPicker } from './StoryPicker'
 import { CustomStoryLetter } from './CustomStoryLetter'
 import { GuideWindow } from './GuideWindow'
+
+/**
+ * The hanging sign's zoom. Normally the stage's; on a window that shows past the map (tall or ultrawide, scale.ts) it is
+ * capped so the board stays within 60% of the width and 30% of the height, stepping down a whole art px at a time.
+ */
+function TitleSign({ children, className }: { children: ReactNode; className?: string }) {
+  const stage = useStageScale()
+  const box = uiBox(stage.width, stage.height, stage)
+  const odd = box.left || box.top || box.right || box.bottom
+  let px = stage.px
+  if (odd) while (px > 1 && (240 * px > 0.6 * stage.width || 64 * px > 0.3 * stage.height)) px--
+  return <header className={className} style={px !== stage.px ? { '--px': `${px}px` } as CSSProperties : undefined}>{children}</header>
+}
 
 export function TitleScreen() {
   const [screen, setScreen] = useState<'menu' | 'picker' | 'letter'>('menu')
@@ -36,13 +51,13 @@ export function TitleScreen() {
     <div className={`fv-title ${screen !== 'menu' ? 'fv-title--subscreen' : ''}`} data-reduce-motion={reduceMotion} onKeyDown={event => {
       if (event.key === 'Escape' && screen !== 'menu' && !window) { event.preventDefault(); back() }
     }}>
-      <header className="fv-sign-wrap">
+      <TitleSign className="fv-sign-wrap">
         <div className="fv-ropes" aria-hidden="true"/>
         <div className={`fv-sign ${screen !== 'menu' ? 'fv-sign--small' : ''}`}>
           <div className="fv-vine fv-vine--top" aria-hidden="true"/><div className="fv-vine fv-vine--left" aria-hidden="true"/><div className="fv-vine fv-vine--right" aria-hidden="true"/>
           <h1>Fortune Valley</h1>
         </div>
-      </header>
+      </TitleSign>
       {screen === 'menu' ? <div className="fv-title-menu" role="group" aria-label="Main menu" ref={menu} onKeyDown={move} onClick={clickSound}>
         <Button size="lg" data-menu="New Story" onClick={() => { returnFocus.current = 'New Story'; setScreen('picker') }}>New Story</Button>
         <Button size="lg" data-menu="Custom Story" onClick={() => { returnFocus.current = 'Custom Story'; setScreen('letter') }}>Custom Story</Button>

@@ -3,9 +3,10 @@ import type { BuildingId } from '@/types/domain'
 import { Sprite } from '../art/Sprite'
 import { SPRITES } from '../art/manifest'
 import { useStageScale } from '../stage/GameStage'
-import { EDGE_TILE, MAP_H, MAP_W, mapWindow } from '../stage/scale'
+import { MAP_H, MAP_W, mapWindow } from '../stage/scale'
+import { EdgeBorder } from './EdgeBorder'
 import { BUILDINGS, BUILDING_IDS } from './landmarks'
-import { BADGE_GAP, BUILDING_LAYOUT, WINDOW_TOP_MAX, CLOCK, FIREFLIES, LAMP, PROPS, SMOKE, VILLAGERS, VILLAGER_STEP_MS, type Villager } from './layout'
+import { BADGE_GAP, BUILDING_LAYOUT, EDGE_BARE, WINDOW_TOP_MAX, CLOCK, FIREFLIES, LAMP, PROPS, SMOKE, VILLAGERS, VILLAGER_STEP_MS, type Villager } from './layout'
 import { useReducedMotion } from './useReducedMotion'
 import './world.css'
 
@@ -67,14 +68,14 @@ export function TownWorld({ onBuildingClick, eventBuildings = [], openBuilding =
   const dusk = timeOfDay === 'dusk'
   const interactive = onBuildingClick !== undefined
   // Centred on the core, unless that would tuck the top row of buildings under the HUD (short viewports). Tall or
-  // ultrawide windows show past the map: the grass-and-pines tile fills that border, aligned to the map's grid.
+  // ultrawide windows show past the map: EdgeBorder fills that with varied grass-and-pine tiles and a fringe.
   const { left, top, wide, tall } = mapWindow(stage.width, stage.height, stage, WINDOW_TOP_MAX)
   const place = (x: number, y: number, h: number, z = y + h): CSSProperties => ({ left: x * px, top: y * px, zIndex: z })
   const lampMeta = SPRITES['world/props/lamp']
   const walks = VILLAGERS.map((v) => ({ v, ...villagerKeyframes(v) }))
 
   return <section className={`fv-town${still ? ' fv-still' : ''}`} aria-label="Fortune Valley. Choose a building to manage your money." data-time={timeOfDay}>
-    {(wide || tall) && <div className="fv-edge" data-dusk={dusk || undefined} style={{ backgroundImage: `url(${SPRITES['world/edge-tile'].src})`, backgroundSize: `${EDGE_TILE * px}px ${EDGE_TILE * px}px`, backgroundPosition: `${left}px ${top}px` }}/>}
+    {(wide || tall) && <EdgeBorder left={left} top={top} px={px} width={stage.width} height={stage.height} edges={{ top: tall, bottom: tall, left: wide, right: wide }} bare={EDGE_BARE} dusk={dusk}/>}
     <div className="fv-map" style={{ width: MAP_W * px, height: MAP_H * px, left, top }}>
       <Sprite name="world/ground" className="fv-ground"/>
       <Sprite name="world/water" animate className="fv-water"/>

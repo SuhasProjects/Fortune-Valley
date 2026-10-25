@@ -47,6 +47,21 @@
 .fv-glyph--play::before { box-shadow: 0 var(--px), 0 calc(2 * var(--px)), 0 calc(3 * var(--px)), 0 calc(4 * var(--px)), var(--px) var(--px), var(--px) calc(2 * var(--px)), var(--px) calc(3 * var(--px)), calc(2 * var(--px)) calc(2 * var(--px)); }
 [data-reduce-motion='true'] .fv-status-dot, [data-reduce-motion='true'].fv-value-tick { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-value-tick, .fv-status-dot { animation: none; } .fv-value-delta { display: none; } }
+/* Compact boards on tall or ultrawide windows at zoom 1-2 (GameStage data-ui, GameScreen.css --hud-bottom 15 and
+   --bar-top 22): values only in the HUD, label text visually hidden, 9-art-px buttons, no countdown caption. */
+.fv-stage[data-ui='compact'] .fv-hud { height: calc(15 * var(--px)); }
+.fv-stage[data-ui='compact'] .fv-hud__cell { position: relative; }
+.fv-stage[data-ui='compact'] .fv-hud dt { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.fv-stage[data-ui='compact'] .fv-hud__brand { flex: 0 1 calc(44 * var(--px)); }
+.fv-stage[data-ui='compact'] .fv-hud__date { flex: 0 0 calc(26 * var(--px)); }
+.fv-stage[data-ui='compact'] .fv-hud__stat { flex: 1 0 calc(22 * var(--px)); }
+.fv-stage[data-ui='compact'] .fv-hud dd { font-size: var(--fs-body); }
+.fv-stage[data-ui='compact'] .fv-hud > .fv-button { --button-height: 9; }
+.fv-stage[data-ui='compact'] .fv-countdown span { display: none; }
+.fv-stage[data-ui='compact'] .fv-countdown { min-width: calc(14 * var(--px)); }
+.fv-stage[data-ui='compact'] .fv-countdown strong { margin-top: 0; }
+.fv-stage[data-ui='compact'] .fv-control-bar > .fv-button { --button-height: 9; }
+.fv-stage[data-ui='compact'] .fv-status-tag { top: calc(17 * var(--px)); }
 /* Landscape phones (zoom 2): the laptop one-row layout with 44 px buttons; keep in step with --hud-bottom (27) and
    --bar-top (5 + 30) in GameScreen.css. The brand keeps its title only when the row has room (hidden here). */
 @media (max-height: 480px) and (orientation: landscape) {

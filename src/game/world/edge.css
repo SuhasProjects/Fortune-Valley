@@ -1,0 +1,7 @@
+/* The border past the map (EdgeBorder): tiles sit under the map, fringe props interleave with the map's own props by
+   their feet (same stacking context as .fv-map's children), the dusk wash is clipped to the ring outside the map. */
+.fv-edge { position: absolute; inset: 0; pointer-events: none; }
+.fv-edge__tile, .fv-edge__fringe { position: absolute; }
+.fv-edge__tile--mirror { transform: scaleX(-1); }
+.fv-edge__fringe { z-index: 1; }
+.fv-edge__dusk { position: absolute; inset: 0; z-index: 1000; background: #4b3f78; mix-blend-mode: multiply; opacity: 0.65; }

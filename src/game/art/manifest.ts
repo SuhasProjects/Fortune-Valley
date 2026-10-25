@@ -1176,7 +1176,10 @@ const sprites = {
     "w": 48,
     "h": 48,
     "frames": [
-      "0"
+      "0",
+      "1",
+      "2",
+      "3"
     ]
   },
   "world/extra/clock-hand": {

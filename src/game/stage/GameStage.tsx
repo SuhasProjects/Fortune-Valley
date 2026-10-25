@@ -26,7 +26,7 @@ function readViewport(): StageView {
  * The UI layer covers the viewport except where the viewport shows past the 480x288 map (tall or ultrawide windows,
  * see scale.ts): there it shrinks to the map's edges, so the HUD, bars and bubbles frame the town, not the border.
  * `--ui-left/top/right/bottom` carry that inset for fixed-position overlays (modals), and `data-fit` says which axes
- * are inset (`map` = none, `tall`, `wide` or `both`).
+ * are inset (`map` = none, `tall`, `wide` or `both`); `data-ui="compact"` marks a zoom of 2 or less on such a window.
  */
 export function GameStage({ world, label, children }: { world: ReactNode; label: string; children?: ReactNode }) {
   const [scale, setScale] = useState(readViewport)
@@ -47,13 +47,16 @@ export function GameStage({ world, label, children }: { world: ReactNode; label:
   const box = uiBox(scale.width, scale.height, scale)
   const tall = box.top > 0 || box.bottom > 0, wide = box.left > 0 || box.right > 0
   const fit = tall && wide ? 'both' : tall ? 'tall' : wide ? 'wide' : 'map'
+  // A small zoom on a window that shows past the map: the UI layer runs at 2 CSS px per art px, so boards built for
+  // zoom 4 would tower over the town; GameScreen.css and hud.css read `data-ui="compact"` for one-line boards.
+  const compact = fit !== 'map' && scale.px <= 2
   const vars = {
     '--px': `${scale.px}px`, '--view-w': scale.viewW, '--view-h': scale.viewH,
     '--ui-left': `${box.left}px`, '--ui-top': `${box.top}px`, '--ui-right': `${box.right}px`, '--ui-bottom': `${box.bottom}px`,
   } as CSSProperties
   const ui = { left: box.left, top: box.top, right: box.right, bottom: box.bottom } as CSSProperties
   return <StageContext.Provider value={scale}>
-    <div className="fv-stage" style={vars} aria-label={label} role="group" data-px={scale.px} data-fit={fit}>
+    <div className="fv-stage" style={vars} aria-label={label} role="group" data-px={scale.px} data-fit={fit} data-ui={compact ? 'compact' : undefined}>
       <div className="fv-world">{world}</div>
       <div className="fv-ui" style={ui}>{children}</div>
     </div>

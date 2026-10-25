@@ -55,6 +55,12 @@ const mixedFlowers = at('world/props/flowers-mixed', true)
  */
 export const EDGE_BANDS: readonly (readonly [number, number])[] = [[55, 86], [394, 426]]
 
+/**
+ * Where a road or the river runs off the map (art px along each edge, from scripts/art's ground mask): the border's
+ * fringe (EdgeBorder) leaves these bare so nothing grows across a road.
+ */
+export const EDGE_BARE = { top: [[187, 196]], bottom: [[153, 173], [235, 244], [318, 325]], left: [[140, 149], [159, 179]], right: [[124, 134]] } as Record<'top' | 'bottom' | 'left' | 'right', [number, number][]>
+
 /** The four round trees the reference puts in the core's corners; the only ring-ish objects allowed inside the core. */
 export const CORE_CORNER_TREES: PlacedSprite[] = [tree(97, 69), tree(353, 68), tree(97, 185), tree(353, 185)]
 
