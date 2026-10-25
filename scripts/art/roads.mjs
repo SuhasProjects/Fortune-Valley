@@ -1,6 +1,6 @@
 // Roads: rewrites the path pixels (`a`) of art-src/world/ground-mask.txt from a list of polylines so every road is
-// continuous and tidy. Water, riverbank, plaza stone and the farm plot are left exactly as drawn in the mask; only
-// `a` is cleared and repainted (plus the stone disc of the plaza), and roads never overwrite another material. Edges wobble by at most one pixel
+// continuous and tidy. Water, riverbank and the farm plot are left exactly as drawn in the mask; only `a` is cleared
+// and repainted (and the old stone disc under the fountain is returned to grass), and roads never overwrite another material. Edges wobble by at most one pixel
 // (dirt, not asphalt) from a deterministic ripple, then a cleanup pass fills pinholes and shaves 1-px spurs.
 // Run by `npm run art` before the ground is compiled. Owner: Agent 1.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -12,6 +12,7 @@ export const MASK_PATH = 'art-src/world/ground-mask.txt';
 
 /** Fountain plaza centre and the ring road around it (map px). Buildings' doors are the ends of their paths. */
 export const PLAZA = { x: 240, y: 145, r: 22, stone: 19 };
+/** Radius of the stone disc an earlier version painted under the fountain; anything inside it goes back to grass. */
 const ring = (r) => [[0, -1], [0.7071, -0.7071], [1, 0], [0.7071, 0.7071], [0, 1], [-0.7071, 0.7071], [-1, 0], [-0.7071, -0.7071], [0, -1]]
   .map(([dx, dy]) => [Math.round(PLAZA.x + dx * r), Math.round(PLAZA.y + dy * r)]);
 
@@ -42,10 +43,15 @@ const distToSegment = (px, py, [ax, ay], [bx, by]) => {
 /** Edge ripple in pixels: smooth, ±~1, deterministic. */
 const ripple = (x, y) => 0.55 * Math.sin(x * 0.31 + y * 0.23) + 0.35 * Math.sin(x * 0.9 - y * 0.7 + 1.3);
 
-/** Returns a new mask (array of char arrays) with `a` repainted from ROADS. Only `h` and old `a` pixels change. */
+/** Returns a new mask (array of char arrays) with `a` repainted from ROADS. Only `h`, old `a` and plaza `s` pixels change. */
 export function paintRoads(mask, roads = ROADS) {
   const H = mask.length, W = mask[0].length;
   const out = mask.map((row) => row.map((k) => (k === 'a' ? 'h' : k)));
+  // No stone disc under the fountain: the sprite's own oval base is the only plaza, so the ground around it is grass
+  // (and the ring road, painted below) just like everywhere else.
+  for (let y = PLAZA.y - PLAZA.stone; y <= PLAZA.y + PLAZA.stone; y++) for (let x = PLAZA.x - PLAZA.stone; x <= PLAZA.x + PLAZA.stone; x++) {
+    if (Math.hypot(x + 0.5 - PLAZA.x, y + 0.5 - PLAZA.y) <= PLAZA.stone && y >= 0 && y < H && x >= 0 && x < W && out[y][x] === 's') out[y][x] = 'h';
+  }
   const road = Array.from({ length: H }, () => new Uint8Array(W));
   for (const r of roads) {
     const half = r.width / 2;
@@ -70,11 +76,6 @@ export function paintRoads(mask, roads = ROADS) {
     for (let y = 0; y < H; y++) road[y].set(next[y]);
   }
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (road[y][x] && out[y][x] === 'h') out[y][x] = 'a';
-  // The plaza: a solid stone disc under the fountain, flush with the ring road (the reference's basin water and
-  // the odd grass pixel inside it would otherwise peek out around the fountain sprite).
-  for (let y = PLAZA.y - PLAZA.stone; y <= PLAZA.y + PLAZA.stone; y++) for (let x = PLAZA.x - PLAZA.stone; x <= PLAZA.x + PLAZA.stone; x++) {
-    if (Math.hypot(x + 0.5 - PLAZA.x, y + 0.5 - PLAZA.y) <= PLAZA.stone && y >= 0 && y < H && x >= 0 && x < W && out[y][x] !== 's') out[y][x] = 's';
-  }
   return out;
 }
 

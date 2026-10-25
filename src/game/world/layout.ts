@@ -11,14 +11,18 @@ export interface PlacedSprite { sprite: SpriteName; x: number; y: number; animat
 
 export const BUILDING_LAYOUT: Record<BuildingId, { x: number; y: number }> = {
   bank: { x: 115, y: 84 },
-  office: { x: 205, y: 84 },
+  office: { x: 205, y: 76 },
   hospital: { x: 295, y: 87 },
   home: { x: 151, y: 148 },
   market: { x: 259, y: 150 },
 }
 
-/** Clearance between the HUD's bottom edge and the highest roof, art px (plus the 1 px hover lift). */
-export const ROOF_CLEARANCE = 8
+/**
+ * Clearance between the HUD's bottom edge and the highest roof, art px, on top of the 1 px hover lift. Zero: at a
+ * 180-row viewport the Town Office's tower peak, the plaza and the bottom row's plaques use every row between the
+ * HUD and the control bar.
+ */
+export const ROOF_CLEARANCE = 0
 /**
  * The map row that sits at the top of the viewport when the viewport is the shortest it can be (the 180-row core).
  * Centred on the core normally; moved up (showing less of the ring above the town) when the HUD would otherwise
@@ -70,7 +74,7 @@ export const RING_PROPS: PlacedSprite[] = [
   lily(40, 160), lily(70, 182), lily(20, 190),
   pine(60, 204), pine(40, 222), tree(8, 232), rock(68, 236), pine(64, 250),
   // Right: a well, pines, and the pond (water x 418–460, y 141–161) with rocks and a bench.
-  { sprite: 'world/extra/well', x: 404, y: 62 }, tree(440, 60), pine(462, 70), pine(404, 86), tree(452, 100),
+  { sprite: 'world/extra/well', x: 404, y: 62 }, tree(440, 60), pine(460, 70), pine(404, 86), tree(452, 100),
   { sprite: 'world/props/bench', x: 426, y: 166 }, { sprite: 'world/extra/signpost', x: 468, y: 138 },
   rock(400, 150), rock(436, 112), rock(408, 160), rock(458, 164), lily(430, 146), lily(446, 152),
   bush(460, 170), pine(404, 176), pine(456, 186), tree(430, 200), { sprite: 'world/extra/stump', x: 412, y: 214 },
@@ -91,11 +95,15 @@ export const SMOKE: { x: number; y: number }[] = [
 
 export const LAMP = { x: 178, y: 118 }
 
-/** Art px between the bottom of a "decision waiting" badge and the top of its building's sprite. */
-export const BADGE_GAP = 3
+/**
+ * Art px between the bottom of a "decision waiting" badge and the top of its building's sprite. Negative: the badge
+ * hangs over the roof peak (its bottom 14 px below the sprite top), so even above the Town Office, whose peak sits
+ * right under the HUD at a 180-row viewport, the whole badge (2 px bob included) stays clear of the HUD.
+ */
+export const BADGE_GAP = -14
 
-/** The Town Office clock hand: sprite top-left relative to the office sprite (face centre at 34,11 in office.txt). */
-export const CLOCK = { sprite: 'world/extra/clock-hand' as const, x: 31, y: 8 }
+/** The Town Office clock hand: sprite top-left relative to the office sprite (face centre at 34,19 in office.txt). */
+export const CLOCK = { sprite: 'world/extra/clock-hand' as const, x: 31, y: 16 }
 
 /**
  * Villagers walk their route once (feet positions, map px; the sprite's anchor is its feet), then vanish at the last

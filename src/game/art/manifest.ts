@@ -1149,7 +1149,7 @@ const sprites = {
   "world/buildings/office": {
     "src": "/art/world/buildings/office.png",
     "w": 68,
-    "h": 42,
+    "h": 50,
     "frames": [
       "0",
       "hover",
@@ -1158,7 +1158,7 @@ const sprites = {
     ],
     "anchor": [
       34,
-      41
+      49
     ]
   },
   "world/extra/clock-hand": {

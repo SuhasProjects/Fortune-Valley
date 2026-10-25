@@ -175,7 +175,26 @@ describe('TownWorld', () => {
       expect(b.y - 1, `${id} roof under the HUD`).toBeGreaterThanOrEqual(hudBottom + ROOF_CLEARANCE)
       expect(b.y + m.h + 9, `${id} plaque under the control bar`).toBeLessThanOrEqual(barTop)
     }
-    expect(BUILDING_LAYOUT.office.y - BADGE_GAP - SPRITES['world/fx/badge'].h, 'office badge mostly under the HUD').toBeGreaterThanOrEqual(hudBottom - 7)
+    // The badge bobs up 2 px; even then it stays clear of the HUD above every building.
+    for (const id of BUILDING_IDS) expect(BUILDING_LAYOUT[id].y - BADGE_GAP - SPRITES['world/fx/badge'].h - 2, `${id} badge under the HUD`).toBeGreaterThanOrEqual(hudBottom)
+  })
+
+  it('keeps every prop sprite fully on the map, 2 px in from its edges', () => {
+    for (const p of PROPS) {
+      const { w, h } = SPRITES[p.sprite]
+      expect(p.x >= 2 && p.y >= 2 && p.x + w <= MAP_W - 2 && p.y + h <= MAP_H - 2, `${p.sprite} at ${p.x},${p.y} (${w}x${h}) is clipped by the map edge`).toBe(true)
+    }
+  })
+
+  it('draws the Town Office with a roof peak above its clock tower, and the clock on the tower face', () => {
+    const rows = readFileSync('art-src/world/buildings/office.txt', 'utf8').split('\n').filter((l) => /^[.A-Za-z0-9]{68}$/.test(l))
+    const m = SPRITES['world/buildings/office']
+    expect(rows).toHaveLength(m.h)
+    const width = (y: number) => rows[y]!.replace(/^\.+|\.+$/g, '').length
+    expect(width(1)).toBeLessThanOrEqual(5) // tower peak
+    for (let y = 2; y <= 9; y++) expect(width(y), `row ${y} narrows towards the peak`).toBeGreaterThan(width(y - 1))
+    expect(width(9)).toBe(60) // the eaves: the full roof width from the original drawing
+    expect(rows[CLOCK.y + 3]![CLOCK.x + 3]).toBe('S') // the hand pivot pin drawn at the face centre
   })
 
   it('centres each badge above its building, above every prop, exactly once per marked building', () => {
