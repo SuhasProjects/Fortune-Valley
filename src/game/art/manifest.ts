@@ -1205,6 +1205,30 @@ const sprites = {
       11
     ]
   },
+  "world/extra/grass-tuft-2": {
+    "src": "/art/world/extra/grass-tuft-2.png",
+    "w": 6,
+    "h": 4,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      3
+    ]
+  },
+  "world/extra/grass-tuft": {
+    "src": "/art/world/extra/grass-tuft.png",
+    "w": 6,
+    "h": 4,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      3
+    ]
+  },
   "world/extra/hay-bale": {
     "src": "/art/world/extra/hay-bale.png",
     "w": 12,
@@ -1231,6 +1255,18 @@ const sprites = {
     ],
     "speed": 180
   },
+  "world/extra/log": {
+    "src": "/art/world/extra/log.png",
+    "w": 10,
+    "h": 4,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      3
+    ]
+  },
   "world/extra/mailbox": {
     "src": "/art/world/extra/mailbox.png",
     "w": 6,
@@ -1241,6 +1277,18 @@ const sprites = {
     "anchor": [
       3,
       9
+    ]
+  },
+  "world/extra/mushrooms": {
+    "src": "/art/world/extra/mushrooms.png",
+    "w": 5,
+    "h": 4,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      2,
+      3
     ]
   },
   "world/extra/pine-tree": {

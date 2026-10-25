@@ -1,0 +1,7 @@
+size 5x4
+anchor 2,3
+--- 0
+.rr..
+rfrr.
+.q.rr
+.q.q.

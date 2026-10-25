@@ -40,49 +40,73 @@ const post = at('world/extra/fence-post')
 const rock = at('world/extra/rock')
 const hay = at('world/extra/hay-bale')
 const crate = at('world/ring/crate')
+const tuft = at('world/extra/grass-tuft')
+const tuft2 = at('world/extra/grass-tuft-2')
+const shrooms = at('world/extra/mushrooms')
+const log = at('world/extra/log')
+const stump = at('world/extra/stump')
+const whiteFlowers = at('world/props/flowers-white', true)
+const mixedFlowers = at('world/props/flowers-mixed', true)
+
+/**
+ * Map columns a window's left or right edge can fall on (the window is centred on the map, so at the laptop sizes
+ * we support the left edge lands on x 55–86 and the right on x 394–426). No prop may straddle either band, or it
+ * would be cut in half at the side of the screen on some monitor (TownWorld.test "edge bands").
+ */
+export const EDGE_BANDS: readonly (readonly [number, number])[] = [[55, 86], [394, 426]]
 
 /** The four round trees the reference puts in the core's corners; the only ring-ish objects allowed inside the core. */
 export const CORE_CORNER_TREES: PlacedSprite[] = [tree(97, 69), tree(353, 68), tree(97, 185), tree(353, 185)]
 
-/** Props inside the 320x180 core (from the reference). */
+/** Props inside the 320x180 core (from the reference), plus small scenery along the core's edges. */
 export const CORE_PROPS: PlacedSprite[] = [
   { sprite: 'world/props/fountain', x: 221, y: 131, animate: true },
   { sprite: 'world/props/lamp', x: 178, y: 118 },
   { sprite: 'world/props/bench', x: 272, y: 128 },
-  { sprite: 'world/props/flowers-white', x: 166, y: 127, animate: true },
-  { sprite: 'world/props/flowers-mixed', x: 336, y: 205, animate: true },
-  { sprite: 'world/props/flowers-white', x: 110, y: 212, animate: true },
+  whiteFlowers(166, 127), mixedFlowers(336, 205), whiteFlowers(110, 212),
   ...CORE_CORNER_TREES,
   lily(90, 175), lily(110, 183), lily(126, 197), lily(140, 219),
+  // The field left of Pine Bank: the farm's hay, crates and signpost by the river road, with a bush and tufts.
+  tuft(88, 64), hay(86, 94), hay(90, 104), crate(88, 114), crate(96, 118), { sprite: 'world/extra/signpost', x: 104, y: 116 },
+  mixedFlowers(100, 98), tuft2(92, 126),
+  // Along the top edge: between the bank and the office, and above the Health House.
+  tuft2(128, 64), bush(140, 58), whiteFlowers(158, 62), rock(174, 68), shrooms(124, 74),
+  bush(284, 62), mixedFlowers(302, 72), tuft(322, 64), rock(336, 58), tuft2(330, 76), shrooms(384, 76), tuft(386, 62), bush(378, 58),
+  // Between the office and the Health House, and east of the hospital.
+  tuft(278, 100), rock(282, 112), tuft2(368, 96), shrooms(372, 112),
+  // Right of the Market Hall.
+  bush(380, 158), rock(360, 156), tuft(350, 168), tuft2(378, 176), whiteFlowers(378, 196), shrooms(366, 214), stump(382, 212), bush(350, 222), tuft(348, 180),
+  // Bottom-left corner of the core, by the river mouth.
+  tuft2(92, 206), bush(88, 222), rock(102, 228), shrooms(118, 206),
 ]
 
 /** Scenery in the outer ring: never inside the core, never on a path or building (enforced by TownWorld.test). */
 export const RING_PROPS: PlacedSprite[] = [
   // Top: a pine line broken by round trees, with the north road (x 189–194) passing between a mailbox and a signpost.
-  pine(2, 14), tree(22, 8), pine(14, 40), bush(40, 40), pine(46, 18), pine(66, 8), tree(90, 16), pine(118, 12), tree(142, 4),
+  pine(2, 14), tree(22, 8), pine(37, 2), pine(14, 40), bush(2, 46), pine(36, 34), shrooms(30, 30),
+  tree(86, 14), pine(106, 2), pine(124, 14), tree(142, 4), tuft(112, 34), tuft2(150, 30), whiteFlowers(96, 38), rock(130, 44),
   pine(160, 18), { sprite: 'world/extra/mailbox', x: 178, y: 38 }, { sprite: 'world/extra/signpost', x: 200, y: 34 },
   pine(210, 10), tree(232, 18), pine(258, 6), pine(278, 20), tree(300, 8), pine(326, 14), tree(348, 22), pine(372, 8),
-  pine(392, 18), tree(414, 4), bush(420, 44), pine(440, 12), pine(460, 22),
-  // Left: the farm plot (soil x 12–63, y 70–121) fenced in, with a scarecrow, hay and crates by the road.
-  pine(62, 40),
-  fence(10, 64), fence(22, 64), fence(34, 64), fence(46, 64),
-  post(9, 72), post(9, 84), post(9, 96), post(9, 108), post(57, 72), post(57, 84), post(57, 96), post(57, 108),
-  fence(10, 116), fence(22, 116), fence(34, 116), fence(46, 116),
-  { sprite: 'world/ring/scarecrow', x: 34, y: 84 },
-  { sprite: 'world/props/flowers-mixed', x: 66, y: 72, animate: true },
-  hay(64, 84), hay(68, 94), crate(66, 106), crate(72, 112), { sprite: 'world/extra/signpost', x: 66, y: 122 },
-  lily(10, 163), lily(36, 167), lily(62, 171),
-  pine(60, 204), pine(40, 222), tree(8, 232), rock(68, 236), pine(64, 250),
+  shrooms(226, 40), tuft(248, 36), mixedFlowers(262, 40), rock(296, 36), tuft2(316, 44), log(336, 46), tuft(362, 44), shrooms(376, 38),
+  tree(428, 2), pine(452, 8), bush(462, 38), tuft2(434, 30), rock(446, 40),
+  // Left: the farm plot (soil x 12–63, y 70–121) fenced in, with a scarecrow; its gear sits in the field by the bank.
+  fence(10, 64), fence(22, 64), fence(34, 64),
+  post(9, 72), post(9, 84), post(9, 96), post(9, 108), post(48, 72), post(48, 84), post(48, 96), post(48, 108),
+  fence(10, 116), fence(22, 116), fence(34, 116),
+  { sprite: 'world/ring/scarecrow', x: 30, y: 84 },
+  tuft(4, 128), mixedFlowers(20, 126), tuft2(40, 130),
+  lily(10, 163), lily(36, 167), lily(44, 172),
+  pine(30, 196), pine(8, 214), tree(30, 238), rock(10, 250), pine(6, 258), rock(40, 266), tuft(6, 196), shrooms(26, 226), tuft2(42, 262),
   // Right: a well, pines, and the pond (water x 418–460, y 141–161) with rocks and a bench.
-  { sprite: 'world/extra/well', x: 404, y: 62 }, tree(440, 60), pine(460, 70), pine(404, 86), tree(452, 100),
+  { sprite: 'world/extra/well', x: 428, y: 64 }, tree(452, 56), pine(460, 84), tree(430, 100), rock(456, 112), shrooms(464, 118),
   { sprite: 'world/props/bench', x: 426, y: 166 }, { sprite: 'world/extra/signpost', x: 468, y: 138 },
-  rock(400, 150), rock(436, 112), rock(408, 160), rock(458, 164), lily(430, 146), lily(444, 150),
-  bush(460, 170), pine(404, 176), pine(456, 186), tree(430, 200), { sprite: 'world/extra/stump', x: 412, y: 214 },
+  rock(458, 164), lily(430, 146), lily(444, 150),
+  bush(460, 170), pine(430, 180), pine(456, 186), tree(432, 206), stump(458, 214), tuft2(448, 230), log(428, 232),
   // Bottom: the river (x 146–170) with lily pads, fences along the south road (x 229–252), the market lane (x 313–329).
-  pine(96, 240), { sprite: 'world/extra/stump', x: 122, y: 252 }, lily(152, 243), lily(158, 267), rock(188, 244),
-  tree(200, 256), fence(256, 246), fence(268, 246), { sprite: 'world/props/flowers-mixed', x: 260, y: 258, animate: true },
-  tree(284, 250), crate(300, 238), crate(332, 240), bush(330, 262), pine(344, 236), pine(372, 248),
-  tree(396, 254), { sprite: 'world/props/flowers-white', x: 404, y: 236, animate: true }, pine(424, 238), rock(452, 250), pine(458, 236),
+  pine(96, 240), stump(122, 252), lily(152, 243), lily(158, 267), rock(188, 244), tuft(108, 266), shrooms(132, 240), bush(112, 274),
+  tree(200, 256), fence(256, 246), fence(268, 246), mixedFlowers(260, 258), tuft2(176, 262), log(210, 244), tuft(226, 262), shrooms(196, 280),
+  tree(284, 250), crate(300, 238), crate(332, 240), bush(330, 262), pine(344, 236), pine(372, 248), tuft(288, 240), tuft2(310, 262), rock(348, 268), shrooms(362, 238),
+  whiteFlowers(378, 266), tree(428, 252), pine(456, 236), rock(466, 268), tuft(452, 274), shrooms(436, 240),
 ]
 
 export const PROPS: PlacedSprite[] = [...CORE_PROPS, ...RING_PROPS]

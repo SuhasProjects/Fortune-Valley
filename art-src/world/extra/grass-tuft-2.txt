@@ -1,0 +1,7 @@
+size 6x4
+anchor 3,3
+--- 0
+t..t..
+Yt.Yt.
+.tttTt
+..tT..

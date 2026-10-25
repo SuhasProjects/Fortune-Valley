@@ -1,0 +1,7 @@
+size 10x4
+anchor 5,3
+--- 0
+.kkkkkkkk.
+kwnnbbnnbk
+kWwwwwwwbk
+.kkkkkkkk.

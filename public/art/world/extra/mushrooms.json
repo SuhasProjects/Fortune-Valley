@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/mushrooms.png",
+  "w": 5,
+  "h": 4,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    2,
+    3
+  ]
+}

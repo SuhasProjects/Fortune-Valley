@@ -1,0 +1,12 @@
+{
+  "src": "/art/world/extra/grass-tuft-2.png",
+  "w": 6,
+  "h": 4,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    3,
+    3
+  ]
+}

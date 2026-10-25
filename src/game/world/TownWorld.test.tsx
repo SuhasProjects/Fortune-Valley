@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { segmentSteps, TownWorld, villagerKeyframes } from './TownWorld'
 import { BUILDINGS, BUILDING_IDS } from './landmarks'
-import { BADGE_GAP, BUILDING_LAYOUT, ROOF_CLEARANCE, WINDOW_TOP_MAX, CLOCK, CORE_CORNER_TREES, CORE_PROPS, DOORS, PROPS, RING_PROPS, SMOKE, VILLAGERS, VILLAGER_STEP_MS } from './layout'
+import { BADGE_GAP, BUILDING_LAYOUT, EDGE_BANDS, ROOF_CLEARANCE, WINDOW_TOP_MAX, CLOCK, CORE_CORNER_TREES, CORE_PROPS, DOORS, PROPS, RING_PROPS, SMOKE, VILLAGERS, VILLAGER_STEP_MS } from './layout'
 import { SPRITES } from '../art/manifest'
 import { BAR_TOP, CORE_OFFSET_X, CORE_OFFSET_Y, CORE_H, CORE_W, HUD_H, MAP_H, MAP_W } from '../stage/scale'
 
@@ -177,6 +177,28 @@ describe('TownWorld', () => {
     }
     // The badge bobs up 2 px; even then it stays clear of the HUD above every building.
     for (const id of BUILDING_IDS) expect(BUILDING_LAYOUT[id].y - BADGE_GAP - SPRITES['world/fx/badge'].h - 2, `${id} badge under the HUD`).toBeGreaterThanOrEqual(hudBottom)
+  })
+
+  it('edge bands: no prop straddles a column where a window edge can fall, so nothing is half-cut at the side of the screen', () => {
+    expect(EDGE_BANDS).toEqual([[55, 86], [394, 426]])
+    for (const p of PROPS) {
+      const { w } = SPRITES[p.sprite]
+      for (const [a, b] of EDGE_BANDS) expect(p.x + w <= a || p.x >= b, `${p.sprite} at ${p.x},${p.y} (w ${w}) straddles screen-edge band ${a}–${b}`).toBe(true)
+    }
+  })
+
+  it('props stand on grass, farm soil or a bank, never on water (lily pads float, the fountain has its plaza)', () => {
+    for (const p of PROPS) {
+      if (p.sprite === 'world/props/fountain' || p.sprite === 'world/props/lilypad') continue
+      const { w, h } = SPRITES[p.sprite]
+      let wet = 0, dry = 0
+      for (let y = Math.max(0, p.y + h - 3); y < Math.min(MAP_H, p.y + h); y++) for (let x = Math.max(0, p.x); x < Math.min(MAP_W, p.x + w); x++) {
+        if (MASK[y]![x] === 'u') wet++
+        else if ('hjfw'.includes(MASK[y]![x]!)) dry++
+      }
+      expect(wet, `${p.sprite} at ${p.x},${p.y} stands in water`).toBe(0)
+      expect(dry, `${p.sprite} at ${p.x},${p.y} has no ground under it`).toBeGreaterThan(0)
+    }
   })
 
   it('keeps every prop sprite fully on the map, 2 px in from its edges', () => {
