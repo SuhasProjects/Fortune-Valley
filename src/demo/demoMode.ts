@@ -51,10 +51,10 @@ export const DEMO_SCRIPT: RunScript = {
 export function demoConfig(): GameConfig {
   const cfg = archetypeConfig('entry_worker', DEMO_SEED);
   const st = cfg.initialState;
-  st.cash = 900;
+  st.cash = 700;
   st.savings = 400;
   st.employment = { status: 'employed', title: 'Junior lab technician', grossAnnualSalary: 30000, monthsUnemployedRemaining: 0, priorGrossAnnualSalary: 30000 };
-  st.household = { housingKind: 'rent', housingMonthly: 340, essentialsMonthly: 560, discretionaryMonthly: 160, dependents: 0 };
+  st.household = { housingKind: 'rent', housingMonthly: 340, essentialsMonthly: 600, discretionaryMonthly: 80, dependents: 0 };
   st.debts = [
     { id: 'debt_1', name: 'Student loan', kind: 'student_loan', balance: 38000, apr: 0.06, minimumPayment: 380 },
     { id: 'debt_2', name: 'Credit card', kind: 'credit_card', balance: 12000, apr: 0.249, minimumPayment: 300 },
