@@ -19,6 +19,7 @@ import { GuideWindow } from './title/GuideWindow'
 import { useGameClock } from '../hooks/useGameClock'
 import { Board, Button, IconButton, Modal, Tag } from '../ui'
 import './flow/flow.css'
+import './GameScreen.css'
 
 type Menu = 'pause' | 'options' | 'guide' | null
 type Confirm = 'restart' | 'delete-save' | 'finish' | null
