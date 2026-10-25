@@ -1,7 +1,7 @@
 // OWNER: Agent 1. The /demo scripted run: events land on their months, the exclusive script silences random rolls,
 // the config validates, the what-if "kept the Plus plan" branch beats the switch, and the Sage explains premiums.
 import { describe, expect, it } from 'vitest';
-import { advanceMonth, createGame, netWorthOf, applyAction, validateConfig, runMonteCarlo, listDecisions, changedPolicyLog } from '@/engine';
+import { advanceMonth, createGame, netWorthOf, applyAction, validateConfig, runMonteCarlo, listDecisions, changedPolicyLog, runWhatIf } from '@/engine';
 import { replayPath } from '@/engine/monteCarlo';
 import { settleClaim } from '@/engine/events';
 import { demoConfig, DEMO_SEED } from '@/demo/demoMode';
@@ -45,7 +45,7 @@ describe('scripted events', () => {
       [8, 200, 'scripted:birthday gift from your grandma'],
       [16, 50, 'scripted:credit card cashback'],
     ]);
-    expect(s.realizedShocks.map((r) => [r.monthIndex, r.shock.kind, r.shock.grossCost])).toEqual([[12, 'medical', 12000], [22, 'medical', 10000]]);
+    expect(s.realizedShocks.map((r) => [r.monthIndex, r.shock.kind, r.shock.grossCost])).toEqual([[12, 'medical', 20000], [22, 'medical', 12000]]);
     expect(s.employment.status).toBe('employed');
     expect(s.employment.grossAnnualSalary).toBe(30000); // no raises in the demo
     // Every notice of the run is one of the five scripted happenings; nothing random, no raise, no offer.
@@ -56,7 +56,7 @@ describe('scripted events', () => {
     // The hospital claim settled with the Plus plan the run starts on.
     const er = s.realizedShocks[0]!.shock;
     expect(er.planId).toBe('health_plus');
-    expect(er.outOfPocket).toBe(settleClaim(12000, INSURANCE_PLANS.find((p) => p.id === 'health_plus')!).outOfPocket);
+    expect(er.outOfPocket).toBe(settleClaim(20000, INSURANCE_PLANS.find((p) => p.id === 'health_plus')!).outOfPocket);
     // The scripted life events carry their own scene so the toast needs no AI call.
     const grandma = s.notifications.find((n) => n.templateId === 'scripted:birthday gift from your grandma');
     expect(grandma?.flavour?.scene).toMatch(/grandmother/);
@@ -75,7 +75,7 @@ describe('scripted events', () => {
     let s = createGame(c);
     for (let m = 0; m < 36; m++) s = advanceMonth(s, { lean: true, inPlace: true });
     expect(s.lifeEvents.map((e) => e.monthIndex)).toEqual([6, 8, 16]);
-    expect(s.realizedShocks.some((r) => r.monthIndex === 12 && r.shock.grossCost === 12000)).toBe(false);
+    expect(s.realizedShocks.some((r) => r.monthIndex === 12 && r.shock.grossCost === 20000)).toBe(false);
     const mc = runMonteCarlo(c, [], playThrough(36), { paths: 8 });
     expect(mc.endingNetWorths).toHaveLength(8);
   });
@@ -110,6 +110,26 @@ describe('what-if: switching to the cheap plan early', () => {
     // On the player's own two hospital bills, keeping Plus would have ended richer (the simulated futures tell the wider story).
     expect(netWorthOf(playThrough(36))).toBeGreaterThan(netWorthOf(played));
     expect(replayPath(c, played.policyLog, DEMO_SEED, 36).history).toHaveLength(37);
+  });
+});
+
+describe('what-if replay of the player\'s own game', () => {
+  it('keeps the scripted bills: with Basic from month 0, "kept Plus" ends at least $2,000 richer and the what-if says so', () => {
+    const c = demoConfig();
+    const switched: PolicyLogEntry[] = [{ monthIndex: 0, action: { type: 'set_insurance', line: 'health', planId: 'health_basic' } }];
+    const played = playThrough(36, switched);
+    const basic = replayPath(c, played.policyLog, DEMO_SEED, 36, { asPlayed: true }).ending;
+    const plus = replayPath(c, [], DEMO_SEED, 36, { asPlayed: true }).ending;
+    expect(basic).toBeCloseTo(netWorthOf(played), 0);
+    expect(plus - basic).toBeGreaterThanOrEqual(2000);
+    const mc = runMonteCarlo(c, played.policyLog, played, { paths: 200 });
+    const d = listDecisions(c, played.policyLog).find((x) => /health plan/i.test(x.label))!;
+    const keep = d.alternatives.find((a) => /Plus Health/.test(a.label))!;
+    const r = runWhatIf({ config: c, policyLog: played.policyLog, finishMonteCarlo: mc, startNetWorth: -49100, observedNetWorth: netWorthOf(played), decisionId: d.id, alternativeId: keep.id });
+    expect(r.yourEventsComparable).toBe(true);
+    expect(r.delta.yourEvents).toBeGreaterThanOrEqual(2000);
+    expect(r.delta.median).toBeLessThan(0); // typical future on Plus is a little lower …
+    expect(r.delta.spread).toBeLessThan(0); // … but much narrower
   });
 });
 

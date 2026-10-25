@@ -48,7 +48,8 @@ export function quantile(sorted: number[], q: number): number {
 
 export interface PathOutcome { ending: number; shortfall: boolean; history: number[]; fallbacks: number }
 
-export function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: number, months: number): PathOutcome {
+/** `asPlayed`: this is the player's own game replayed (same seed), so a scripted run keeps its scripted events exactly. */
+export function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed: number, months: number, opts: { asPlayed?: boolean } = {}): PathOutcome {
   let s: GameState = createGame({ ...config, seed });
   s.durationMonths = Math.max(months, 1);
   let fallbacks = 0;
@@ -64,7 +65,7 @@ export function replayPath(config: GameConfig, policyLog: PolicyLogEntry[], seed
       s = r.state;
       if (r.fallback) fallbacks += 1;
     }
-    s = advanceMonth(s, { lean: true, inPlace: true });
+    s = advanceMonth(s, { lean: true, inPlace: true, ...(opts.asPlayed ? { asPlayed: true } : {}) });
   }
   return { ending: netWorthOf(s), shortfall: s.shortfallMonths.length > 0, history: s.netWorthHistory, fallbacks };
 }

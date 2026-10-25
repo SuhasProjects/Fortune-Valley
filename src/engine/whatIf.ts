@@ -337,8 +337,8 @@ export function runWhatIf(input: WhatIfInput): WhatIfResult {
   const summary = summarize(outcomes, mc.months);
 
   // The player's own game: same seed as the game they played, so the same returns, shocks and job events.
-  const replayOriginal = replayPath(config, policyLog, config.seed, mc.months).ending;
-  const replayChanged = replayPath(config, log, config.seed, mc.months).ending;
+  const replayOriginal = replayPath(config, policyLog, config.seed, mc.months, { asPlayed: true }).ending;
+  const replayChanged = replayPath(config, log, config.seed, mc.months, { asPlayed: true }).ending;
   const yourEventsDelta = round2(replayChanged - replayOriginal);
   const yourEventsComparable = Math.abs(replayOriginal - observedNetWorth) <= REPLAY_TOLERANCE;
 

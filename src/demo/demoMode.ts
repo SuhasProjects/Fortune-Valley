@@ -41,9 +41,9 @@ export const DEMO_SCRIPT: RunScript = {
   events: [
     { monthIndex: 6, kind: 'life', amountSigned: -250, label: 'college textbooks', headline: 'Textbook bill lands', scene: 'The reading list for your evening course came with three required textbooks. The campus shop took $250 for the lot.' },
     { monthIndex: 8, kind: 'life', amountSigned: 200, label: 'birthday gift from your grandma', headline: 'Grandma remembers', scene: 'A card in your grandmother\'s handwriting arrived two days before your birthday with $200 folded inside.' },
-    { monthIndex: 12, kind: 'shock', shockKind: 'medical', grossCost: 12000, variant: 'er_night' },
+    { monthIndex: 12, kind: 'shock', shockKind: 'medical', grossCost: 20000, variant: 'er_night' },
     { monthIndex: 16, kind: 'life', amountSigned: 50, label: 'credit card cashback', headline: 'Cashback credited', scene: 'The card company posted $50 of cashback to your account, the reward for a year of on-time payments.' },
-    { monthIndex: 22, kind: 'shock', shockKind: 'medical', grossCost: 10000, variant: 'er_night' },
+    { monthIndex: 22, kind: 'shock', shockKind: 'medical', grossCost: 12000, variant: 'er_night' },
   ],
 };
 

@@ -32,6 +32,8 @@ export interface AdvanceOptions {
   inPlace?: boolean;
   /** Override RNG streams (tests). */
   rng?: { market: Rng; shocks: Rng; employment: Rng; life?: Rng };
+  /** A lean replay of the player's own game: a `'played'` script keeps its scripted events exactly (no random luck). */
+  asPlayed?: boolean;
 }
 
 /** Illustrative annual withholding: standard deduction + progressive brackets + flat payroll. */
@@ -194,8 +196,8 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   // A scripted run lands its own events this month; an exclusive script also silences the random rolls.
   const scripted = scriptedThisMonth(s);
   const played = s.script?.exclusive === 'played'; // simulated paths (lean) still roll shocks; the played run does not
-  const exclusive = s.script?.exclusive === true || (played && !lean);
-  const simulated = played && lean;
+  const exclusive = s.script?.exclusive === true || (played && (!lean || opts.asPlayed === true));
+  const simulated = played && lean && opts.asPlayed !== true;
   const shockEvents = exclusive ? [] : rollShocks(s, rng.shocks, lean, simulated ? s.script?.simulationShocks ?? s.assumptions.shocks : s.assumptions.shocks);
   for (const e of scripted) {
     if (e.kind !== 'shock' || simulated) continue; // simulated futures replace the scripted bills with their own luck
