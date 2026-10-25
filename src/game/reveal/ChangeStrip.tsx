@@ -10,7 +10,8 @@ export function changeSentence(median: number, spread: number): string {
   return spread < 0 ? 'Typically worse off, with a narrower range of possible outcomes.' : 'Typically worse off, and outcomes were more spread out.'
 }
 
-export function ChangeStrip({ result }: { result: WhatIfResult }) {
+/** `line` is the AI's one-sentence why (swapped in once it arrives); until then the sign-based sentence shows. */
+export function ChangeStrip({ result, line }: { result: WhatIfResult; line?: { text: string; source: 'ai' | 'fallback' } }) {
   // Display rounding only: whole dollars decide the sign so "-$0" never shows as a loss.
   const round = (value: number) => Math.round(value) || 0
   const delta = { median: round(result.delta.median), yourEvents: round(result.delta.yourEvents), spread: round(result.delta.spread) }
@@ -20,7 +21,7 @@ export function ChangeStrip({ result }: { result: WhatIfResult }) {
       <Inset title="Your run"><strong className="fv-change-value" data-direction={Math.sign(delta.yourEvents)}>{usd(delta.yourEvents, true)}</strong>{!result.yourEventsComparable && <small>estimated from a replay of your game</small>}</Inset>
       <Inset title="Spread"><strong className="fv-change-value" data-direction={-Math.sign(delta.spread) || 0}>{delta.spread === 0 ? 'Unchanged' : `${delta.spread < 0 ? 'Narrower' : 'Wider'} by ${usd(Math.abs(delta.spread))}`}</strong></Inset>
     </div>
-    <p className="fv-change-sentence">{changeSentence(delta.median, delta.spread)}</p>
+    <p className="fv-change-sentence" data-source={line?.source ?? 'engine'} aria-live="polite">{line?.text ?? changeSentence(delta.median, delta.spread)}</p>
     {result.replayFallbacks > 0 && <small>{result.replayFallbacks} later decisions couldn’t apply in some futures.</small>}
   </section>
 }

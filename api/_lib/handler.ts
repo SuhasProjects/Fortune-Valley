@@ -15,6 +15,7 @@ import { AiRequestSchema, ExplainOutputSchema, OpportunityOutputSchema, Scenario
 import { makeOpenAiCompatibleClient, UpstreamError } from './openaiCompatible.js';
 import { allowRequest, MAX_BODY_BYTES } from './rateLimit.js';
 import * as flavour from './kinds/flavour.js';
+import { recap, runKind, whatif } from './kinds/index.js';
 
 export interface HandlerResult { status: number; body: AiResponse | AiErrorResponse }
 export interface HandlerEnv {
@@ -123,6 +124,8 @@ export async function handleAiRequest(rawBody: string, env: HandlerEnv, client?:
       return { status: 200, body: { kind: 'opportunity', source: 'ai', proposal: r.parsed.proposal, warnings: [] } };
     }
     if (req.kind === 'flavour') { const r = await model.parse({ system: flavour.system, user: flavour.user(req), schema: flavour.responseSchema, maxTokens: 400 }); return r.stopReason === 'refusal' ? err(502, 'upstream_error', 'Model declined the request') : !r.parsed ? err(502, 'schema_mismatch', 'Model output did not match the flavour schema') : { status: 200, body: { kind: 'flavour', source: 'ai', headline: r.parsed.headline, scene: r.parsed.scene, warnings: [] } }; }
+    if (req.kind === 'whatif') { const k = await runKind(model, whatif, req); return k.ok ? { status: 200, body: { kind: 'whatif', source: 'ai', text: k.parsed.text, warnings: [] } } : err(502, k.code, k.error); }
+    if (req.kind === 'recap') { const k = await runKind(model, recap, req); return k.ok ? { status: 200, body: { kind: 'recap', source: 'ai', text: k.parsed.text, warnings: [] } } : err(502, k.code, k.error); }
     const r = await model.parse({ system: EXPLAIN_SYSTEM, user: buildExplainUser(req), schema: ExplainOutputSchema, maxTokens: 800 });
     if (r.stopReason === 'refusal') return err(502, 'upstream_error', 'Model declined the request');
     if (!r.parsed) return err(502, 'schema_mismatch', 'Model output did not match the explain schema');

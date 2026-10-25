@@ -79,6 +79,44 @@ Live samples (2026-10-24, Luminal DeepSeek-V4.1-Flash, via `curl` to the dev ser
 - medical $4,200 → "Wrist broken on ice" / "A fall on ice outside the house in February broke a wrist and needed surgery. The hospital billed $4,200."
 - home $650 (dorm) → "Laptop taken from dorm room" / "A laptop was taken from a dorm room overnight while the resident was at the dining hall. The loss came to $650."
 - job_loss → "Firm cuts analyst position" / "The firm eliminated the analyst position on the fourteenth of May, and pay stopped at the end of that pay period."
+## 4. whatif — one plain-cause-and-effect line under the what-if tiles
+
+Module: `api/_lib/kinds/whatif.ts` (self-contained: `requestSchema`, `responseSchema`, `system`, `user(req)`, `maxTokens`). Registered by one line each in `schemas.ts` (union member) and `handler.ts` (dispatch via `kinds/index.ts` `runKind`).
+
+Request: the `WhatIfResult` the ending computed, trimmed to what the sentence needs.
+```json
+{ "kind": "whatif", "comparison": { "decisionLabel": "Save $300/month", "alternativeLabel": "Keep what you had before",
+  "original": { "p10": -15000, "median": -13000, "p90": -10000, "yourEvents": -12000 }, "changed": { "p10": -16200, "median": -12400, "p90": -8300, "yourEvents": -11700 },
+  "delta": { "p10": -1200, "median": 600, "p90": 1700, "yourEvents": 300, "spread": 2900 }, "startNetWorth": -14000, "months": 24 } }
+```
+Response (200): `{ "kind": "whatif", "source": "ai", "text": "Keeping the cash each month makes the typical ending a bit better but risks a bigger drop.", "warnings": [] }`
+
+Prompt: ELI5 cause → effect about the ALTERNATIVE (the user message states every delta is "alternative minus actual"; the first draft without that line described the player's own choice and got the direction backwards). One sentence, ≤ 18 words, everyday words, no numbers unless essential, no "X. Y." fragments, no advice. `responseSchema` caps at 160 chars, 20 words and exactly one sentence; anything else is `schema_mismatch` (after the provider's one corrective retry) and the client falls back. `maxTokens` is 1500 because DeepSeek spends most of the budget on hidden reasoning (with 300 the visible content came back empty).
+
+UI (`src/game/reveal/useWhatIfLine.tsx` → `ChangeStrip` `line` prop): the sign-based `changeSentence` shows instantly as `data-source="fallback"`, the request is debounced 400 ms, cached per `(decision, alternative)` for the life of the screen, and a selection change aborts the in-flight fetch (the hook passes a `fetchImpl` that injects its own `AbortSignal`, so `aiClient` is unchanged).
+
+Offline fallback (`fallbackWhatIf`): nine sign-combination sentences (typical up/down/flat × spread narrower/wider/same), each ≤ 18 words with no digits, e.g. "This choice puts a little more aside each month, so the ending grows and bad months hurt less."
+
+## 5. recap — three news-wire sentences at the top of the reveal
+
+Module: `api/_lib/kinds/recap.ts`. Input is `summarizeTimeline(state)` (`src/services/summarizeTimeline.ts`): ≤ 25 lines `{ month, label: "YYYY-MM", event, amount? }` built from `policyLog` (every action described in past tense, `apply_event_option` as `Chose "<label>"`), `realizedShocks` (kind, gross cost, insurer paid, out of pocket; job loss as "Job loss cut the paycheck to unemployment benefits") and the notable engine notifications (`Back to work`, `Paid off`, `Cash ran short`, `Emergency fund`, `Annual raise`). Priority when trimming: shocks, then decisions, then notifications; sorted by month.
+
+Request:
+```json
+{ "kind": "recap", "recap": { "months": 24, "startNetWorth": -23300, "endNetWorth": -17567, "timeline": [
+  { "month": 4, "label": "2026-05", "event": "Job loss cut the paycheck to unemployment benefits" },
+  { "month": 6, "label": "2026-07", "event": "Set savings to $300 and investing to $200 a month" },
+  { "month": 10, "label": "2026-11", "event": "Medical bill of $11,404, insurer paid $5,183, out of pocket $6,221", "amount": 6221 } ] } }
+```
+Response (200): `{ "kind": "recap", "source": "ai", "text": "In July 2026 the player set savings at $300 monthly, investing at $200, and took a $52,000 role. A May 2026 job loss cut pay to unemployment benefits, and a November medical bill cost $6,221 out of pocket. A second job loss in June 2027 led to $2,423 drawn from savings, and net worth ended at -$17,567 versus -$23,300.", "warnings": [] }`
+
+Prompt: plain news-wire reporting (the system prompt quotes a wire excerpt as the register): concrete, past tense, short declarative sentences, specific months and amounts, no piled adjectives, no moralising, banned words `journey / resilient / navigate / rollercoaster / testament`, no exclamation marks, no fragments. Exactly three sentences, ≤ 60 words, each under 22 words. `responseSchema`: ≤ 480 chars, ≤ 70 words, 2–4 sentences, no `!`. `maxTokens` 2000 (reasoning budget).
+
+UI (`src/game/reveal/RecapLine.tsx`, under the headline): the template recap shows at once with a "Recap" tag; when the gateway answers with `source:'ai'` the text and tag ("AI recap") swap in. Unmount aborts the fetch.
+
+Offline fallback (`fallbackRecap`): the same three beats from the same timeline: opening net worth and the first decision ("The run opened at -$23,300, and in July 2026 the player set the investment mix."), up to two named shocks plus a count of the rest ("A job loss in May 2026 cut pay to benefits, and a medical bill in November 2026 cost $6,221 out of pocket; 3 more hard months followed."), then the ending versus the start. ≤ 60 words, no exclamation marks (tests/engine/fallback-whatif-recap.test.ts).
+
+Adding another kind: copy `api/_lib/kinds/whatif.ts`, then one line each in `schemas.ts`, `handler.ts`, `src/types/domain.ts` (request and response union members), `aiClient.ts` (one function) and `aiFallback.ts` (one function). `kinds/index.ts` `runKind` turns a refusal into `upstream_error` and an invalid output into `schema_mismatch`.
 
 ## Smoke test with a real key (about 2 minutes)
 
@@ -104,12 +142,19 @@ The whole path is unit-tested with a mocked upstream (`tests/engine/ai-gateway.t
    ```sh
    curl -s http://127.0.0.1:5195/api/ai -H 'content-type: application/json' -d '{"kind":"flavour","shock":{"kind":"auto","amount":1800,"monthLabel":"2026-11","archetype":"entry_worker","housingKind":"rent","hasCar":true,"employment":"employed"}}'
    ```
+   whatif and recap take the comparison / condensed timeline shown in sections 4 and 5:
+   ```sh
+   curl -s http://127.0.0.1:5195/api/ai -H 'content-type: application/json' -d '{"kind":"whatif","comparison":{"decisionLabel":"Save $300/month","alternativeLabel":"Keep what you had before","original":{"p10":-15000,"median":-13000,"p90":-10000,"yourEvents":-12000},"changed":{"p10":-16200,"median":-12400,"p90":-8300,"yourEvents":-11700},"delta":{"p10":-1200,"median":600,"p90":1700,"yourEvents":300,"spread":2900},"startNetWorth":-14000,"months":24}}'
+   curl -s http://127.0.0.1:5195/api/ai -H 'content-type: application/json' -d '{"kind":"recap","recap":{"months":24,"startNetWorth":-23300,"endNetWorth":-17567,"timeline":[{"month":4,"label":"2026-05","event":"Job loss cut the paycheck to unemployment benefits"},{"month":6,"label":"2026-07","event":"Set savings to $300 and investing to $200 a month"},{"month":10,"label":"2026-11","event":"Medical bill of $11,404, insurer paid $5,183, out of pocket $6,221","amount":6221}]}}'
+   ```
+   Expect one sentence ≤ 18 words about the alternative, and three past-tense sentences ≤ 60 words.
 5. Negative checks (each should take under a second): empty `AI_API_KEY` → 503 `{"code":"disabled"}`; a wrong key → 502 `{"error":"AI credentials rejected","code":"upstream_error"}`; `curl -X GET` → 405. Any of these in the browser becomes `source:'fallback'` and `aiStatus:'offline'` in the store.
 6. In the app (same dev server): write a custom story on the title screen, then play to the ending; `useGameStore` sets `aiStatus: 'online'` only when the gateway answered with `source:'ai'`.
 
 | Date | Kind | HTTP | source | Notes |
 |---|---|---|---|---|
 | 2026-10-24 | flavour | 200 | ai | Luminal DeepSeek-V4.1-Flash via dev server on 5242; 4 kinds, outputs quoted in §4. |
+| 2026-10-24 | whatif / recap | 200 | ai | Luminal DeepSeek-V4.1-Flash via `npx vite --port 5241`. whatif: "Keeping the cash each month makes the typical ending a bit better but risks a bigger drop." / "Dropping coverage saves each month, so the typical ending rises, but one bad bill can wipe that out." recap: see section 5. First prompt draft inverted the direction (described the player's choice, not the alternative); fixed by labelling deltas "alternative minus actual". `maxTokens` 300 returned empty content (reasoning ate the budget) → 1500 / 2000. |
 | 2026-10-24 | scenario / opportunity / explain | — | — | Not run: no key in the integration environment. Endpoint reachability checked without a key: `POST https://flash.luminal.cloud/v1/chat/completions` → 401 (path exists). Fill this row in after the steps above. |
 
 ## Error codes

@@ -5,6 +5,7 @@
  */
 import type { AiErrorResponse, AiRequest, AiResponse, MonteCarloResult, PersonalizedInput, ShockFlavourInput, StateSummary } from '@/types/domain';
 import { fallbackExplanation, fallbackFlavour, fallbackOpportunity, fallbackScenario } from './aiFallback';
+import { fallbackRecap, fallbackWhatIf } from './aiFallback';
 
 export interface AiClientOptions {
   endpoint?: string;
@@ -27,6 +28,8 @@ export type ScenarioResult = Extract<AiResponse, { kind: 'scenario' }>;
 export type OpportunityResult = Extract<AiResponse, { kind: 'opportunity' }>;
 export type ExplainResult = Extract<AiResponse, { kind: 'explain' }>;
 export type FlavourResult = Extract<AiResponse, { kind: 'flavour' }>;
+export type WhatIfLineResult = Extract<AiResponse, { kind: 'whatif' }>;
+export type RecapResult = Extract<AiResponse, { kind: 'recap' }>;
 
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;
@@ -70,6 +73,20 @@ export async function describeShock(shock: ShockFlavourInput, seed: number | str
   const r = await call({ kind: 'flavour', shock }, opts);
   if (r && r.kind === 'flavour') return r;
   return { kind: 'flavour', source: 'fallback', ...fallbackFlavour(shock, seed), warnings: ['AI gateway unavailable; used offline scene.'] };
+}
+
+/** One caveman-logic sentence for a what-if comparison; falls back to the sign-based template. */
+export async function explainWhatIf(comparison: Extract<AiRequest, { kind: 'whatif' }>['comparison'], opts: AiClientOptions = {}): Promise<WhatIfLineResult> {
+  const r = await call({ kind: 'whatif', comparison }, opts);
+  if (r && r.kind === 'whatif') return r;
+  return { kind: 'whatif', source: 'fallback', text: fallbackWhatIf(comparison), warnings: ['AI gateway unavailable; used template what-if line.'] };
+}
+
+/** Three news-wire sentences recapping a finished run; falls back to the template recap. */
+export async function recapRun(recap: Extract<AiRequest, { kind: 'recap' }>['recap'], opts: AiClientOptions = {}): Promise<RecapResult> {
+  const r = await call({ kind: 'recap', recap }, opts);
+  if (r && r.kind === 'recap') return r;
+  return { kind: 'recap', source: 'fallback', text: fallbackRecap(recap), warnings: ['AI gateway unavailable; used template recap.'] };
 }
 
 export { scenarioToConfig, proposalToEvent } from './scenarioMapper';

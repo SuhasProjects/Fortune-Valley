@@ -4,6 +4,7 @@ import { Dropdown, Inset } from '@/ui'
 import { endingApi, type ChartLines, type DecisionChoice, type WhatIfResult } from './ending-contract'
 import { OutcomeChart, sharedYDomain } from './OutcomeChart'
 import { ChangeStrip } from './ChangeStrip'
+import { useWhatIfLine } from './useWhatIfLine'
 
 /** Engine ids starting with `hyp:` are hypothetical "from the start" decisions available even without a policy log. */
 const isHypothetical = (decision: DecisionChoice) => decision.id.startsWith('hyp:')
@@ -37,6 +38,7 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
     return () => { current = false; controller.abort() }
   }, [ready, key, selection.decision, selection.alternative, payload.config, payload.policyLog, payload.monteCarlo, original.start])
 
+  const line = useWhatIfLine(key, result, original.start)
   const domain = result ? sharedYDomain(result.original, result.changed) : sharedYDomain(original)
   const toOption = (decision: DecisionChoice) => ({ value: decision.id, label: decision.label })
   const real = decisions.filter(decision => !isHypothetical(decision)), hypothetical = decisions.filter(isHypothetical)
@@ -59,7 +61,7 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
         </div>
         <div className="fv-comparison-charts"><OutcomeChart lines={result?.original ?? original} yDomain={domain} title="What you did"/>
           <div aria-busy={pending} className="fv-changed-chart">{result ? <OutcomeChart lines={result.changed} yDomain={domain} title={`If you had: ${result.alternativeLabel}`} highlightLabel="You, this choice"/> : error ? <p role="alert">{error}</p> : <p role="status"><img className="fv-computing-coin" src="/art/title/favicon.png" alt=""/>Re-running 1,000 futures…</p>}</div></div>
-        {result && <ChangeStrip result={result}/>}
+        {result && <ChangeStrip result={result} line={line}/>}
       </>}
   </section>
 }

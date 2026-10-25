@@ -1,6 +1,8 @@
 /** Zod schemas for the AI gateway: request validation + model-output verification. */
 import { z } from 'zod';
 import { requestSchema as FlavourRequestSchema } from './kinds/flavour.js';
+import { requestSchema as WhatIfRequestSchema } from './kinds/whatif.js';
+import { requestSchema as RecapRequestSchema } from './kinds/recap.js';
 
 const archetype = z.enum(['college_student', 'entry_worker', 'professional', 'young_family']);
 const building = z.enum(['bank', 'office', 'home', 'hospital', 'market']);
@@ -61,6 +63,8 @@ export const AiRequestSchema = z.discriminatedUnion('kind', [
     }).optional(),
   }),
   FlavourRequestSchema,
+  WhatIfRequestSchema,
+  RecapRequestSchema,
 ]);
 export type AiRequestParsed = z.infer<typeof AiRequestSchema>;
 
