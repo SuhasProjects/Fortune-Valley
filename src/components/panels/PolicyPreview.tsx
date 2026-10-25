@@ -37,6 +37,6 @@ export function PolicyPreview({ state, draftPolicy, overrides, invalid = false, 
       <tr><th scope="row">Cash</th><td>{money(baseline.cash)}</td><td>{money(draft.cash)}</td></tr>
       <tr><th scope="row">Savings</th><td>{money(baseline.savings)}</td><td>{money(draft.savings)}</td></tr>
       <tr><th scope="row">Net worth</th><td>{money(baseline.netWorth)}</td><td>{money(draft.netWorth)}</td></tr>
-    </tbody></table></div><p>{borrowing}.</p><small>Same simulated luck. Illustrative, not a forecast.</small>
+    </tbody></table></div><p>{borrowing}.</p><small>Same simulated luck, illustrative rather than a forecast.</small>
   </aside>;
 }

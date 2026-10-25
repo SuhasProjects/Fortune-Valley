@@ -3,11 +3,11 @@ import { useGameStore } from '../../stores/useGameStore';
 import { useReducedMotion } from '../../ui';
 
 export const KEEPER_LINES: Record<BuildingId, readonly string[]> = {
-  bank: ['A little set aside each month becomes a cushion.', 'Welcome back. A steady habit can start small.'],
-  office: ['Pull up a chair. Let\'s see what\'s on the noticeboard.', 'Every new chapter starts somewhere.'],
-  hospital: ['Welcome in. Take your time comparing the plans.', 'A little preparation can bring some peace of mind.'],
+  bank: ['A little set aside each month becomes a cushion.', 'Welcome back, a steady habit can start small.'],
+  office: ['Pull up a chair and let\'s see what\'s on the noticeboard.', 'Every new chapter starts somewhere.'],
+  hospital: ['Welcome in, and take your time comparing the plans.', 'A little preparation can bring some peace of mind.'],
   home: ['The kettle\'s on, and the cat saved you a seat.', 'Make a little room for the things you enjoy.'],
-  market: ['Welcome to the hall. Have a look around.', 'There\'s more than one basket on these shelves.'],
+  market: ['Welcome to the hall, have a look around.', 'There\'s more than one basket on these shelves.'],
 };
 export function KeeperGreeting({ building }: { building: BuildingId }) {
   const month = useGameStore(store => store.game?.monthIndex ?? 0);

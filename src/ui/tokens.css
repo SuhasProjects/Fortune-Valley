@@ -1,12 +1,14 @@
 @import '../styles/palette.css';
 :root {
   --px: 4px;
-  --font-body: 'VT323', ui-monospace, monospace;
+  /* Pixelify Sans (Minecraft-like, open counters) for every size; VT323 stays loaded for the few places that opt in via --font-mono. */
+  --font-body: 'Pixelify Sans', 'VT323', ui-monospace, monospace;
   --font-heading: 'Pixelify Sans', ui-monospace, monospace;
-  --fs-label: calc(3.5 * var(--px));
-  --fs-body: calc(4.5 * var(--px));
-  --fs-value: calc(5 * var(--px));
-  --fs-heading: calc(6 * var(--px));
+  --font-mono: 'VT323', ui-monospace, monospace;
+  --fs-label: calc(4.5 * var(--px));
+  --fs-body: calc(6 * var(--px));
+  --fs-value: calc(6.5 * var(--px));
+  --fs-heading: calc(8 * var(--px));
   --fs-title: calc(12 * var(--px));
   --space-sm: calc(2 * var(--px));
   --space-md: calc(4 * var(--px));

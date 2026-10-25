@@ -7,8 +7,8 @@
   --chart-observed: #9d592f;
   --chart-positive: #56824e;
   --chart-negative: #b65b43;
-  --ft-font-body: 'VT323', monospace;
-  font-family: 'VT323', monospace;
+  --ft-font-body: 'Pixelify Sans', 'VT323', monospace;
+  font-family: 'Pixelify Sans', 'VT323', monospace;
   color: var(--ink);
   background: #42684b;
   font-synthesis: none;
@@ -92,7 +92,7 @@ p { line-height: 1.4; }
 .story-list button { display: block; margin-top: 12px; }
 .action-error { padding: 12px; border-color: #ab5e45; }
 .completion-banner { padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
-.recharts-wrapper { font-family: 'VT323',monospace!important; }
+.recharts-wrapper { font-family: 'Pixelify Sans','VT323',monospace!important; }
 .recharts-surface { shape-rendering: crispEdges; }
 .recharts-cartesian-grid line { stroke: var(--chart-grid); }
 .skip-link { position: absolute; left: 15px; top: -100px; z-index: 20; padding: 12px; background: #f5d795; }

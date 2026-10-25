@@ -1,9 +1,9 @@
 /* Shared controls and frames come from src/ui. These rules arrange building content. */
 .ft-sheet, .ft-sheet * { box-sizing: border-box; }
-.ft-sheet { min-width: 0; color: var(--c-outline); font: var(--fs-body)/1.2 var(--font-body); font-variant-numeric: tabular-nums; }
+.ft-sheet { min-width: 0; color: var(--c-outline); font: var(--fs-body)/1.25 var(--font-body); font-variant-numeric: tabular-nums; }
 .ft-sheet__header, .ft-sheet__help-heading { display: flex; justify-content: space-between; align-items: center; gap: calc(2 * var(--px)); }
 .ft-sheet__header h2 { margin: 0; font: 700 var(--fs-heading)/1.1 var(--font-heading); }
-.ft-sheet__body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: calc(2 * var(--px)); }
+.ft-sheet__body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: calc(3 * var(--px)); }
 .ft-sheet__status, .ft-sheet__history { grid-column: 1 / -1; }
 .ft-sheet__decision, .ft-sheet__consequence { min-width: 0; }
 .ft-sheet__body > section > .fv-inset { height: 100%; }
@@ -11,12 +11,12 @@
 .ft-sheet dl, .ft-receipt { margin: calc(2 * var(--px)) 0; }
 .ft-sheet dl > div, .ft-receipt > div { display: flex; justify-content: space-between; align-items: baseline; gap: calc(3 * var(--px)); }
 .ft-sheet dd, .ft-receipt dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.ft-sheet__status dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(2 * var(--px)) calc(5 * var(--px)); }
+.ft-sheet__status dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(2 * var(--px)) calc(6 * var(--px)); }
 .ft-sheet__status dl > div { border-bottom: var(--px) solid var(--c-parchment-shadow); padding-bottom: var(--px); }
 .ft-sheet form { display: grid; gap: calc(2 * var(--px)); }
 .ft-sheet fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
 .ft-sheet legend { margin-bottom: calc(2 * var(--px)); }
-.ft-sheet summary { cursor: pointer; padding: calc(2 * var(--px)) 0; font-family: var(--font-heading); }
+.ft-sheet summary { cursor: pointer; padding: calc(2 * var(--px)) 0; font: 700 var(--fs-body)/1.1 var(--font-heading); }
 .ft-sheet__history { padding: 0 calc(2 * var(--px)); background: repeating-linear-gradient(transparent 0 calc(6 * var(--px) - 1px), var(--c-parchment-shadow) calc(6 * var(--px) - 1px) calc(6 * var(--px))); }
 .ft-sheet footer { margin-top: calc(3 * var(--px)); font-size: var(--fs-label); }
 .ft-sheet small, .ft-notice small { font-size: var(--fs-label); }

@@ -18,7 +18,7 @@ export function HomePanel({ state, dispatch }: PanelProps) {
     <Slider className="ft-budget" id={id} label="Monthly spending" aria-label="Monthly discretionary budget (USD)" min={0} max={BOUNDS.monthlySpendMax} step={.01} value={Number.isFinite(Number(budget)) ? Number(budget) : 0} disabled={disabled} format={() => error ? 'Invalid amount' : `${money(Number(budget))} / month`} onChange={value => setBudget(String(value))} error={error} />
     <Button type="submit" variant="primary" disabled={disabled || !!error}>Save budget</Button>{task.feedback}
   </form>} consequence={<><p>After Save · {error ? 'Check amount' : `${money(-Number(budget))} / month`}</p><PolicyPreview state={state} overrides={{ household: { discretionaryMonthly: Number(budget) } }} invalid={!!error} compact /></>} help={<>
-    <p>This changes flexible spending. Housing and essentials stay the same.</p>
+    <p>This changes flexible spending, while housing and essentials stay the same.</p>
     <PolicyPreview state={state} overrides={{ household: { discretionaryMonthly: Number(budget) } }} invalid={!!error} />
   </>} details={<LedgerHistory state={state} categories={['housing', 'essentials', 'discretionary']} />} />;
 }

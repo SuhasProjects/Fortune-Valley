@@ -19,6 +19,6 @@ export function EventCard({ event, onChoose }: { event: GameEvent; onChoose: (op
       <Tooltip content={option.description}><Button variant="primary" onClick={() => onChoose(option.id)} title={option.description} aria-describedby={`event-${event.id}-${option.id}-description`}>{option.label}</Button></Tooltip>
       <small id={`event-${event.id}-${option.id}-description`}>{option.description}</small>
     </div>)}</div>
-    <small>Illustrative educational scenario. Terms and outcomes are simplified.</small>
+    <small>An illustrative educational scenario with simplified terms and outcomes.</small>
   </Board>;
 }
