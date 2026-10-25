@@ -6,6 +6,7 @@ import { TitleScene } from './TitleScene'
 import { StoryPicker } from './StoryPicker'
 import { CustomStoryLetter } from './CustomStoryLetter'
 import { GuideWindow } from './GuideWindow'
+import { isDemoMode } from '@/demo/demoMode'
 
 export function TitleScreen() {
   const [screen, setScreen] = useState<'menu' | 'picker' | 'letter'>('menu')
@@ -46,7 +47,7 @@ export function TitleScreen() {
       {screen === 'menu' ? <div className="fv-title-menu" role="group" aria-label="Main menu" ref={menu} onKeyDown={move} onClick={clickSound}>
         <Button size="lg" data-menu="New Story" onClick={() => { returnFocus.current = 'New Story'; setScreen('picker') }}>New Story</Button>
         <Button size="lg" data-menu="Custom Story" onClick={() => { returnFocus.current = 'Custom Story'; setScreen('letter') }}>Custom Story</Button>
-        <Button size="lg" disabled={!savedGame} title={savedGame ? 'Continue your saved story' : 'No saved story yet'} onClick={() => loadSavedGame()}>Continue{savedGame && <small>Month {savedGame.monthIndex} · {savedGame.title}</small>}</Button>
+        {!isDemoMode() && <Button size="lg" disabled={!savedGame} title={savedGame ? 'Continue your saved story' : 'No saved story yet'} onClick={() => loadSavedGame()}>Continue{savedGame && <small>Month {savedGame.monthIndex} · {savedGame.title}</small>}</Button>}
       </div> : <div className="fv-title-content" ref={content}>
         <Button className="fv-back" onClick={back}>Back</Button>
         {screen === 'picker' ? <StoryPicker/> : <CustomStoryLetter/>}

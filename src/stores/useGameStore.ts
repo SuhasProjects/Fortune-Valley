@@ -306,7 +306,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   saveGame: () => {
     const { game, config, storage } = get();
-    if (!game || !config || !storage) return false;
+    if (!game || !config || !storage || isDemoMode()) return false; // a demo run never touches the save slot
     try {
       storage.setItem(SAVE_STORAGE_KEY, serializeSave(config, game));
       set({ savedGame: { savedAt: new Date().toISOString(), title: config.title, monthIndex: game.monthIndex } });

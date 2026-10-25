@@ -6,6 +6,8 @@
  */
 import type { GameConfig, RunScript } from '@/types/domain';
 import { archetypeConfig } from '@/config/archetypes';
+import { SAVE_STORAGE_KEY } from '@/engine/persistence';
+import { SETTINGS_STORAGE_KEY } from '@/game/settings/useSettings';
 
 export const DEMO_STORAGE_KEY = 'fv-demo';
 export const DEMO_SEED = 20261025;
@@ -24,7 +26,12 @@ export function isDemoMode(): boolean {
     const url = new URL(window.location.href);
     const q = url.searchParams.get('demo');
     const on = q === '1' || q === 'true' || /^\/demo\/?$/.test(url.pathname);
-    if (on) { st?.setItem(DEMO_STORAGE_KEY, '1'); return true; }
+    if (on) {
+      // Arriving on /demo starts from nothing: no saved story, no remembered settings or seen tips from earlier runs.
+      if (st?.getItem(DEMO_STORAGE_KEY) !== '1') { try { localStorage.removeItem(SAVE_STORAGE_KEY); localStorage.removeItem(SETTINGS_STORAGE_KEY); } catch { /* unavailable */ } }
+      st?.setItem(DEMO_STORAGE_KEY, '1');
+      return true;
+    }
     if (q === '0' || q === 'false') { st?.removeItem(DEMO_STORAGE_KEY); return false; }
     return st?.getItem(DEMO_STORAGE_KEY) === '1';
   } catch {
