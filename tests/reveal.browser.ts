@@ -37,7 +37,7 @@ test('finishing without decisions still offers "from the start" comparisons', as
   await expect(pick).toBeVisible()
   await expect(pick.locator('option')).not.toHaveCount(0)
   expect((await pick.locator('option').allTextContents()).every(text => text.startsWith('From the start'))).toBe(true)
-  await expect(page.getByText('Typical outcome')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: 'Typical outcome' })).toBeVisible({ timeout: 15_000 })
 })
 
 // Isolate the comparison UI from simulation speed so selection, shared axes, cancellation and stale responses
