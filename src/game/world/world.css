@@ -11,7 +11,7 @@
 .fv-building--static { cursor: default; }
 .fv-building__hover { display: none; position: absolute; left: 0; top: 0; }
 .fv-building:hover .fv-building__hover,
-.fv-building:focus-visible .fv-building__hover,
+.fv-building:focus .fv-building__hover,
 .fv-building[data-open] .fv-building__hover { display: block; }
 .fv-building:focus-visible { outline: none; }
 .fv-building:hover, .fv-building:focus-visible { transform: translateY(calc(-1 * var(--px))); }

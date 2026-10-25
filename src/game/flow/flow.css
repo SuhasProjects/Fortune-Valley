@@ -69,3 +69,9 @@
 }
 [data-reduce-motion='true'] .fv-month-banner, [data-reduce-motion='true'] .fv-counter i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-month-banner, .fv-counter i { animation: none; } }
+
+/* Toasts drop in two steps; no tweening (replaces framer-motion). */
+.fv-toast__enter { animation: fv-toast-in 240ms steps(2, end); }
+.fv-toast__enter--still { animation: none; }
+@keyframes fv-toast-in { from { transform: translateY(calc(-2 * var(--px))); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fv-toast__enter { animation: none; } }
