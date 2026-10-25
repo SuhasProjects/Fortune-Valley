@@ -75,7 +75,7 @@ export const PROPS: PlacedSprite[] = [...CORE_PROPS, ...RING_PROPS]
 
 /** Chimney tops: Your Home and Health House puff smoke. */
 export const SMOKE: { x: number; y: number }[] = [
-  { x: 157, y: 139 },
+  { x: 169, y: 139 },
   { x: 350, y: 68 },
 ]
 
@@ -90,8 +90,8 @@ export const CLOCK = { sprite: 'world/extra/clock-hand' as const, x: 31, y: 8 }
  */
 export interface Villager { id: string; sprite: SpriteName; path: { x: number; y: number }[]; delay: number }
 export const VILLAGERS: Villager[] = [
-  // Town Office door, down to the east–west road, west to Pine Bank's front path and up to its door.
-  { id: 'a', sprite: 'world/ring/villager-a', path: [{ x: 233, y: 108 }, { x: 233, y: 132 }, { x: 147, y: 132 }, { x: 147, y: 116 }], delay: 0 },
+  // Town Office door, a few steps down, around the west side of the fountain to the east–west road, west to Pine Bank's front path and up to its door.
+  { id: 'a', sprite: 'world/ring/villager-a', path: [{ x: 233, y: 108 }, { x: 233, y: 114 }, { x: 211, y: 114 }, { x: 211, y: 132 }, { x: 147, y: 132 }, { x: 147, y: 116 }], delay: 0 },
   // Market Hall door, down its lane and out of town past the south edge of the map.
   { id: 'b', sprite: 'world/ring/villager-b', path: [{ x: 305, y: 194 }, { x: 305, y: 206 }, { x: 318, y: 206 }, { x: 318, y: 274 }], delay: -9000 },
 ]
