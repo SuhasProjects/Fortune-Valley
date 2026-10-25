@@ -48,7 +48,8 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
   // Gemini's OpenAI-compatible endpoint spends the output budget on hidden "thinking" unless told not to; our outputs are
   // small structured JSON, so turn it off there (other providers would reject the unknown field).
   const gemini = /generativelanguage\.googleapis\.com/.test(url);
-  const providerExtras = gemini ? { extra_body: { google: { thinking_config: { thinking_budget: 0 } } } } : {};
+  // Lite models have no thinking and reject the field with 400; we also drop it after any 400 that mentions the argument.
+  let providerExtras: Record<string, unknown> = gemini && !/lite/i.test(o.model) ? { extra_body: { google: { thinking_config: { thinking_budget: 0 } } } } : {};
   if (o.authHeader === 'api-key') headers['Api-Key'] = o.apiKey; else headers['Authorization'] = `Bearer ${o.apiKey}`;
 
   /** Some OpenAI-compatible servers reject `response_format`; remember that and stop sending it. */
@@ -59,12 +60,26 @@ export function makeOpenAiCompatibleClient(o: OpenAiCompatibleOptions): ModelCli
     const timer = setTimeout(() => ctrl.abort(), o.timeoutMs ?? 25_000);
     try {
       const send = (withFormat: boolean) => f(url, { method: 'POST', headers, signal: ctrl.signal, body: JSON.stringify({ model: o.model, max_tokens: maxTokens, temperature: 0.2, ...providerExtras, ...(withFormat ? { response_format: { type: 'json_object' } } : {}), messages }) });
+      type Body = { choices?: { message?: { content?: string | null }; finish_reason?: string | null }[]; error?: { message?: string } | string } | null;
+      // Gemini wraps errors in a one-element array; unwrap so the message survives.
+      const readBody = async (r: Response): Promise<Body> => { const j: unknown = await r.json().catch(() => null); return (Array.isArray(j) ? j[0] : j) as Body; };
       let res = await send(supportsResponseFormat);
-      let body = (await res.json().catch(() => null)) as { choices?: { message?: { content?: string | null }; finish_reason?: string | null }[]; error?: { message?: string } | string } | null;
+      let body = await readBody(res);
+      if (res.status === 400 && Object.keys(providerExtras).length > 0) {
+        providerExtras = {};
+        res = await send(supportsResponseFormat);
+        body = await readBody(res);
+      }
       if (res.status === 400 && supportsResponseFormat && /response_format|json_object/i.test(JSON.stringify(body ?? ''))) {
         supportsResponseFormat = false;
         res = await send(false);
-        body = (await res.json().catch(() => null)) as typeof body;
+        body = await readBody(res);
+      }
+      if (res.status === 503) {
+        // Busy upstream (Gemini "high demand"): one short pause and one more try before giving up.
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        res = await send(supportsResponseFormat);
+        body = await readBody(res);
       }
       if (!res.ok) {
         const message = typeof body?.error === 'string' ? body.error : body?.error?.message ?? `HTTP ${res.status}`;

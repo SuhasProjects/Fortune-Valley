@@ -90,12 +90,12 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
     }
   });
 
-  it.each([[401, 'upstream_error', 502], [403, 'upstream_error', 502], [429, 'rate_limited', 429], [500, 'upstream_error', 502], [503, 'upstream_error', 502]] as const)(
-    'upstream %i → %s (no retry, provider message not forwarded) and every client call falls back', async (status, code, http) => {
-      const { impl, calls } = mockFetch([{ status, body: { error: { message: 'nope-from-provider' } } }]);
+  it.each([[401, 'upstream_error', 502, 1], [403, 'upstream_error', 502, 1], [429, 'rate_limited', 429, 1], [500, 'upstream_error', 502, 1], [503, 'upstream_error', 502, 2]] as const)(
+    'upstream %i → %s (503 gets one retry, provider message not forwarded) and every client call falls back', async (status, code, http, attempts) => {
+      const { impl, calls } = mockFetch([{ status, body: { error: { message: 'nope-from-provider' } } }, { status, body: { error: { message: 'nope-from-provider' } } }]);
       const r = await handleAiRequest(scenarioReq, env, client(impl));
       expect(r).toMatchObject({ status: http, body: { code } });
-      expect(calls).toHaveLength(1);
+      expect(calls).toHaveLength(attempts);
       expect(JSON.stringify(r.body)).not.toContain('nope-from-provider');
       const s = summary();
       const [a, b, c] = await Promise.all([generateScenario(scenarioInput, { fetchImpl: replay(r) }), proposeOpportunity(s, { fetchImpl: replay(r) }), explainOutcome(s, 'why', undefined, { fetchImpl: replay(r) })]);
