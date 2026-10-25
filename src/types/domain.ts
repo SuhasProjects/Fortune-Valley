@@ -568,7 +568,13 @@ export interface PersonalizedInput {
 export type AiRequest =
   | { kind: 'scenario'; input: PersonalizedInput }
   | { kind: 'opportunity'; summary: StateSummary }
-  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> };
+  | { kind: 'explain'; summary: StateSummary; question: string; monteCarlo?: Pick<MonteCarloResult, 'median' | 'p10' | 'p90' | 'probabilityNegativeNetWorth' | 'probabilityLiquidityShortfall' | 'observedNetWorth' | 'percentileOfObserved'> }
+  | { kind: 'coach'; summary: StateSummary; question: string; history: CoachTurn[]; openBuilding?: BuildingId | null; facts?: CoachFacts };
+
+/** Rates the StateSummary omits but the Coach quotes: savings APY, each debt's APR, the insurance plans held. */
+export interface CoachFacts { savingsApy: number; debts: Pick<Debt, 'name' | 'kind' | 'balance' | 'apr' | 'minimumPayment'>[]; insurance: Pick<InsurancePlan, 'line' | 'name' | 'monthlyPremium' | 'deductible' | 'coinsurance'>[] }
+/** One line of the Coach chat; `source` is set on coach turns only. */
+export interface CoachTurn { role: 'user' | 'coach'; text: string; source?: 'ai' | 'fallback' }
 
 /** The scenario the AI maps a prompt onto. Engine turns it into a GameConfig. */
 export interface ScenarioProposal {
@@ -604,7 +610,8 @@ export interface OpportunityProposal {
 export type AiResponse =
   | { kind: 'scenario'; source: 'ai' | 'fallback'; proposal: ScenarioProposal; warnings: string[] }
   | { kind: 'opportunity'; source: 'ai' | 'fallback'; proposal: OpportunityProposal | null; warnings: string[] }
-  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
+  | { kind: 'explain'; source: 'ai' | 'fallback'; text: string; warnings: string[] }
+  | { kind: 'coach'; source: 'ai' | 'fallback'; text: string; warnings: string[] };
 
 export interface AiErrorResponse {
   error: string;

@@ -3,8 +3,8 @@
  * Every call resolves — on any failure it returns the offline fallback with
  * source:'fallback' and a warning, so UI never needs a try/catch to stay usable.
  */
-import type { AiErrorResponse, AiRequest, AiResponse, MonteCarloResult, PersonalizedInput, StateSummary } from '@/types/domain';
-import { fallbackExplanation, fallbackOpportunity, fallbackScenario } from './aiFallback';
+import type { AiErrorResponse, AiRequest, AiResponse, BuildingId, CoachFacts, CoachTurn, MonteCarloResult, PersonalizedInput, StateSummary } from '@/types/domain';
+import { fallbackCoach, fallbackExplanation, fallbackOpportunity, fallbackScenario } from './aiFallback';
 
 export interface AiClientOptions {
   endpoint?: string;
@@ -26,6 +26,7 @@ const defaultOffline = (): boolean => {
 export type ScenarioResult = Extract<AiResponse, { kind: 'scenario' }>;
 export type OpportunityResult = Extract<AiResponse, { kind: 'opportunity' }>;
 export type ExplainResult = Extract<AiResponse, { kind: 'explain' }>;
+export type CoachResult = Extract<AiResponse, { kind: 'coach' }>;
 
 async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse | null> {
   if (opts.offline ?? defaultOffline()) return null;
@@ -62,6 +63,15 @@ export async function explainOutcome(summary: StateSummary, question: string, mo
   const r = await call({ kind: 'explain', summary, question, monteCarlo: mc }, opts);
   if (r && r.kind === 'explain') return r;
   return { kind: 'explain', source: 'fallback', text: fallbackExplanation(summary, mc, question), warnings: ['AI gateway unavailable; used template explanation.'] };
+}
+
+/** Coach chat: one ELI5 answer (≤ 70 words) to a short question; the last 4 turns give the model context. */
+export async function askCoach(summary: StateSummary, question: string, history: CoachTurn[] = [], openBuilding: BuildingId | null = null, facts?: CoachFacts, opts: AiClientOptions = {}): Promise<CoachResult> {
+  const q = question.trim().slice(0, 300);
+  const turns = history.slice(-4).map((t) => ({ role: t.role, text: t.text.slice(0, 600) }));
+  const r = await call({ kind: 'coach', summary, question: q, history: turns, openBuilding, facts }, opts);
+  if (r && r.kind === 'coach') return r;
+  return { kind: 'coach', source: 'fallback', text: fallbackCoach(summary, q, openBuilding, facts), warnings: ['AI gateway unavailable; used offline coach answer.'] };
 }
 
 export { scenarioToConfig, proposalToEvent } from './scenarioMapper';

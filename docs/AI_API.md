@@ -62,6 +62,35 @@ Framing (system prompt): the reveal draws straight lines from the start to the u
 
 Offline fallback (`fallbackExplanation(summary, monteCarlo?, question?)`): 4–7 sentences in the same shape, keyed on the question (`classifyQuestion` → savings | debt | investing | insurance | spending | advice | general): the three endings and the actual ending with its percentile plus the two probabilities, two or three lever sentences (principle + trade-off) built from the summary's cash/savings/debt/spending/policy/coverage, one what-if pointer, then the 7-word note. A topic question puts its levers first; "what should I do" lists the buffer, highest-rate-debt and steadier-mix levers with their trade-offs instead of refusing. No arithmetic beyond formatting.
 
+## 4. coach — in-town chatbot (StateSummary + question → one ELI5 answer)
+
+Request (`api/_lib/kinds/coach.ts`; the browser sends it from `askCoach` in `src/services/aiClient.ts`, called by `useGameStore.askCoach`):
+```json
+{ "kind": "coach", "summary": <StateSummary>, "question": "Pay the card or save?",
+  "history": [ { "role": "user", "text": "…" }, { "role": "coach", "text": "…" } ],
+  "openBuilding": "bank",
+  "facts": { "savingsApy": 0.04,
+             "debts": [ { "name": "Credit card", "kind": "credit_card", "balance": 2351, "apr": 0.24, "minimumPayment": 60 } ],
+             "insurance": [ { "line": "health", "name": "Basic Health (high deductible)", "monthlyPremium": 180, "deductible": 4000, "coinsurance": 0.3 } ] } }
+```
+`question` is 1–300 chars, `history` at most the last 4 turns (the client trims both), `openBuilding` the window the player has open (or null), `facts` the rates the StateSummary leaves out (each debt's APR, the savings APY, the plans held) so the answer can quote them instead of inventing numbers. Response (200): `{ "kind": "coach", "source": "ai", "text": "…", "warnings": [] }`; `text` is capped at 600 chars (≈ 70 words) by the response schema.
+
+Style (system prompt): explain like the player is twelve, cause → effect with the player's own numbers ("Your card charges 24%. Your savings earn 4%. Every $100 you throw at the card saves about $2 a month; the same $100 saved earns about 33 cents…"), answer in the first sentence, general rule plus its trade-off, never "you should" / "I recommend" / guarantees, no invented rates, no "the simulation can't decide" openers, no two-word fragments, ≤ 70 words, no personal identifiers. The gateway asks for up to 1,200 tokens because the provider's reasoning tokens count against the limit; the visible answer is still bounded by the schema.
+
+Offline fallback (`fallbackCoach` in `src/services/coachFallback.ts`, re-exported from `aiFallback.ts`): `classifyCoachQuestion` keyword-matches eight families (save vs debt, insurance, investing allocation, emergency fund, budget cut, job loss, loans, what-if) plus a general answer; the open building breaks ties. Each answer is built from the summary (cash, savings, months of cover, spending, policy, coverage) and `facts` when present (highest-rate debt, plan premium/deductible), in the same voice and under 70 words (`tests/engine/ai-coach.test.ts`).
+
+UI: the speech-bubble button bottom-right of the town (`src/game/coach/CoachPanel.tsx`) opens a 120×104 art px parchment chat (full-width sheet above the control bar on phones) with the Coach portrait, three suggested chips, an input and Ask. Escape closes and focus returns to the bubble; history lives in the store for the session only (cleared on new game, load and quit).
+
+Live check (2026-10-24, Luminal DeepSeek-V4.1-Flash, `npx vite --port 5243`, the month-6 fixture summary plus the facts above):
+
+| Question | Answer (source: ai) |
+|---|---|
+| What happens if I save more? | Saving more grows your cushion. $100 in savings earns about 33 cents a month at 4%. That same $100 paid on your 24% card would stop about $2 of interest a month. Your $3,047 covers about 2.2 months of essentials, so more saved means fewer scares but slower progress on the $2,351 card. |
+| Pay the card or save? | Your card charges 24% a year; savings earn 4%. Every $100 you put on the card saves about $2 a month, while $100 saved earns about 33 cents. Your cash and savings cover 2.2 months of essentials, a small cushion. More saved means fewer scares, but money sitting still earns little, so extra dollars toward the card cut the faster-growing cost. |
+| What does this insurance do? | Your health plan is a trade: $180 a month keeps it active, then you pay the first $4,000 of care each year yourself; after that you pay 30% and the insurer pays the rest. Your auto policy costs $70 a month and covers harm you cause to others, but you pay 100% of your own car's repairs. |
+
+Before the `facts` block existed the same questions came back vaguer ("Compare the card's APR with what Pine Bank pays on savings"); passing the rates and adding "lead with the numbers, not with instructions" to the prompt fixed that in one iteration.
+
 ## Smoke test with a real key (about 2 minutes)
 
 The whole path is unit-tested with a mocked upstream (`tests/engine/ai-gateway.test.ts`: success, fenced/invalid JSON, 401/403/429/500/503, timeout, rate limit, `.env` loading, dev-middleware = Vercel parity), but only a live call proves the key, endpoint and model name. Steps for someone holding the key:
@@ -87,6 +116,7 @@ The whole path is unit-tested with a mocked upstream (`tests/engine/ai-gateway.t
 
 | Date | Kind | HTTP | source | Notes |
 |---|---|---|---|---|
+| 2026-10-24 | coach | 200 | ai | Three questions above, 53–61 words each, numbers quoted from the request. |
 | 2026-10-24 | scenario / opportunity / explain | — | — | Not run: no key in the integration environment. Endpoint reachability checked without a key: `POST https://flash.luminal.cloud/v1/chat/completions` → 401 (path exists). Fill this row in after the steps above. |
 
 ## Error codes

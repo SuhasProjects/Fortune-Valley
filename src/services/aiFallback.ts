@@ -606,3 +606,6 @@ export function fallbackExplanation(s: StateSummary, mc?: Mc, question?: string)
   const asked = topic !== 'general' && (question ?? '').trim().length > 0;
   return [...(asked ? [...levers, ...happened] : [...happened, ...levers]), whatIfSentence(topic, s), DISCLAIMER].join(' ');
 }
+
+/** Coach chat fallback: keyword-matched ELI5 answers built from the summary's own numbers (src/services/coachFallback.ts). */
+export { fallbackCoach } from './coachFallback';

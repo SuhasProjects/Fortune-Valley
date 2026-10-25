@@ -54,6 +54,21 @@ test('keyboard reaches title, buildings, windows and the ending with visible foc
   await expect(page.getByRole('dialog', { name: 'Pine Bank' })).toHaveCount(0)
   expect(await page.evaluate(() => document.activeElement?.getAttribute('data-building'))).toBe('bank')
 
+  // The Coach bubble is reachable by keyboard: Enter opens the chat (focus lands in the question box), the three
+  // suggested chips are there, a chip gets an (offline) answer, Escape closes and focus returns to the bubble.
+  const coach = page.getByRole('button', { name: 'Ask the Coach' })
+  await coach.focus()
+  expect((await focused(page)).visible, 'coach bubble focus visible').toBe(true)
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('dialog', { name: 'Coach' })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Your question' })).toBeFocused()
+  await expect(page.getByRole('button', { name: 'Pay the card or save?' })).toBeVisible()
+  await page.getByRole('button', { name: 'Pay the card or save?' }).click()
+  await expect(page.getByRole('dialog', { name: 'Coach' }).getByText(/savings earn/)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Coach' })).toHaveCount(0)
+  await expect(coach).toBeFocused()
+
   // HUD and control bar are reachable and show focus.
   for (const name of [/Timeline/, /Next month/, /Finish & reveal/]) {
     await page.getByRole('button', { name }).focus()

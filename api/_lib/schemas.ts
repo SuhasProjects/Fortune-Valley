@@ -1,5 +1,6 @@
 /** Zod schemas for the AI gateway: request validation + model-output verification. */
 import { z } from 'zod';
+import * as coach from './kinds/coach.js';
 
 const archetype = z.enum(['college_student', 'entry_worker', 'professional', 'young_family']);
 const building = z.enum(['bank', 'office', 'home', 'hospital', 'market']);
@@ -59,6 +60,7 @@ export const AiRequestSchema = z.discriminatedUnion('kind', [
       observedNetWorth: z.number(), percentileOfObserved: z.number().optional(),
     }).optional(),
   }),
+  coach.requestSchema.extend({ summary: StateSummarySchema }),
 ]);
 export type AiRequestParsed = z.infer<typeof AiRequestSchema>;
 

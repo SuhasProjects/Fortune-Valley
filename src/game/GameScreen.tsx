@@ -16,6 +16,7 @@ import { GameStage } from './stage/GameStage'
 import { TownWorld } from './world/TownWorld'
 import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
 import { GuideWindow } from './title/GuideWindow'
+import { CoachPanel } from './coach/CoachPanel'
 import { useGameClock } from '../hooks/useGameClock'
 import { Board, Button, Modal, Tag } from '../ui'
 import './flow/flow.css'
@@ -57,7 +58,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   const finishStarted = useRef(false)
 
   const panel = store.openBuildingId
-  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || menu || confirm)
+  const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || store.coachOpen || menu || confirm)
   const clock = useGameClock({
     enabled: settings.autoAdvanceSeconds > 0,
     intervalMs: Math.max(1, settings.autoAdvanceSeconds) * 1_000,
@@ -101,6 +102,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
     else if (menu === 'pause') closePause()
     else if (store.historyOpen) store.setHistoryOpen(false)
     else if (store.timelineOpen) store.closeTimeline()
+    else if (store.coachOpen) store.setCoachOpen(false)
     else if (panel) store.closeBuilding()
     else if (!finishing) openPause()
   }, [closePause, confirm, finishing, menu, openPause, panel, store])
@@ -182,6 +184,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
       <ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/>
       <HudFooter/>
+      <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
       {monthBanner && <Board className="fv-month-banner" role="status" data-reduce-motion={settings.reduceMotion || undefined}>Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</Board>}
       {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
