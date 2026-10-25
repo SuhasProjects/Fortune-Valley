@@ -49,6 +49,8 @@ export function parseSave(raw: string | null | undefined): ParsedSave {
     const isObj = (v: unknown) => !!v && typeof v === 'object';
     if (![s.marketState, s.policy, s.household, s.employment, s.assumptions, s.insurance, s.taxProfile].every(isObj) || !isObj(s.marketState.index) || !isObj(s.marketState.lastMonthlyReturns)) return { ok: false, error: 'Saved state is missing required sections' };
     if (!Number.isInteger(s.durationMonths) || s.durationMonths < 1 || s.monthIndex > s.durationMonths) return { ok: false, error: 'Saved duration invalid' };
+    if (s.lifeEvents === undefined) s.lifeEvents = []; // saves from before life events existed
+    else if (!Array.isArray(s.lifeEvents) || !s.lifeEvents.every((e) => isNum(e.amountSigned) && Number.isInteger(e.monthIndex))) return { ok: false, error: 'Saved life events invalid' };
     const av = validateAssumptions(s.assumptions);
     if (!av.ok) return { ok: false, error: `Saved assumptions invalid: ${av.message}` };
     const alloc = validateAllocation(s.policy.targetAllocation);

@@ -2,7 +2,7 @@
  * Validated demo assumptions. All numbers are illustrative teaching defaults,
  * NOT calibrated real-world probabilities or forecasts. Owner: Agent 1.
  */
-import type { Allocation, Assumptions, InsurancePlan, Policy } from '@/types/domain';
+import type { Allocation, Assumptions, InsurancePlan, LifeEventAssumptions, Policy } from '@/types/domain';
 
 export const DISCLAIMER =
   'Fictional educational simulation. All returns, costs, tax rates and event probabilities are illustrative demo assumptions, not forecasts or advice.';
@@ -20,6 +20,9 @@ export const INSURANCE_PLANS: InsurancePlan[] = [
 ];
 
 export const DEFAULT_ALLOCATION: Allocation = { stock: 0.2, bond: 0.3, etf: 0.5 };
+
+/** Life events: about one every two months, $20–$300, signs paired so a run nets within ±$100. */
+export const DEFAULT_LIFE_EVENTS: LifeEventAssumptions = { monthlyIncidence: 0.45, amountMin: 20, amountMax: 300, netCap: 100 };
 
 export const DEFAULT_ASSUMPTIONS: Assumptions = {
   version: 1,
@@ -45,18 +48,19 @@ export const DEFAULT_ASSUMPTIONS: Assumptions = {
   },
   insurancePlans: INSURANCE_PLANS,
   shocks: [
-    { kind: 'medical', label: 'Medical emergency', monthlyIncidence: 0.025, costMedian: 2500, costSigma: 0.9, costMin: 150, costMax: 60000, coveredBy: 'health' },
-    { kind: 'auto', label: 'Car repair / accident', monthlyIncidence: 0.02, costMedian: 1200, costSigma: 0.8, costMin: 100, costMax: 20000, coveredBy: 'auto' },
-    { kind: 'home', label: 'Theft / apartment damage', monthlyIncidence: 0.008, costMedian: 1500, costSigma: 0.7, costMin: 100, costMax: 15000, coveredBy: 'renters' },
+    { kind: 'medical', label: 'Medical emergency', monthlyIncidence: 0.04, costMedian: 2500, costSigma: 0.9, costMin: 150, costMax: 60000, coveredBy: 'health' },
+    { kind: 'auto', label: 'Car repair / accident', monthlyIncidence: 0.035, costMedian: 1200, costSigma: 0.8, costMin: 100, costMax: 20000, coveredBy: 'auto' },
+    { kind: 'home', label: 'Theft / apartment damage', monthlyIncidence: 0.015, costMedian: 1500, costSigma: 0.7, costMin: 100, costMax: 15000, coveredBy: 'renters' },
   ],
   employment: {
-    jobLossMonthlyIncidence: 0.006,
+    jobLossMonthlyIncidence: 0.009,
     unemploymentDurationMonthsMin: 2,
     unemploymentDurationMonthsMax: 6,
     unemploymentReplacementRate: 0.45,
     unemploymentBenefitMonthlyCap: 2200,
     annualRaiseRate: 0.03,
   },
+  lifeEvents: DEFAULT_LIFE_EVENTS,
   overdraftApr: 0.24,
   liquidityShortfallThresholdMonths: 1,
   disclaimer: DISCLAIMER,

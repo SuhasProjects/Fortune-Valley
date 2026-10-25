@@ -2,7 +2,8 @@
  * Type A shocks (engine-owned randomness) and whitelisted effect application.
  * Insurance changes payout, never incidence. Owner: Agent 1.
  */
-import type { EventEffect, GameEvent, GameState, InsurancePlan, RealizedShock, ShockAssumption } from '@/types/domain';
+import type { EventEffect, GameEvent, GameState, InsurancePlan, LifeEventAssumptions, RealizedLifeEvent, RealizedShock, ShockAssumption } from '@/types/domain';
+import { DEFAULT_LIFE_EVENTS } from '@/config/defaults';
 import type { Rng } from './rng';
 import { coverShortfall, makeId, post, round2 } from './accounting';
 import { validateEffect } from './validation';
@@ -83,6 +84,46 @@ export function rollShocks(s: GameState, rng: Rng, lean: boolean): GameEvent[] {
     });
   }
   return events;
+}
+
+export function lifeEventAssumptions(s: Pick<GameState, 'assumptions'>): LifeEventAssumptions {
+  return s.assumptions.lifeEvents ?? DEFAULT_LIFE_EVENTS;
+}
+
+/** Signed running total of realized life events (gifts − costs). */
+export function lifeEventNet(s: Pick<GameState, 'lifeEvents'>): number {
+  return round2((s.lifeEvents ?? []).reduce((acc, e) => acc + e.amountSigned, 0));
+}
+
+/**
+ * Life event roll on the dedicated `life` stream: a small unavoidable cost or a small gift.
+ * Three draws are consumed every month (incidence, amount, sign) so streams stay aligned.
+ * The sign is paired with the running net: whenever a draw would push |gifts − costs| past
+ * `netCap` the sign flips, and if both signs would, the amount is trimmed so the net lands
+ * exactly on the cap. Expected net ≈ $0; any single run stays within ±netCap. Not insured; a
+ * cost that overdraws cash uses the normal shortfall order. Returns the realized event or null.
+ */
+export function rollLifeEvent(s: GameState, rng: Rng, lean: boolean): RealizedLifeEvent | null {
+  const a = lifeEventAssumptions(s);
+  const u = rng.next();
+  const v = rng.next();
+  const w = rng.next();
+  if (u >= a.monthlyIncidence) return null;
+  let amount = Math.round(a.amountMin + v * (a.amountMax - a.amountMin));
+  const net = lifeEventNet(s);
+  let sign = w < 0.5 ? -1 : 1;
+  if (Math.abs(net + sign * amount) > a.netCap) sign = -sign;
+  if (Math.abs(net + sign * amount) > a.netCap) {
+    sign = net >= 0 ? -1 : 1;
+    amount = Math.max(1, Math.round(a.netCap + Math.abs(net)));
+  }
+  const amountSigned = round2(sign * amount);
+  post(s, 'cash', 'life_event', amountSigned, amountSigned > 0 ? 'Life event: small gift' : 'Life event: small cost', lean);
+  if (amountSigned < 0) coverShortfall(s, 'a small unplanned cost', lean);
+  if (!s.lifeEvents) s.lifeEvents = [];
+  const ev: RealizedLifeEvent = { monthIndex: s.monthIndex, amountSigned, eventId: makeId('EVL', s, s.lifeEvents.length) };
+  s.lifeEvents.push(ev);
+  return ev;
 }
 
 /** Job-loss roll on the employment stream. Returns true if a job loss started this month. */

@@ -179,7 +179,7 @@ Invariant: `netWorth = cash + savings + stock + bond + etf − Σ debts`; ledger
 
 ### Randomness
 
-`mulberry32` seeded by `hash(seed, monthIndex, stream)` for streams `market | shocks | employment`. Same seed ⇒ identical run. Changing insurance, allocation or budget can never change which shocks occur or market returns — only money flows. Behavior can change risk only via explicitly modeled exposure (none in MVP).
+`mulberry32` seeded by `hash(seed, monthIndex, stream)` for streams `market | shocks | employment | life`. Same seed ⇒ identical run. The `life` stream drives life events (small uninsured costs and gifts, $20–300, about one every two months) whose signs are paired so a run nets within ±$100; it is separate so adding them never re-aligned the shock or market draws. Changing insurance, allocation or budget can never change which shocks occur or market returns — only money flows. Behavior can change risk only via explicitly modeled exposure (none in MVP).
 
 ### Actions & events
 

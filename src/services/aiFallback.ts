@@ -650,6 +650,9 @@ const shockClause = (l: Line): string => {
 export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap']): string {
   const decisions = r.timeline.filter((l) => l.event.startsWith('Set ') || l.event.startsWith('Chose '));
   const shocks = r.timeline.filter((l) => /^(Job loss|Medical bill|Car repair|Home repair|Cash ran short)/.test(l.event));
+  const life = r.timeline.filter((l) => /^Small (gift|unplanned cost)/.test(l.event)).sort((a, b) => Math.abs(b.amount ?? 0) - Math.abs(a.amount ?? 0))[0];
+  // Folded into the second sentence so the recap stays three sentences (and the recap can mention a gift or a fee).
+  const lifeTail = life ? `; ${life.event.startsWith('Small gift') ? `a ${fmtUsd(life.amount ?? 0)} gift came in` : `an unplanned ${fmtUsd(Math.abs(life.amount ?? 0))} cost went out`}` : '';
   const first = decisions[0];
   const one = first
     ? `The run opened at ${fmtUsd(r.startNetWorth)}, and in ${monthWords(first.label)} the player ${shortDecision(first.event)}.`
@@ -657,8 +660,8 @@ export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap'])
   const named = shocks.slice(0, 2).map(shockClause);
   const rest = shocks.length - named.length;
   const two = shocks.length === 0
-    ? `No shock landed in ${r.months} months; pay came in and bills went out on schedule.`
-    : `${named.length === 2 ? `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}, and ${named[1]}` : `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}`}${rest > 0 ? `; ${rest === 1 ? 'one more hard month' : `${rest} more hard months`} followed` : ''}.`;
+    ? `No shock landed in ${r.months} months; pay came in and bills went out on schedule${lifeTail}.`
+    : `${named.length === 2 ? `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}, and ${named[1]}` : `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}`}${rest > 0 ? `; ${rest === 1 ? 'one more hard month' : `${rest} more hard months`} followed` : ''}${lifeTail}.`;
   const diff = Math.round(r.endNetWorth - r.startNetWorth);
   const three = `After ${r.months} months the run ended at ${fmtUsd(r.endNetWorth)}, ${diff === 0 ? 'level with' : `${fmtUsd(Math.abs(diff))} ${diff > 0 ? 'above' : 'below'}`} the start.`;
   return `${one} ${two} ${three}`;

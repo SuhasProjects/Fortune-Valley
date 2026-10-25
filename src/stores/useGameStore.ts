@@ -6,7 +6,7 @@ import { create } from 'zustand';
 import { advanceMonth, applyAction, compareWithBaseline, createGame, defaultStorage, hasCar, monthLabel, parseSave, runMonteCarlo, netWorthOf, serializeSave, shouldRequestOpportunity, summarizeForAi, SAVE_STORAGE_KEY, type KeyValueStorage } from '@/engine';
 import { describeShock, explainOutcome, generateScenario, proposeOpportunity, proposalToEvent, scenarioToConfig } from '@/services/aiClient';
 
-/** One flavour request per shock notification, keyed by scenario + notification id; survives store resets within a session. */
+/** One flavour request per shock or life-event notification, keyed by scenario + notification id; survives store resets within a session. */
 const flavourRequested = new Set<string>();
 import type { ActionResult, BuildingId, GameAction, GameConfig, GameState, MonteCarloResult, PersonalizedInput, PolicyLogEntry } from '@/types/domain';
 import { INSURANCE_PLANS } from '@/config/defaults';
@@ -164,7 +164,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const key = `${game.scenarioId}:${notificationId}`;
     if (flavourRequested.has(key)) return;
     flavourRequested.add(key);
-    const input = { kind: n.shockKind, amount: Math.max(0, -(n.amountSigned ?? 0)), monthLabel: monthLabel(game.startMonth, n.monthIndex), archetype: config.archetype, housingKind: game.household.housingKind, hasCar: hasCar(game), employment: game.employment.status };
+    const input = { kind: n.shockKind, amount: n.shockKind === 'life' ? (n.amountSigned ?? 0) : Math.max(0, -(n.amountSigned ?? 0)), monthLabel: monthLabel(game.startMonth, n.monthIndex), archetype: config.archetype, housingKind: game.household.housingKind, hasCar: hasCar(game), employment: game.employment.status };
     try {
       const r = await describeShock(input, notificationId);
       const current = get();

@@ -1,7 +1,8 @@
 /**
  * Condense a finished (or running) game into ≤ 25 timeline lines for the `recap` AI kind and its
  * offline fallback: the player's policy changes, every realized shock, and the engine's notable
- * notifications (back to work, debt paid off, cash ran short). Pure; no engine imports beyond labels.
+ * notifications (back to work, debt paid off, cash ran short), and the two largest life events (a gift or a fee).
+ * Pure; no engine imports beyond labels.
  */
 import type { AiRequest, GameAction, GameState, PolicyLogEntry } from '@/types/domain';
 import { monthLabel, netWorthOf } from '@/engine/accounting';
@@ -31,9 +32,11 @@ export function describeLogEntry(entry: PolicyLogEntry): { event: string; amount
   }
 }
 
-const SHOCK_NAMES = { medical: 'Medical bill', auto: 'Car repair', home: 'Home repair', job_loss: 'Job loss' } as const;
+const SHOCK_NAMES = { medical: 'Medical bill', auto: 'Car repair', home: 'Home repair', job_loss: 'Job loss', life: 'Life event' } as const;
+/** How many life events the recap may mention (the largest by amount). */
+export const MAX_RECAP_LIFE_EVENTS = 2;
 
-/** Build the recap input. Priority when trimming to 25 lines: shocks, then decisions, then notifications. */
+/** Build the recap input. Priority when trimming to 25 lines: shocks, then decisions, then notifications, then the two largest life events. */
 export function summarizeTimeline(state: GameState): RecapInput {
   const label = (m: number) => monthLabel(state.startMonth, m);
   const clip = (t: string) => t.slice(0, 160);
@@ -43,7 +46,9 @@ export function summarizeTimeline(state: GameState): RecapInput {
   const decisions: TimelineLine[] = state.policyLog.flatMap((entry) => { const d = describeLogEntry(entry); return d ? [{ month: entry.monthIndex, label: label(entry.monthIndex), event: clip(d.event), ...(d.amount !== undefined ? { amount: Math.round(d.amount) } : {}) }] : []; });
   const notable = /^(Back to work|Paid off|Cash ran short|Emergency fund|Annual raise)/;
   const notes: TimelineLine[] = state.notifications.filter((n) => notable.test(n.summary)).map((n) => ({ month: n.monthIndex, label: label(n.monthIndex), event: clip(n.summary.replace(/!$/, '')), ...(n.amountSigned !== undefined ? { amount: Math.round(n.amountSigned) } : {}) }));
-  const picked = [...shocks, ...decisions, ...notes].slice(0, MAX_RECAP_LINES).sort((a, b) => a.month - b.month);
+  const life: TimelineLine[] = [...(state.lifeEvents ?? [])].sort((a, b) => Math.abs(b.amountSigned) - Math.abs(a.amountSigned)).slice(0, MAX_RECAP_LIFE_EVENTS)
+    .map((e) => ({ month: e.monthIndex, label: label(e.monthIndex), event: e.amountSigned > 0 ? `Small gift of ${usd(e.amountSigned)} received` : `Small unplanned cost of ${usd(-e.amountSigned)} paid`, amount: Math.round(e.amountSigned) }));
+  const picked = [...shocks, ...decisions, ...notes, ...life].slice(0, MAX_RECAP_LINES).sort((a, b) => a.month - b.month);
   const history = state.netWorthHistory;
   return { months: state.monthIndex, startNetWorth: Math.round(history[0] ?? netWorthOf(state)), endNetWorth: Math.round(history[state.monthIndex] ?? netWorthOf(state)), timeline: picked };
 }

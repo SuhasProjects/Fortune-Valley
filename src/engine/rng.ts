@@ -63,7 +63,7 @@ export function makeRng(seed: number): Rng {
   };
 }
 
-export type StreamName = 'market' | 'shocks' | 'employment' | 'events';
+export type StreamName = 'market' | 'shocks' | 'employment' | 'events' | 'life';
 
 /** Deterministic sub-stream for a given game seed, month and purpose. */
 export function monthRng(seed: number, monthIndex: number, stream: StreamName): Rng {

@@ -40,7 +40,8 @@ export type HousingKind = 'rent' | 'dorm' | 'family' | 'own';
 /** Where money is drawn from when cash is insufficient (in order). */
 export type FundingSource = 'savings' | 'investments' | 'borrow';
 
-export type ShockKind = 'medical' | 'auto' | 'home' | 'job_loss';
+/** `life` is the small unavoidable cost / small gift family (life events); it is never insured. */
+export type ShockKind = 'medical' | 'auto' | 'home' | 'job_loss' | 'life';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Assumptions (demo, configurable, illustrative — never real-world forecasts)
@@ -84,7 +85,7 @@ export interface InsurancePlan {
 }
 
 export interface ShockAssumption {
-  kind: Exclude<ShockKind, 'job_loss'>;
+  kind: Exclude<ShockKind, 'job_loss' | 'life'>;
   /** Probability the shock occurs in a given month (independent across months). */
   monthlyIncidence: number;
   /** Lognormal cost parameters: median cost and dispersion sigma (log space). */
@@ -108,6 +109,19 @@ export interface EmploymentAssumptions {
   annualRaiseRate: number;
 }
 
+/**
+ * Life events: small costs and small gifts drawn on their own RNG stream. Signs are paired so the
+ * cumulative net over a run stays within ±netCap (expected net ≈ $0); flavour only, not economics.
+ */
+export interface LifeEventAssumptions {
+  /** Probability of one life event in a given month. */
+  monthlyIncidence: number;
+  amountMin: number;
+  amountMax: number;
+  /** Running |gifts − costs| never exceeds this; amounts are trimmed to keep it so. */
+  netCap: number;
+}
+
 export interface Assumptions {
   version: 1;
   assets: Record<AssetClass, AssetAssumption>;
@@ -118,6 +132,8 @@ export interface Assumptions {
   insurancePlans: InsurancePlan[];
   shocks: ShockAssumption[];
   employment: EmploymentAssumptions;
+  /** Small unavoidable costs and small gifts; absent in older saves → engine uses DEFAULT_LIFE_EVENTS. */
+  lifeEvents?: LifeEventAssumptions;
   /** APR charged on the overdraft debt created when cash would go negative. */
   overdraftApr: number;
   /** Months of essential spending the engine treats as the "liquidity shortfall" threshold (metric only). */
@@ -206,6 +222,7 @@ export type LedgerCategory =
   | 'savings_interest'
   | 'investment_return'
   | 'shock_cost'
+  | 'life_event'
   | 'insurance_claim'
   | 'emergency_funding'
   | 'overdraft'
@@ -234,7 +251,7 @@ export interface GameNotification {
   /** Optional headline amount for the toast (display only; ledger is the source of truth). */
   amountSigned?: number;
   read: boolean;
-  /** Set on shock notices so the UI can ask for a news-wire scene (AI kind `flavour`). */
+  /** Set on shock and life-event notices so the UI can ask for a news-wire scene (AI kind `flavour`); `life` uses the signed amount. */
   shockKind?: ShockKind;
   /** Type A event id, so the matching timeline entry can carry the same scene. */
   eventId?: string;
@@ -247,6 +264,7 @@ export interface ShockFlavour { headline: string; scene: string; source?: 'ai' |
 /** PII-free input for the `flavour` kind. */
 export interface ShockFlavourInput {
   kind: ShockKind;
+  /** Gross cost (≥ 0) for insured shocks; for `life` the signed amount (gift > 0, cost < 0). */
   amount: number;
   monthLabel: string;
   archetype?: ArchetypeId;
@@ -501,7 +519,11 @@ export interface GameState {
   shortfallMonths: number[];
   /** Realized Type A shocks, for reproducibility checks. */
   realizedShocks: { monthIndex: number; shock: RealizedShock }[];
+  /** Realized life events (signed: gift > 0, cost < 0); kept in Monte Carlo paths too so the net cap can be enforced. */
+  lifeEvents: RealizedLifeEvent[];
 }
+
+export interface RealizedLifeEvent { monthIndex: number; amountSigned: number; eventId: string }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Monte Carlo

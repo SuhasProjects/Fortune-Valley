@@ -10,7 +10,8 @@
  *                   cash above the policy's minCashBuffer — never creates money
  *  5. Returns       savings interest; lognormal monthly asset returns, correlated
  *  6. Shocks        Type A incidence/severity on the shocks stream; claims settled;
- *                   out-of-pocket funded by the same funding order; job-loss roll
+ *                   out-of-pocket funded by the same funding order; job-loss roll;
+ *                   one life event (small cost or gift, ±$20–300, nets ≈ $0) on the life stream
  *  7. Alerts        notifications, timeline, event expiry, checkpoint, monthIndex++
  *
  * Deterministic given (seed, monthIndex). Never mutates the input unless opts.inPlace.
@@ -18,7 +19,7 @@
 import type { GameEvent, GameState, LedgerCategory, ShockKind } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
 import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
-import { activePlan, rollEmployment, rollShocks } from './events';
+import { activePlan, rollEmployment, rollLifeEvent, rollShocks } from './events';
 import { monthRng, type Rng } from './rng';
 
 export interface AdvanceOptions {
@@ -27,7 +28,7 @@ export interface AdvanceOptions {
   /** Mutate the given state instead of cloning (caller owns it). */
   inPlace?: boolean;
   /** Override RNG streams (tests). */
-  rng?: { market: Rng; shocks: Rng; employment: Rng };
+  rng?: { market: Rng; shocks: Rng; employment: Rng; life?: Rng };
 }
 
 /** Illustrative annual withholding: standard deduction + progressive brackets + flat payroll. */
@@ -53,6 +54,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   const lean = opts.lean === true;
   const m = s.monthIndex;
   const rng = opts.rng ?? { market: monthRng(s.seed, m, 'market'), shocks: monthRng(s.seed, m, 'shocks'), employment: monthRng(s.seed, m, 'employment') };
+  const lifeRng = rng.life ?? monthRng(s.seed, m, 'life');
   const notes: { kind: 'info' | 'positive' | 'negative' | 'decision'; summary: string; details?: string; building?: GameEvent['buildingTarget']; amountSigned?: number; shockKind?: ShockKind; eventId?: string }[] = [];
   const timeline: { type: 'shock' | 'milestone'; description: string; eventId?: string }[] = [];
   const nwBefore = netWorthOf(s);
@@ -198,6 +200,14 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     s.realizedShocks.push({ monthIndex: m, shock: ev.shock! });
     notes.push({ kind: 'negative', summary: 'You lost your job', details: ev.body, building: 'office', shockKind: 'job_loss', eventId: ev.id });
     timeline.push({ type: 'shock', description: `Job loss; ${s.employment.monthsUnemployedRemaining} months of reduced income`, eventId: ev.id });
+  }
+
+  const life = rollLifeEvent(s, lifeRng, lean);
+  if (life) {
+    const gift = life.amountSigned > 0;
+    const abs = Math.abs(life.amountSigned).toLocaleString();
+    notes.push({ kind: gift ? 'positive' : 'negative', summary: gift ? `A small windfall: $${abs}` : `A small unplanned cost: $${abs}`, details: gift ? `Someone sent you $${abs}; it went straight into your cash.` : `Life happened and $${abs} left your cash; no insurance covers this kind of thing.`, building: 'home', amountSigned: life.amountSigned, shockKind: 'life', eventId: life.eventId });
+    timeline.push({ type: 'shock', description: gift ? `Small gift: $${abs} received` : `Small cost: $${abs} paid`, eventId: life.eventId });
   }
 
   // ── 7. Alerts / checkpoint ──────────────────────────────────────────────────
