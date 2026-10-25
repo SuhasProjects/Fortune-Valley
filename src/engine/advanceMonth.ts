@@ -125,6 +125,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
 
   // ── 3. Debt: interest first, then payments ──────────────────────────────────
   let debtPaid = 0;
+  let overdraftRepaid: string | null = null;
   let extra = s.policy.extraDebtPaymentPerMonth;
   const byApr = [...s.debts].sort((a, b) => b.apr - a.apr);
   for (const d of byApr) {
@@ -142,8 +143,13 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     }
     if (d.balance <= 0.005) {
       d.balance = 0;
-      notes.push({ kind: 'positive', summary: `Paid off ${d.name}!`, building: 'bank' });
-      timeline.push({ type: 'milestone', description: `Paid off ${d.name}` });
+      // The overdraft is often repaid here and re-borrowed by coverShortfall minutes later in the same month, so its
+      // payoff is only celebrated at the end of the month if no overdraft balance remains (step 7).
+      if (d.kind === 'overdraft') overdraftRepaid = d.name;
+      else {
+        notes.push({ kind: 'positive', summary: `Paid off ${d.name}!`, building: 'bank' });
+        timeline.push({ type: 'milestone', description: `Paid off ${d.name}` });
+      }
     }
   }
   s.debts = s.debts.filter((d) => d.balance > 0 || d.kind !== 'overdraft');
@@ -247,6 +253,10 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   s.activeEvents = s.activeEvents.filter((e) => e.expiresAtMonth === undefined || e.expiresAtMonth >= m + 1);
   const nwAfter = netWorthOf(s);
   s.netWorthHistory.push(nwAfter);
+  if (overdraftRepaid && !s.debts.some((d) => d.kind === 'overdraft' && d.balance > 0)) {
+    notes.push({ kind: 'positive', summary: `Paid off ${overdraftRepaid}!`, building: 'bank' });
+    timeline.push({ type: 'milestone', description: `Paid off ${overdraftRepaid}` });
+  }
   if (nwBefore < 0 && nwAfter >= 0) timeline.push({ type: 'milestone', description: 'Net worth crossed above zero' });
   const essentials = h.housingMonthly + h.essentialsMonthly;
   const prevCovered = essentials > 0 ? (input.cash + input.savings) / essentials : Infinity;

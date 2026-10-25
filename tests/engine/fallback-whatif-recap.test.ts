@@ -78,6 +78,17 @@ describe('fallbackRecap', () => {
     expect(t).toContain('No shock landed in 12 months');
     expect(t).toContain('level with the start');
   });
+  it('pluralises the month count and words a month-0 finish sensibly', () => {
+    const one = fallbackRecap({ months: 1, startNetWorth: 1000, endNetWorth: 900, timeline: [] });
+    expect(one).toContain('No shock landed in 1 month;');
+    expect(one).toContain('After 1 month the run ended at $900, $100 below the start.');
+    expect(one).not.toMatch(/1 months/);
+    const zero = fallbackRecap({ months: 0, startNetWorth: 1000, endNetWorth: 1000, timeline: [] });
+    expect(zero).not.toMatch(/0 months|in 0 month|After 0/);
+    expect(zero).toContain('No shock landed before the first month ended;');
+    expect(zero).toContain('Before the first month ended the run ended at $1,000, level with the start.');
+    expect((zero.match(/\.(\s|$)/g) ?? []).length).toBe(3);
+  });
   it('mentions the mid-game state shocks when present', () => {
     const r = summarizeTimeline(fixtureState);
     const t = fallbackRecap(r);

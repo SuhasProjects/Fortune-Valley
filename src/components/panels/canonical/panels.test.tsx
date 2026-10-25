@@ -70,6 +70,25 @@ describe('reduced Bank decisions', () => {
     await waitFor(() => expect(input.value).toBe(''));
     expect(dispatch).toHaveBeenCalledWith({ type: 'make_extra_payment', debtId: state.debts[0]!.id, amount: 10 });
   });
+  it('never flashes "Enter a valid USD amount." when a successful payment clears the field', async () => {
+    const state = initial(); const dispatch = dispatchFor(state);
+    const view = render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
+    fireEvent.click(screen.getByText('Extra debt payment'));
+    const input = screen.getByLabelText('One-time debt payment (USD)') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: '10' } }); fireEvent.blur(input);
+    // Watch every DOM mutation from the click on: the error must not appear even for one committed render.
+    const added: string[] = [];
+    const record = (records: MutationRecord[]) => { for (const r of records) for (const node of [...r.addedNodes, ...(r.type === 'characterData' ? [r.target] : [])]) added.push(node.textContent ?? ''); };
+    const observer = new MutationObserver(record); observer.observe(view.container, { childList: true, subtree: true, characterData: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Pay once' }));
+    await waitFor(() => expect(input.value).toBe(''));
+    record(observer.takeRecords()); observer.disconnect();
+    expect(added.some(text => text.includes('Enter a valid USD amount.'))).toBe(false);
+    expect(view.container.textContent).not.toContain('Enter a valid USD amount.');
+    // Typing again still validates as before.
+    fireEvent.change(input, { target: { value: '-5' } });
+    expect(view.container.textContent).toMatch(/Enter \$0\.01 to/);
+  });
   it('disables payments for no cash and shows the engine rejection without mutating state', async () => {
     const state = initial(); state.cash = 0;
     const dispatch = vi.fn(() => ({ ok: false as const, code: 'invalid_amount' as const, message: 'Engine rejected this policy.', state }));

@@ -641,6 +641,7 @@ export function fallbackWhatIf(c: Extract<AiRequest, { kind: 'whatif' }>['compar
 // ── recap: three news-wire sentences from the condensed timeline ─────────────
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const monthWords = (label: string): string => { const [y, m] = label.split('-').map(Number); return y && m ? `${MONTHS[m - 1]} ${y}` : label; };
+const monthCount = (n: number): string => `${n} month${n === 1 ? '' : 's'}`;
 const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 /** "Set savings to $300 and …" → "set savings"; `Chose "Lease renewal: Stay"` → `took the offer "Lease renewal"`. */
 const shortDecision = (event: string): string => {
@@ -672,10 +673,10 @@ export function fallbackRecap(r: Extract<AiRequest, { kind: 'recap' }>['recap'])
   const named = shocks.slice(0, 2).map(shockClause);
   const rest = shocks.length - named.length;
   const two = shocks.length === 0
-    ? `No shock landed in ${r.months} months; pay came in and bills went out on schedule${lifeTail}.`
+    ? `No shock landed ${r.months === 0 ? 'before the first month ended' : `in ${monthCount(r.months)}`}; pay came in and bills went out on schedule${lifeTail}.`
     : `${named.length === 2 ? `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}, and ${named[1]}` : `${named[0]!.charAt(0).toUpperCase()}${named[0]!.slice(1)}`}${rest > 0 ? `; ${rest === 1 ? 'one more hard month' : `${rest} more hard months`} followed` : ''}${lifeTail}.`;
   const diff = Math.round(r.endNetWorth - r.startNetWorth);
-  const three = `After ${r.months} months the run ended at ${fmtUsd(r.endNetWorth)}, ${diff === 0 ? 'level with' : `${fmtUsd(Math.abs(diff))} ${diff > 0 ? 'above' : 'below'}`} the start.`;
+  const three = `${r.months === 0 ? 'Before the first month ended' : `After ${monthCount(r.months)}`} the run ended at ${fmtUsd(r.endNetWorth)}, ${diff === 0 ? 'level with' : `${fmtUsd(Math.abs(diff))} ${diff > 0 ? 'above' : 'below'}`} the start.`;
   return `${one} ${two} ${three}`;
 }
 /** Coach chat fallback: keyword-matched ELI5 answers built from the summary's own numbers (src/services/coachFallback.ts). */

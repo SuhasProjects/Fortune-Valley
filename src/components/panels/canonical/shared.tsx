@@ -50,7 +50,10 @@ export function MoneyInput({ label, raw, onChange, min = 0, max, step = .01, dis
   label: string; raw: string; onChange: (value: string) => void; min?: number; max: number; step?: number; disabled?: boolean;
 }) {
   const id = useId(); const [touched, setTouched] = useState(false);
-  useEffect(() => { if (!raw) setTouched(false); }, [raw]);
+  // A cleared field (after "Pay once" or a debt change) must never show "Enter a valid USD amount": the reset happens in
+  // the same render as the clear, not in an effect a paint later.
+  const [lastRaw, setLastRaw] = useState(raw);
+  if (raw !== lastRaw) { setLastRaw(raw); if (!raw) setTouched(false); }
   const error = amountError(raw, min, max, step);
   return <div className="ft-money-field"><Field label={label} prefix="$" id={id} aria-label={`${label} (USD)`} type="number" inputMode="decimal" value={raw} min={min} max={max} step={step} disabled={disabled} onChange={event => { onChange(event.target.value); setTouched(true); }} onBlur={() => setTouched(true)} error={touched ? error : undefined} /></div>;
 }
