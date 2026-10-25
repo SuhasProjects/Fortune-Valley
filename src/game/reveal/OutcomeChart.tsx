@@ -22,22 +22,32 @@ export function sharedYDomain(...charts: ChartLines[]): [number, number] {
 }
 
 const series = [
-  { key: 'p10', label: 'Unlucky (10th percentile)', color: 'var(--c-money-down)', order: 0 },
-  { key: 'median', label: 'Typical (median)', color: 'var(--c-outline)', order: 1 },
-  { key: 'p90', label: 'Lucky (90th percentile)', color: 'var(--c-money-up)', order: 2 },
-  { key: 'yourEvents', label: 'What actually happened', color: 'var(--c-path-edge-dark)', order: 3 },
+  { key: 'p10', label: 'Unlucky (10th)', color: 'var(--c-money-down)', order: 0 },
+  { key: 'median', label: 'Typical', color: 'var(--c-outline)', order: 1 },
+  { key: 'p90', label: 'Lucky (90th)', color: 'var(--c-money-up)', order: 2 },
+  { key: 'yourEvents', label: 'You', color: 'var(--c-path-edge-dark)', order: 3 },
 ] as const
 
 /** Tick labels are gains and losses against the start: -$2,000 / $0 / +$1,500. */
 const tickLabel = (delta: number) => (Math.round(delta) === 0 ? '$0' : usd(delta, true))
 
-export interface OutcomeChartProps { lines: ChartLines; yDomain: [number, number]; title: string; highlightLabel?: string }
+export interface OutcomeChartProps { lines: ChartLines; yDomain: [number, number]; title: string; highlightLabel?: string; hideTitle?: boolean }
 
 // viewBox geometry (SVG units). The plot box holds every line, marker and wedge; labels live in the column to its right,
 // or (compact, phones) in an HTML list under the chart so the plot can shrink to the screen without a sideways scroll.
 const W = 680, H = 326
 const plot = { left: 100, right: 340, top: 18, bottom: 268 }
 const labelX = plot.right + 22, labelGap = 56, stroke = 2.5
+/** End-label column: from `labelX` to the right edge, minus a small margin. Both label lines must fit inside it. */
+export const LABEL_FONT = 21, LABEL_COLUMN = W - labelX - 6
+/** Pixel-font average advance is about 0.6em; the estimate errs wide so a label that "fits" here never runs off the SVG. */
+export const estimateTextWidth = (text: string, fontSize = LABEL_FONT) => text.length * fontSize * 0.6
+/** Truncates `text` with an ellipsis so its estimated width is at most `maxWidth`. The full text stays in the <title>/aria-label. */
+export function fitLabel(text: string, maxWidth = LABEL_COLUMN, fontSize = LABEL_FONT): string {
+  if (estimateTextWidth(text, fontSize) <= maxWidth) return text
+  const chars = Math.max(1, Math.floor(maxWidth / (fontSize * 0.6)) - 1)
+  return `${text.slice(0, chars).trimEnd()}…`
+}
 const COMPACT = '(max-width: 639px)'
 
 function useCompact() {
@@ -52,7 +62,7 @@ function useCompact() {
   return compact
 }
 
-export function OutcomeChart({ lines, yDomain, title, highlightLabel }: OutcomeChartProps) {
+export function OutcomeChart({ lines, yDomain, title, highlightLabel, hideTitle }: OutcomeChartProps) {
   const id = useId()
   const compact = useCompact()
   const [active, setActive] = useState<string | null>(null)
@@ -72,7 +82,7 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel }: OutcomeC
   const describe = (line: typeof ends[number]) => `${line.label}: ${usd(line.value)} after ${lines.months} months`
   const width = compact ? plot.right + 48 : W
   return <figure className={`fv-outcome-chart ${compact ? 'fv-outcome-chart--compact' : ''}`} aria-labelledby={`${id}-title`}>
-    <figcaption id={`${id}-title`}>{title}</figcaption>
+    <figcaption id={`${id}-title`} className={hideTitle ? 'fv-sr-only' : undefined}>{title}</figcaption>
     <div className="fv-chart-scroll"><svg viewBox={`0 0 ${width} ${H}`} role="group" aria-label={`${title}: four ending net worth lines`} shapeRendering="geometricPrecision">
       <title>Straight lines from the starting net worth to each ending after {lines.months} months, shown as gain or loss against the start.</title>
       <defs><clipPath id={`${id}-clip`}><rect x={plot.left - 6} y={plot.top - 6} width={plot.right - plot.left + 12} height={plot.bottom - plot.top + 12}/></clipPath></defs>
@@ -98,19 +108,19 @@ export function OutcomeChart({ lines, yDomain, title, highlightLabel }: OutcomeC
         <g role="button" tabIndex={0} aria-label={describe(line)} onFocus={() => setActive(line.key)} onBlur={() => setActive(null)} onMouseEnter={() => setActive(line.key)} onMouseLeave={() => setActive(null)} onClick={() => toggle(line.key)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggle(line.key) } }}>
           <title>{describe(line)}</title>
           <rect x={labelX - 4} y={line.labelY - 18} width={W - labelX + 2} height="50" fill="var(--c-paper)" fillOpacity={active === line.key ? 1 : 0}/>
-          <text x={labelX} y={line.labelY} fill="var(--c-outline)" className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{line.label}</text>
-          <text x={labelX} y={line.labelY + 20} fill="var(--c-ink)">{usd(line.value)} ({tickLabel(line.value - lines.start)})</text>
+          <text x={labelX} y={line.labelY} fill="var(--c-outline)" className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{fitLabel(line.label)}</text>
+          <text x={labelX} y={line.labelY + 20} fill="var(--c-ink)">{fitLabel(`${usd(line.value)} (${tickLabel(line.value - lines.start)})`)}</text>
         </g>
       </g>)}
       <text className="fv-axis-x" x={plot.left} y={plot.bottom + 27} textAnchor="middle">Start ({usd(lines.start)})</text>
       <text className="fv-axis-x" x={plot.right} y={plot.bottom + 27} textAnchor="middle">Month {lines.months}</text>
-      <text className="fv-axis-title" x={(plot.left + plot.right) / 2} y={H - 5} textAnchor="middle">Months played</text>
-      <text className="fv-axis-title" transform={`translate(16 ${(plot.top + plot.bottom) / 2}) rotate(-90)`} textAnchor="middle">Gain or loss vs start</text>
+      <text className="fv-axis-title" x={(plot.left + plot.right) / 2} y={H - 5} textAnchor="middle">Months</text>
+      <text className="fv-axis-title" transform={`translate(16 ${(plot.top + plot.bottom) / 2}) rotate(-90)`} textAnchor="middle">vs start</text>
     </svg></div>
     {compact && <ul className="fv-chart-legend">{byOrder.map(line => <li key={line.key} className={active && active !== line.key ? 'fv-line-muted' : ''}>
       <button type="button" aria-label={describe(line)} aria-pressed={active === line.key} style={{ '--line-color': line.color } as CSSProperties} onFocus={() => setActive(line.key)} onBlur={() => setActive(null)} onClick={() => toggle(line.key)}>
         <span className="fv-chart-legend__swatch" aria-hidden="true"/><span className={line.key === 'yourEvents' ? 'fv-chart-your-label' : ''}>{line.label}</span><strong>{usd(line.value)} ({tickLabel(line.value - lines.start)})</strong>
       </button></li>)}</ul>}
-    <details className="fv-chart-table"><summary>Table: {title}</summary><table><caption>Starting net worth {usd(lines.start)} and ending net worth after {lines.months} months.</caption><thead><tr><th scope="col">Future</th><th scope="col">Ending net worth</th><th scope="col">Change from start</th></tr></thead><tbody>{byOrder.map(line => <tr key={line.key}><th scope="row">{line.label}</th><td>{usd(line.value)}</td><td>{tickLabel(line.value - lines.start)}</td></tr>)}</tbody></table></details>
+    <details className="fv-chart-table"><summary aria-label={`Table: ${title}`}>Table</summary><table><caption>Starting net worth {usd(lines.start)} and ending net worth after {lines.months} months.</caption><thead><tr><th scope="col">Future</th><th scope="col">Ending net worth</th><th scope="col">Change from start</th></tr></thead><tbody>{byOrder.map(line => <tr key={line.key}><th scope="row">{line.label}</th><td>{usd(line.value)}</td><td>{tickLabel(line.value - lines.start)}</td></tr>)}</tbody></table></details>
   </figure>
 }

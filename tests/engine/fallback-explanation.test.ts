@@ -17,7 +17,7 @@ const mc = {
   percentileOfObserved: fixtureMonteCarlo.percentileOfObserved,
 };
 const sentences = (text: string) => text.split(/(?<=[.!?])\s+(?=[A-Z"])/).filter((s) => s.trim().length > 0);
-const DISCLAIMER = 'All figures use the illustrative demo assumptions listed in the reveal; they are not forecasts or personal advice.';
+const DISCLAIMER = 'Demo figures are illustrative, not personal advice.';
 
 const QUESTIONS: Record<ExplainTopic, string[]> = {
   savings: ['How did my savings do?', 'Was my emergency fund big enough?', 'why did I run low on cash'],
@@ -38,9 +38,12 @@ describe('fallbackExplanation', () => {
     expect(classifyQuestion('What should I do about my debt?')).toBe('advice');
   });
 
-  it('explains the straight-line endings with the numbers it is given and ends with the disclaimer', () => {
+  it('explains the endings with the numbers it is given and ends with the short note', () => {
     const text = fallbackExplanation(finished(), mc, 'What do these results mean?');
-    expect(text).toContain('straight lines');
+    expect(text).toContain('1,000 replays');
+    expect(text.startsWith('Across 1,000 replays')).toBe(true);
+    expect(DISCLAIMER.split(/\s+/).length).toBeLessThanOrEqual(8);
+    expect(text).toContain('what-if panel');
     expect(text).toMatch(/unlucky \(10th percentile\)/i);
     expect(text).toMatch(/median ending net worth/i);
     expect(text).toMatch(/lucky \(90th percentile\)/i);
@@ -54,14 +57,18 @@ describe('fallbackExplanation', () => {
     expect(text.endsWith(DISCLAIMER)).toBe(true);
   });
 
-  it('produces 3–5 clean sentences for every question category, with and without Monte Carlo numbers', () => {
+  it('produces 4–7 clean sentences for every question category, with and without Monte Carlo numbers', () => {
     for (const qs of Object.values(QUESTIONS)) {
       for (const q of qs) {
         for (const [summary, m] of [[finished(), mc], [midGame(), undefined]] as const) {
           const text = fallbackExplanation(summary, m, q);
           const n = sentences(text).length;
-          expect(n, `${q}: ${text}`).toBeGreaterThanOrEqual(3);
-          expect(n, `${q}: ${text}`).toBeLessThanOrEqual(5);
+          expect(n, `${q}: ${text}`).toBeGreaterThanOrEqual(4);
+          expect(n, `${q}: ${text}`).toBeLessThanOrEqual(7);
+          // Answers never open by refusing; general levers always carry a trade-off and a what-if pointer.
+          expect(text).not.toMatch(/^(The|This) simulation can(not|'t)|^I can(not|'t)/);
+          expect(text).toMatch(/but|at the cost|trade-off|while/);
+          expect(text).toContain('what-if panel');
           expect(text).not.toMatch(/NaN|undefined|null|\$-|Infinity/);
           expect(text).not.toMatch(/\byou should\b|\bI recommend\b|\bguarantee/i);
           expect(text.length).toBeGreaterThan(200);
@@ -98,9 +105,18 @@ describe('fallbackExplanation', () => {
     expect(spending).toContain(`${fmtUsd(s.grossAnnualSalary)}/yr`);
 
     const advice = fallbackExplanation(s, mc, 'What should I do?');
-    expect(advice).toContain('cannot tell you what to do');
+    expect(advice.startsWith('The levers that usually matter most')).toBe(true);
+    expect(advice).not.toMatch(/cannot (tell|say|decide)/);
+    expect(advice).toContain('highest-rate debt first');
+    expect(advice).toContain('3–6 months');
     expect(advice).toContain('what-if panel');
-    expect(advice).toMatch(/you could explore/i);
+
+    // A follow-up question is answered directly with the general principle and its trade-off.
+    const volatile = fallbackExplanation(s, mc, 'what is the best way to be less volatile');
+    expect(volatile).not.toMatch(/^(The|This) simulation can(not|'t)/);
+    expect(volatile).toMatch(/higher bond share usually narrows the spread .* but lowers the typical one/);
+    expect(volatile).toContain(fmtUsd(mc.p90));
+    expect(volatile).toContain('what-if panel');
   });
 
   it('is deterministic and formats negative and missing percentile values cleanly', () => {
@@ -123,14 +139,16 @@ describe('fallbackExplanation', () => {
     const text = fallbackExplanation(s, undefined, 'Is my budget reasonable');
     expect(text).toContain(`As of ${s.monthLabel}`);
     expect(text).toContain(fmtUsd(s.netWorth));
-    expect(text).not.toContain('straight lines');
+    expect(text).not.toContain('1,000 replays');
     expect(text).toContain(`${fmtUsd(s.discretionaryMonthly)} on everything else`);
+    expect(text.endsWith(DISCLAIMER)).toBe(true);
   });
 
   it('is what the offline client returns, keyed on the player’s question', async () => {
     const r = await explainOutcome(finished(), 'What should I do?', fixtureMonteCarlo, { offline: true });
     expect(r.source).toBe('fallback');
-    expect(r.text).toContain('cannot tell you what to do');
+    expect(r.text).toContain('highest-rate debt first');
+    expect(r.text).not.toMatch(/cannot tell you what to do/);
     expect(r.text).toContain(fmtUsd(fixtureMonteCarlo.median));
   });
 

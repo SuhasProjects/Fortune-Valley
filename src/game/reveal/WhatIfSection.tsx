@@ -51,14 +51,14 @@ export function WhatIfSection({ payload, original }: { payload: FinishPayload; o
     <h2 id="fv-what-if-title">What if you’d chosen differently?</h2>
     {decisions.length === 0 ? <Inset><p className="fv-what-if-empty">You didn’t change any settings this time. Next story, visit a building and make a choice to compare.</p></Inset>
       : <>
-        <p className="fv-what-if-lead">Change one decision and the same 1,000 futures run again with the same luck, so any difference comes from that decision alone.</p>
+        <p className="fv-what-if-lead">Change one choice and the same 1,000 futures run again.</p>
         <div className="fv-what-if-fields">
           {groups.length > 1 ? <Dropdown label="Pick a decision" value={selection.decision} groups={groups} onChange={pickDecision}/>
             : <Dropdown label="Pick a decision" value={selection.decision} options={decisions.map(toOption)} onChange={pickDecision}/>}
           <Dropdown label="Instead…" value={selection.alternative} options={(selected?.alternatives ?? []).map(alternative => ({ value: alternative.id, label: alternative.label }))} onChange={value => setSelection(previous => ({ ...previous, alternative: value }))}/>
         </div>
         <div className="fv-comparison-charts"><OutcomeChart lines={result?.original ?? original} yDomain={domain} title="What you did"/>
-          <div aria-busy={pending} className="fv-changed-chart">{result ? <OutcomeChart lines={result.changed} yDomain={domain} title={`If you had: ${result.alternativeLabel}`} highlightLabel="Your exact events, with this change"/> : error ? <p role="alert">{error}</p> : <p role="status"><img className="fv-computing-coin" src="/art/title/favicon.png" alt=""/>Re-running 1,000 futures…</p>}</div></div>
+          <div aria-busy={pending} className="fv-changed-chart">{result ? <OutcomeChart lines={result.changed} yDomain={domain} title={`If you had: ${result.alternativeLabel}`} highlightLabel="You, this choice"/> : error ? <p role="alert">{error}</p> : <p role="status"><img className="fv-computing-coin" src="/art/title/favicon.png" alt=""/>Re-running 1,000 futures…</p>}</div></div>
         {result && <ChangeStrip result={result}/>}
       </>}
   </section>

@@ -26,9 +26,8 @@ export function RevealScreen({ payload, onPlayAgain }: { payload: FinishPayload;
     <div className="fv-reveal-ui" data-reduce-motion={readReduceMotion()}>
       <Board className="fv-reveal-ledger" padding="lg">
         <header className="fv-reveal-heading"><Plaque>Your Next Chapter</Plaque>
-          <h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1>
-          <p>8 in 10 of your {paths} futures ended between <strong>{usd(mc.p10)}</strong> and <strong>{usd(mc.p90)}</strong>.</p></header>
-        <section className="fv-reveal-futures" aria-label="Your simulated futures"><h2>Same strategy, {paths} futures</h2><OutcomeChart lines={lines} yDomain={sharedYDomain(lines)} title={`Your ${paths} futures`}/></section>
+          <h1 ref={heading} tabIndex={-1}>You finished month {payload.finalState.monthIndex} with <strong>{usd(mc.observedNetWorth)}</strong></h1></header>
+        <section className="fv-reveal-futures" aria-label="Your simulated futures"><h2>Same strategy, {paths} futures</h2><OutcomeChart lines={lines} yDomain={sharedYDomain(lines)} title={`Your ${paths} futures`} hideTitle/></section>
         <WhatIfSection payload={payload} original={lines}/>
         <section className="fv-reveal-explanation" aria-labelledby="fv-why"><h2 id="fv-why">Why?</h2>
           <div aria-live="polite" className="fv-reveal-answer">{payload.explanation ? <><Tag tone={payload.explanation.source === 'ai' ? 'gold' : 'dark'}>{payload.explanation.source === 'ai' ? 'AI explanation' : 'Offline explanation (template)'}</Tag><p>{payload.explanation.text}</p></> : <p>Preparing your explanation…</p>}</div>

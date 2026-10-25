@@ -31,7 +31,8 @@
 .fv-chart-legend button[aria-pressed=true], .fv-chart-legend button:focus-visible { border-color:var(--c-gold); outline:none; background:var(--c-paper); }
 .fv-chart-legend__swatch { grid-row:span 2; width:calc(5 * var(--px)); height:var(--px); background:var(--line-color); }
 .fv-chart-legend strong { font-weight:400; color:var(--c-ink); }
-.fv-chart-table { font-size:calc(4.5 * var(--px)); margin-top:calc(2 * var(--px)); } .fv-chart-table summary { cursor:pointer; }
+.fv-sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+.fv-chart-table { font-size:calc(4.5 * var(--px)); margin-top:calc(2 * var(--px)); } .fv-chart-table summary { cursor:pointer; display:inline-block; color:var(--c-wood-dark); text-decoration:underline; }
 .fv-chart-table table { width:100%; text-align:left; border-collapse:collapse; } .fv-chart-table th, .fv-chart-table td { padding:var(--px) calc(2 * var(--px)) var(--px) 0; }
 .fv-chart-table caption { text-align:left; padding:calc(2 * var(--px)) 0; }
 .fv-reveal-futures .fv-outcome-chart { max-width:calc(215 * var(--px)); }
