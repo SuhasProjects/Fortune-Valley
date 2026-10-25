@@ -31,16 +31,16 @@
 }
 .fv-building:hover .fv-town-plaque > span, .fv-building:focus-visible .fv-town-plaque > span { color: var(--c-ink); }
 
-/* "Decision waiting" badge above the roof, bobbing two steps. */
-.fv-badge { position: absolute; right: calc(2 * var(--px)); top: calc(-8 * var(--px)); animation: fv-bob 600ms steps(1) infinite alternate; }
+/* "Decision waiting" badge centred above the roof peak (placed by TownWorld, above all props), bobbing two steps. */
+.fv-badge { position: absolute; pointer-events: none; animation: fv-bob 600ms steps(1) infinite alternate; }
 @keyframes fv-bob { from { transform: translateY(0); } to { transform: translateY(calc(-2 * var(--px))); } }
 
 /* Town Office clock: the hour hand overlay sits on the gable face, above the base and hover frames. */
 .fv-clock { position: absolute; pointer-events: none; }
 
-/* Villagers: the outer span steps along its waypoints (keyframes generated per villager in TownWorld),
-   the inner span mirrors the sprite while it heads left, and the sprite itself steps its walk frames. */
-.fv-villager { position: absolute; left: 0; top: 0; pointer-events: none; animation: var(--walk) var(--walk-dur) linear var(--walk-delay) infinite; }
+/* Villagers: the outer span steps along its route and vanishes at the end of it (keyframes generated per villager
+   in TownWorld), the inner span mirrors the sprite while it heads left, and the sprite itself steps its walk frames. */
+.fv-villager { position: absolute; left: 0; top: 0; pointer-events: none; animation: var(--walk) var(--walk-dur) linear var(--walk-delay) infinite, var(--show) var(--walk-dur) linear var(--walk-delay) infinite; }
 .fv-villager__flip { display: block; animation: var(--flip) var(--walk-dur) step-end var(--walk-delay) infinite; }
 @media (prefers-reduced-motion: reduce) { .fv-villager, .fv-villager__flip { animation: none; } }
 

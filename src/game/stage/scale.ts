@@ -7,6 +7,10 @@ export const MAP_H = 288;
 export const CORE_OFFSET_X = (MAP_W - CORE_W) / 2;
 export const CORE_OFFSET_Y = (MAP_H - CORE_H) / 2;
 export const MIN_SCALE = 1;
+/** Height of the HUD bar laid over the top of the viewport (art px); the world keeps its buildings below it. */
+export const HUD_H = 22;
+/** Distance from the viewport bottom to the control bar's top edge (art px); matches --bar-top in GameScreen.css. */
+export const BAR_TOP = 25;
 
 export interface StageScale { px: number; viewW: number; viewH: number }
 

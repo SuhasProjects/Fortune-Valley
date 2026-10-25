@@ -1529,6 +1529,54 @@ const sprites = {
     ],
     "speed": 120
   },
+  "world/ring/villager-c": {
+    "src": "/art/world/ring/villager-c.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "anchor": [
+      6,
+      14
+    ],
+    "speed": 120
+  },
+  "world/ring/villager-d": {
+    "src": "/art/world/ring/villager-d.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "anchor": [
+      6,
+      14
+    ],
+    "speed": 120
+  },
+  "world/ring/villager-e": {
+    "src": "/art/world/ring/villager-e.png",
+    "w": 12,
+    "h": 16,
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ],
+    "anchor": [
+      6,
+      14
+    ],
+    "speed": 120
+  },
   "world/ground": {
     "src": "/art/world/ground.png",
     "w": 480,

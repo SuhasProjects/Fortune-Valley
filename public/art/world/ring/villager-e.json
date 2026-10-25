@@ -1,0 +1,16 @@
+{
+  "src": "/art/world/ring/villager-e.png",
+  "w": 12,
+  "h": 16,
+  "frames": [
+    "0",
+    "1",
+    "2",
+    "3"
+  ],
+  "anchor": [
+    6,
+    14
+  ],
+  "speed": 120
+}
