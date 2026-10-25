@@ -49,7 +49,7 @@ export const CORE_PROPS: PlacedSprite[] = [
   { sprite: 'world/props/flowers-mixed', x: 336, y: 205, animate: true },
   { sprite: 'world/props/flowers-white', x: 110, y: 212, animate: true },
   ...CORE_CORNER_TREES,
-  lily(106, 173), lily(122, 190), lily(96, 205), lily(112, 228),
+  lily(90, 175), lily(110, 183), lily(126, 197), lily(140, 219),
 ]
 
 /** Scenery in the outer ring: never inside the core, never on a path or building (enforced by TownWorld.test). */
@@ -67,15 +67,15 @@ export const RING_PROPS: PlacedSprite[] = [
   { sprite: 'world/ring/scarecrow', x: 34, y: 84 },
   { sprite: 'world/props/flowers-mixed', x: 66, y: 72, animate: true },
   hay(64, 84), hay(68, 94), crate(66, 106), crate(72, 112), { sprite: 'world/extra/signpost', x: 66, y: 122 },
-  lily(40, 160), lily(70, 182), lily(20, 190),
+  lily(10, 163), lily(36, 167), lily(62, 171),
   pine(60, 204), pine(40, 222), tree(8, 232), rock(68, 236), pine(64, 250),
   // Right: a well, pines, and the pond (water x 418–460, y 141–161) with rocks and a bench.
   { sprite: 'world/extra/well', x: 404, y: 62 }, tree(440, 60), pine(462, 70), pine(404, 86), tree(452, 100),
   { sprite: 'world/props/bench', x: 426, y: 166 }, { sprite: 'world/extra/signpost', x: 468, y: 138 },
-  rock(400, 150), rock(436, 112), rock(408, 160), rock(458, 164), lily(430, 146), lily(446, 152),
+  rock(400, 150), rock(436, 112), rock(408, 160), rock(458, 164), lily(430, 146), lily(444, 150),
   bush(460, 170), pine(404, 176), pine(456, 186), tree(430, 200), { sprite: 'world/extra/stump', x: 412, y: 214 },
-  // Bottom: the river (x 144–186) with lily pads, fences along the south road (x 229–252), the market lane (x 313–329).
-  pine(96, 240), { sprite: 'world/extra/stump', x: 122, y: 252 }, lily(152, 244), lily(166, 266), rock(188, 244),
+  // Bottom: the river (x 146–170) with lily pads, fences along the south road (x 229–252), the market lane (x 313–329).
+  pine(96, 240), { sprite: 'world/extra/stump', x: 122, y: 252 }, lily(152, 243), lily(158, 267), rock(188, 244),
   tree(200, 256), fence(256, 246), fence(268, 246), { sprite: 'world/props/flowers-mixed', x: 260, y: 258, animate: true },
   tree(284, 250), crate(300, 238), crate(332, 240), bush(330, 262), pine(344, 236), pine(372, 248),
   tree(396, 254), { sprite: 'world/props/flowers-white', x: 404, y: 236, animate: true }, pine(424, 238), rock(452, 250), pine(458, 236),
