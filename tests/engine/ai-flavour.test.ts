@@ -28,7 +28,7 @@ const lintScene = (scene: string, headline: string) => {
   expect(sentences(scene).length).toBeLessThanOrEqual(2);
   expect(words(headline)).toBeGreaterThanOrEqual(2);
   expect(words(headline)).toBeLessThanOrEqual(5);
-  expect(scene).not.toMatch(/\byou\b/i);
+  expect(scene).toMatch(/\b(you|your)\b/i); // it happened to the player, so the scene says so
   expect(scene).toMatch(/[.?]$/);
 };
 
