@@ -1,0 +1,12 @@
+{
+  "src": "/art/title/scene/pine-haze-1.png",
+  "w": 5,
+  "h": 8,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    2,
+    7
+  ]
+}

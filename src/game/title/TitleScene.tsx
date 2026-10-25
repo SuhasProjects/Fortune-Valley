@@ -19,7 +19,6 @@ const LAYERS: [SpriteName, number][] = [
 ]
 
 interface Placed { sprite: SpriteName; x: number; y: number; animate?: boolean }
-const pine = (x: number, y: number): Placed => ({ sprite: 'world/extra/pine-tree', x, y })
 const tree = (x: number, y: number): Placed => ({ sprite: 'world/props/tree-round', x, y, animate: true })
 const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x, y, animate: true })
 
@@ -28,20 +27,32 @@ const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x,
  * Standalone props sit fully inside the core or fully outside x 58..422 so no viewport cuts one in half; the pine
  * line leaves a gap over those edge bands for the same reason.
  */
-// A continuous tree line, as originally drawn: no gaps for the path or the screen-edge bands (a half tree at the
-// window edge reads better than a hole in the forest).
-// Deterministic jitter (seeded hash) so the line reads as a wood, not a picket fence, yet renders the same every load.
+// A scattered forest receding into the distance: a cool, small far band along the horizon, a darker mid band in
+// front of it and a few full-size pines nearest the meadow. Seeded jitter keeps the scatter the same every load.
 const jitter = (i: number, salt: number, range: number): number => {
   const h = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
   return Math.floor((h - Math.floor(h)) * range)
 }
+const band = (name: string, pines: number, rounds: number): { pines: SpriteName[]; rounds: SpriteName[] } => ({
+  pines: Array.from({ length: pines }, (_, i) => `title/scene/pine-${name}-${i}` as SpriteName),
+  rounds: Array.from({ length: rounds }, (_, i) => `title/scene/tree-${name}-${i}` as SpriteName),
+})
+const HAZE = band('haze', 3, 2), FAR = band('far', 3, 2), MID = band('mid', 3, 2)
+const NEAR = { pines: ['world/extra/pine-tree'] as SpriteName[], rounds: MID.rounds } // the nearest band keeps its broadleaves small
 const forest: Placed[] = []
-for (let x = -10; x < MAP_W; x += 10) {
-  const step = Math.round((x + 10) / 10)
-  // One ragged row hugging the horizon; trunk bases (y + 28) stay on the top of the meadow, off the farmland.
-  forest.push(pine(x + 3 + jitter(step, 1, 5), 120 + jitter(step, 2, 6)))
-  if (step % 3 === 1) forest.push(pine(x + 8 + jitter(step, 3, 3), 119 + jitter(step, 4, 3))) // odd filler so gaps vary
+/** Scatter one depth band: ~70% evergreens, ~30% broadleaf, irregular gaps, the odd tree missing. */
+const scatter = (b: { pines: SpriteName[]; rounds: SpriteName[] }, from: number, gap: number, gapSpread: number, base: number, baseSpread: number, salt: number) => {
+  for (let x = from, i = 0; x < MAP_W; x += gap + jitter(i, salt, gapSpread), i++) {
+    if (jitter(i, salt + 1, 10) < 2) continue // the odd missing tree
+    const names = jitter(i, salt + 4, 10) < 3 ? b.rounds : b.pines
+    const name = names[jitter(i, salt + 2, names.length)] ?? names[0]!
+    forest.push({ sprite: name, x, y: base + jitter(i, salt + 3, baseSpread) - SPRITES[name].h })
+  }
 }
+scatter(HAZE, -3, 3, 2, 145, 2, 40) // a pale, unbroken line of tiny trees along the whole horizon
+scatter(FAR, -4, 5, 4, 146, 3, 10)
+scatter(MID, -2, 10, 8, 149, 4, 20)
+scatter(NEAR, 6, 44, 40, 154, 4, 30)
 
 const PROPS: Placed[] = [
   ...forest,

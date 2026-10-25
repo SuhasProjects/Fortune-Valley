@@ -83,6 +83,65 @@ write('art-src/title/scene/hills.txt', mountains({ seed: 37, h: 44, base: 22, am
   write('art-src/title/ground-mask.txt', rows, { kind: 'mask' });
 }
 
+
+// Distant pines for the title horizon: three sizes per depth band, no outline, cooler and darker the farther back
+// (atmospheric perspective). Lit from the top-left: a light column on the left edge of each tier, shade on the right.
+function distantPine({ h, w, body, light, shade, trunk, tiers, seed }) {
+  const r = rng(seed);
+  const rows = grid(w, h);
+  const cx = Math.floor(w / 2);
+  const trunkH = Math.max(2, Math.round(h * 0.12));
+  const crownH = h - trunkH;
+  const th = Math.floor(crownH / tiers);
+  for (let y = 0; y < crownH; y++) {
+    const tier = Math.min(tiers - 1, Math.floor(y / th));
+    const i = y - tier * th, span = tier === tiers - 1 ? crownH - tier * th : th;
+    const maxHalf = Math.round(((tier + 1) / tiers) * (w - 1) / 2);
+    const half = Math.max(0, Math.round((maxHalf * (i + 1)) / span));
+    for (let x = cx - half; x <= cx + half; x++) {
+      if (x < 0 || x >= w) continue;
+      const edgeL = x === cx - half && half > 0, edgeR = x >= cx + half - (half > 2 ? 1 : 0) && half > 0;
+      rows[y][x] = edgeL ? light : edgeR ? shade : r() < 0.12 ? shade : body;
+    }
+  }
+  for (let y = crownH; y < h; y++) { rows[y][cx] = trunk; if (w >= 11) rows[y][cx - 1] = trunk; }
+  return rows;
+}
+/** A distant broadleaf tree: a round-ish canopy on a short trunk, same light/shade rule as the pines. */
+function distantRound({ h, w, body, light, shade, trunk, seed }) {
+  const r = rng(seed);
+  const rows = grid(w, h);
+  const cx = (w - 1) / 2;
+  const trunkH = Math.max(2, Math.round(h * 0.2));
+  const ch = h - trunkH, cy = (ch - 1) / 2, rx = w / 2, ry = ch / 2;
+  for (let y = 0; y < ch; y++) for (let x = 0; x < w; x++) {
+    const d = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
+    if (d > 1) continue;
+    const lit = d > 0.55 && x - cx + (y - cy) < -1, dark = d > 0.5 && x - cx + (y - cy) > 1;
+    rows[y][x] = lit ? light : dark ? shade : r() < 0.12 ? shade : body;
+  }
+  const tx = Math.floor(cx);
+  for (let y = ch; y < h; y++) { rows[y][tx] = trunk; if (w >= 9) rows[y][tx + 1] = trunk; }
+  return rows;
+}
+const ROUND_SIZES = { haze: [[5, 7], [7, 9]], far: [[7, 11], [9, 13]], mid: [[11, 16], [13, 19]] };
+const PINE_BANDS = {
+  haze: { body: ';', light: '3', shade: ':', trunk: ';' },   // mountain-far-dark / mountain-far / mountain-mid-dark
+  far: { body: ':', light: ',', shade: 'J', trunk: ':' },    // mountain-mid-dark / mountain-mid / tag-dark
+  mid: { body: 'T', light: 't', shade: 'J', trunk: 'W' },    // leaf-dark / leaf / tag-dark
+};
+const PINE_SIZES = { haze: [[5, 7], [5, 8], [7, 10]], far: [[7, 11], [9, 13], [9, 15]], mid: [[11, 17], [13, 20], [13, 22]] };
+for (const band of ['haze', 'far', 'mid']) {
+  PINE_SIZES[band].forEach(([w, h], i) => {
+    const rows = distantPine({ w, h, tiers: 3, seed: 500 + i * 7 + (band === 'haze' ? 100 : band === 'far' ? 0 : 50), ...PINE_BANDS[band] });
+    write(`art-src/title/scene/pine-${band}-${i}.txt`, rows, { anchor: [Math.floor(w / 2), h - 1] });
+  });
+  ROUND_SIZES[band].forEach(([w, h], i) => {
+    const rows = distantRound({ w, h, seed: 700 + i * 7 + (band === 'haze' ? 100 : band === 'far' ? 0 : 50), ...PINE_BANDS[band] });
+    write(`art-src/title/scene/tree-${band}-${i}.txt`, rows, { anchor: [Math.floor(w / 2), h - 1] });
+  });
+}
+
 // The hanging sign (240x64) and its vines. The vines are one long non-repeating run each: a wandering stem with
 // leaves of several shapes, tendrils and the odd flower placed by the seeded generator, so nothing tiles visibly.
 {
@@ -172,10 +231,13 @@ const LEAVES = [
   ['.YYY', 'YYYt', '..*t'],
   ['Y.', '*t'],
   ['.YY', 'YYYt', 'Y*t.'],
+  ['.YYY.', 'YYYYt', 'YY*tt', '..t..'],
+  ['YYYY.', 'YYYYt', '.Y*tt'],
+  ['..YY.', '.YYYt', 'YYY*t', '.tt..'],
 ];
 const FLOWERS = [['5f5', '.f5'], ['6f6', '.f6'], ['.5.', '5f5', '.5.']];
 
-function vine({ seed, length, breadth, horizontal }) {
+function vine({ seed, length, breadth, horizontal, hangers = 0 }) {
   const r = rng(seed);
   const w = horizontal ? length : breadth, h = horizontal ? breadth : length;
   const rows = grid(w, h);
@@ -240,7 +302,30 @@ function vine({ seed, length, breadth, horizontal }) {
       if (free(x, y)) put(x, y, k);
     }
   }
+  // Hangers (horizontal vines only): tendrils that drop off the stem and dangle down across the board, each with
+  // its own small leaves, so the vine drapes over the sign instead of sitting on its top edge.
+  for (let n = 0; n < hangers; n++) {
+    const i0 = Math.floor(8 + ((n + 0.5) / hangers) * (length - 16) + (r() - 0.5) * 10);
+    const len = 8 + Math.floor(r() * (breadth - stem[i0] - 10));
+    let x = i0;
+    for (let d = 1; d <= len; d++) {
+      const y = stem[i0] + d;
+      if (d % 3 === 0) x += r() < 0.5 ? -1 : 1;
+      put(x, y, d % 2 ? 't' : 'T');
+      if (d % 3 === 1 && d > 1) {
+        const leaf = LEAVES[Math.floor(r() * LEAVES.length)];
+        const sideL = d % 2 ? -1 : 1;
+        for (let ly = 0; ly < leaf.length; ly++) for (let lx = 0; lx < leaf[ly].length; lx++) {
+          const k = leaf[ly][lx];
+          if (k === '.' || k === '*') continue;
+          const px = sideL < 0 ? x - (leaf[ly].length - lx) : x + lx + 1, py = y - (leaf.length - 1) + ly;
+          if (get(px, py) === '.') put(px, py, k);
+        }
+      }
+    }
+    if (r() < 0.5) { const f = FLOWERS[Math.floor(r() * FLOWERS.length)]; f.forEach((row, fy) => [...row].forEach((k, fx) => { if (k !== '.' && get(x - 1 + fx, stem[i0] + len + 1 + fy) === '.') put(x - 1 + fx, stem[i0] + len + 1 + fy, k); })); }
+  }
   return rows;
 }
-write('art-src/title/vine-top.txt', vine({ seed: 301, length: 256, breadth: 18, horizontal: true }));
-write('art-src/title/vine-side.txt', vine({ seed: 302, length: 72, breadth: 16, horizontal: false }));
+write('art-src/title/vine-top.txt', vine({ seed: 301, length: 256, breadth: 36, horizontal: true, hangers: 7 }));
+write('art-src/title/vine-side.txt', vine({ seed: 302, length: 80, breadth: 24, horizontal: false }));

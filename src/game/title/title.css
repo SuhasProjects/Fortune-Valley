@@ -31,9 +31,9 @@
 .fv-sign h1 { margin:0; white-space:nowrap; text-transform:uppercase; font-size:calc(25 * var(--px)); line-height:1; color:var(--c-paper); text-shadow:var(--px) 0 var(--c-outline),calc(-1 * var(--px)) 0 var(--c-outline),0 var(--px) var(--c-outline),0 calc(-1 * var(--px)) var(--c-outline),var(--px) var(--px) var(--c-outline),calc(-1 * var(--px)) var(--px) var(--c-outline),var(--px) calc(-1 * var(--px)) var(--c-outline),calc(-1 * var(--px)) calc(-1 * var(--px)) var(--c-outline),0 calc(2 * var(--px)) var(--c-wood-dark),0 calc(3 * var(--px)) var(--c-wood-dark); }
 .fv-vine { position:absolute; pointer-events:none; z-index:1; animation:fv-drift 1.8s steps(2,end) infinite alternate; }
 /* Vines are single non-repeating runs (256x18 and 16x72) generated with irregular leaves, so no segment tiles. */
-.fv-vine--top { left:calc(-8 * var(--px)); right:calc(-8 * var(--px)); top:calc(-12 * var(--px)); height:calc(18 * var(--px)); background:url('/art/title/vine-top.png') left top / calc(256 * var(--px)) calc(18 * var(--px)) no-repeat; }
-.fv-vine--left,.fv-vine--right { top:calc(-4 * var(--px)); width:calc(16 * var(--px)); height:calc(72 * var(--px)); background:url('/art/title/vine-side.png') left top / calc(16 * var(--px)) calc(72 * var(--px)) no-repeat; }
-.fv-vine--left { left:calc(-10 * var(--px)); } .fv-vine--right { right:calc(-10 * var(--px)); animation-direction:alternate-reverse; background-image:url('/art/title/vine-side.png'); transform:scaleX(-1); }
+.fv-vine--top { left:calc(-8 * var(--px)); right:calc(-8 * var(--px)); top:calc(-16 * var(--px)); height:calc(36 * var(--px)); background:url('/art/title/vine-top.png') left top / calc(256 * var(--px)) calc(36 * var(--px)) no-repeat; }
+.fv-vine--left,.fv-vine--right { top:calc(-6 * var(--px)); width:calc(24 * var(--px)); height:calc(80 * var(--px)); background:url('/art/title/vine-side.png') left top / calc(24 * var(--px)) calc(80 * var(--px)) no-repeat; }
+.fv-vine--left { left:calc(-9 * var(--px)); } .fv-vine--right { right:calc(-9 * var(--px)); animation-direction:alternate-reverse; background-image:url('/art/title/vine-side.png'); transform:scaleX(-1); }
 
 /* Main menu: three large wood buttons in a row, pixel pointer beside the focused one. */
 .fv-title-menu { position:absolute; top:70%; left:50%; transform:translateX(-50%); display:flex; gap:calc(6 * var(--px)); width:max-content; max-width:94%; }

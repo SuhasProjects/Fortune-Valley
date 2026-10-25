@@ -1,0 +1,12 @@
+{
+  "src": "/art/title/scene/pine-mid-1.png",
+  "w": 13,
+  "h": 20,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    6,
+    19
+  ]
+}

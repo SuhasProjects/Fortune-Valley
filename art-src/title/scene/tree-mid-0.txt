@@ -1,0 +1,19 @@
+size 11x16
+anchor 5,15
+--- 0
+...ttttt...
+..ttttttt..
+.ttTTTTTTT.
+.tTTTTTTTT.
+ttTTTTJTTJJ
+ttTTJTJTTJJ
+tTTTTTTTTJJ
+ttTTTTTJTJJ
+ttTJTTTTTJJ
+.TJTTTTTJJ.
+.TTJTTTJJJ.
+..JJJJJJJ..
+...JJJJJ...
+.....WW....
+.....WW....
+.....WW....

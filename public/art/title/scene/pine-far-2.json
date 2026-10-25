@@ -1,0 +1,12 @@
+{
+  "src": "/art/title/scene/pine-far-2.png",
+  "w": 9,
+  "h": 15,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    4,
+    14
+  ]
+}

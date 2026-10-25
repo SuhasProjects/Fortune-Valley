@@ -1,0 +1,12 @@
+{
+  "src": "/art/title/scene/tree-mid-0.png",
+  "w": 11,
+  "h": 16,
+  "frames": [
+    "0"
+  ],
+  "anchor": [
+    5,
+    15
+  ]
+}

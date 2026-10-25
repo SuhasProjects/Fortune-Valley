@@ -85,12 +85,192 @@ const sprites = {
       "0"
     ]
   },
+  "title/scene/pine-far-0": {
+    "src": "/art/title/scene/pine-far-0.png",
+    "w": 7,
+    "h": 11,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      10
+    ]
+  },
+  "title/scene/pine-far-1": {
+    "src": "/art/title/scene/pine-far-1.png",
+    "w": 9,
+    "h": 13,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      4,
+      12
+    ]
+  },
+  "title/scene/pine-far-2": {
+    "src": "/art/title/scene/pine-far-2.png",
+    "w": 9,
+    "h": 15,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      4,
+      14
+    ]
+  },
+  "title/scene/pine-haze-0": {
+    "src": "/art/title/scene/pine-haze-0.png",
+    "w": 5,
+    "h": 7,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      2,
+      6
+    ]
+  },
+  "title/scene/pine-haze-1": {
+    "src": "/art/title/scene/pine-haze-1.png",
+    "w": 5,
+    "h": 8,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      2,
+      7
+    ]
+  },
+  "title/scene/pine-haze-2": {
+    "src": "/art/title/scene/pine-haze-2.png",
+    "w": 7,
+    "h": 10,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      9
+    ]
+  },
+  "title/scene/pine-mid-0": {
+    "src": "/art/title/scene/pine-mid-0.png",
+    "w": 11,
+    "h": 17,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      16
+    ]
+  },
+  "title/scene/pine-mid-1": {
+    "src": "/art/title/scene/pine-mid-1.png",
+    "w": 13,
+    "h": 20,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      6,
+      19
+    ]
+  },
+  "title/scene/pine-mid-2": {
+    "src": "/art/title/scene/pine-mid-2.png",
+    "w": 13,
+    "h": 22,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      6,
+      21
+    ]
+  },
   "title/scene/sky": {
     "src": "/art/title/scene/sky.png",
     "w": 480,
     "h": 146,
     "frames": [
       "0"
+    ]
+  },
+  "title/scene/tree-far-0": {
+    "src": "/art/title/scene/tree-far-0.png",
+    "w": 7,
+    "h": 11,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      10
+    ]
+  },
+  "title/scene/tree-far-1": {
+    "src": "/art/title/scene/tree-far-1.png",
+    "w": 9,
+    "h": 13,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      4,
+      12
+    ]
+  },
+  "title/scene/tree-haze-0": {
+    "src": "/art/title/scene/tree-haze-0.png",
+    "w": 5,
+    "h": 7,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      2,
+      6
+    ]
+  },
+  "title/scene/tree-haze-1": {
+    "src": "/art/title/scene/tree-haze-1.png",
+    "w": 7,
+    "h": 9,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      3,
+      8
+    ]
+  },
+  "title/scene/tree-mid-0": {
+    "src": "/art/title/scene/tree-mid-0.png",
+    "w": 11,
+    "h": 16,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      5,
+      15
+    ]
+  },
+  "title/scene/tree-mid-1": {
+    "src": "/art/title/scene/tree-mid-1.png",
+    "w": 13,
+    "h": 19,
+    "frames": [
+      "0"
+    ],
+    "anchor": [
+      6,
+      18
     ]
   },
   "title/sign-large": {
@@ -128,8 +308,8 @@ const sprites = {
   },
   "title/vine-side": {
     "src": "/art/title/vine-side.png",
-    "w": 16,
-    "h": 72,
+    "w": 24,
+    "h": 80,
     "frames": [
       "0"
     ]
@@ -137,7 +317,7 @@ const sprites = {
   "title/vine-top": {
     "src": "/art/title/vine-top.png",
     "w": 256,
-    "h": 18,
+    "h": 36,
     "frames": [
       "0"
     ]
