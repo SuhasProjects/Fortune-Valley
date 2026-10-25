@@ -21,11 +21,25 @@
 .fv-toast--positive .fv-toast__head { color: var(--c-money-up); }
 .fv-toasts .fv-view-all { align-self: flex-end; }
 
-/* Month ribbon and action errors drop in under the HUD. */
-.fv-month-banner, .fv-action-error { position: absolute; z-index: var(--z-toast); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
-.fv-month-banner { z-index: calc(var(--z-toast) + 1); font: 700 var(--fs-heading)/1 var(--font-heading); padding: var(--px) calc(3 * var(--px)); animation: fv-banner-drop 240ms steps(3, end); }
-.fv-action-error { color: var(--c-money-down); white-space: normal; max-width: min(calc(140 * var(--px)), calc(100% - 8 * var(--px))); }
-@keyframes fv-banner-drop { from { transform: translate(-50%, calc(-4 * var(--px))); opacity: 0; } }
+/* Action errors drop in under the HUD. */
+.fv-action-error { position: absolute; z-index: var(--z-toast); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); left: 50%; transform: translateX(-50%); margin: 0; color: var(--c-money-down); max-width: min(calc(140 * var(--px)), calc(100% - 8 * var(--px))); }
+
+/* Month recap: a slim parchment strip centred just under the HUD after every month advance. Line 1 is the month, the
+   date and net worth with its change; line 2 is signed cash-flow chips (green +, red −) that wrap on narrow stages.
+   It drops in over three steps, stays ~5 s and slides away over three steps; a new month replaces it (new key).
+   The host is the always-mounted live region, so each recap is announced; nothing here takes focus or clicks. */
+.fv-month-recap-host { position: absolute; z-index: var(--z-toast); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); left: 50%; transform: translateX(-50%); width: max-content; max-width: min(calc(200 * var(--px)), calc(100% - 150 * var(--px))); pointer-events: none; }
+.fv-month-recap { display: grid; gap: calc(0.5 * var(--px)); margin: 0; padding: calc(0.5 * var(--px)) calc(2 * var(--px)); background: var(--c-paper); animation: fv-recap-in 240ms steps(3, end), fv-recap-out 300ms steps(3, end) 4700ms forwards; }
+.fv-month-recap__line { margin: 0; font-size: var(--fs-body); line-height: 1.15; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fv-month-recap__line strong { font: 700 var(--fs-body)/1 var(--font-heading); }
+.fv-month-recap__delta--up { color: var(--c-money-up); } .fv-month-recap__delta--down { color: var(--c-money-down); }
+.fv-month-recap__chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 calc(3 * var(--px)); }
+.fv-chip { display: inline-block; padding: 0; font-size: var(--fs-label); line-height: 1.2; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fv-chip--up { color: var(--c-money-up); } .fv-chip--down { color: var(--c-money-down); }
+/* With a toast on the right, the strip leaves the toast column and the status tools alone. */
+.fv-ui:has(.fv-toasts .fv-toast) > .fv-month-recap-host { left: calc(75 * var(--px)); right: calc(min(calc(150 * var(--px)), 42vw) + 6 * var(--px)); transform: none; width: auto; max-width: none; }
+@keyframes fv-recap-in { from { transform: translateY(calc(-4 * var(--px))); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fv-recap-out { from { transform: none; opacity: 1; } to { transform: translateY(calc(-6 * var(--px))); opacity: 0; } }
 
 /* First-game coach marks. */
 .fv-coach-tip { position: absolute; z-index: var(--z-toast); width: min(calc(72 * var(--px)), calc(100vw - 6 * var(--px))); display: grid; gap: var(--px); }
@@ -83,10 +97,18 @@
   .fv-toasts > :nth-child(n+2):not(.fv-view-all) { display: none; }
   .fv-toasts { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); }
   .fv-flow-tools { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); }
-  .fv-month-banner { font-size: var(--fs-body); }
+  /* Phones: the recap spans the strip under the HUD as two fixed lines (chips in one row, overflow hidden); the
+     status tools and toasts sit below it while it shows. */
+  .fv-month-recap-host, .fv-ui:has(.fv-toasts .fv-toast) > .fv-month-recap-host { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); transform: none; width: auto; max-width: none; }
+  .fv-month-recap { height: calc(20 * var(--px)); box-sizing: border-box; gap: calc(0.5 * var(--px)); overflow: hidden; }
+  .fv-month-recap__line { font-size: var(--fs-label); overflow: hidden; text-overflow: ellipsis; }
+  .fv-month-recap__line strong { font-size: var(--fs-label); }
+  .fv-month-recap__chips { flex-wrap: nowrap; overflow: hidden; gap: var(--px); }
+  .fv-chip { font-size: 10px; }
+  .fv-ui:has(.fv-month-recap) > :is(.fv-flow-tools, .fv-toasts) { top: calc(var(--hud-bottom, calc(55 * var(--px))) + 24 * var(--px)); }
 }
-[data-reduce-motion='true'] .fv-month-banner, [data-reduce-motion='true'] .fv-counter i { animation: none; }
-@media (prefers-reduced-motion: reduce) { .fv-month-banner, .fv-counter i { animation: none; } }
+[data-reduce-motion='true'].fv-month-recap, [data-reduce-motion='true'] .fv-counter i { animation: none; }
+@media (prefers-reduced-motion: reduce) { .fv-month-recap, .fv-counter i { animation: none; } }
 
 /* Toasts drop in two steps; no tweening (replaces framer-motion). */
 .fv-toast__enter { animation: fv-toast-in 240ms steps(2, end); }

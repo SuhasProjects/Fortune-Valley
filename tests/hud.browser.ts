@@ -8,7 +8,7 @@ for (const scale of [3, 4, 6]) {
     await page.goto(`/src/ui/dev/index.html?scale=${scale}`)
     await page.evaluate(() => document.fonts.ready)
     await page.getByRole('button', {name:'Load HUD example'}).click()
-    await expect(page.getByRole('region', {name:'Financial overview'})).toContainText('Month 0 / 24')
+    await expect(page.getByRole('region', {name:'Financial overview'})).toContainText('Month 0 / 36')
     const invalidFonts = await page.locator('.fv-gallery').evaluate(root => {
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), invalid: string[] = []
       while (walker.nextNode()) {

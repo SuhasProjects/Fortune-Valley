@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { monthLabel } from '../components/flow'
 import { useGameStore } from '../stores/useGameStore'
 import type { BuildingId, GameConfig, GameState } from '../types/domain'
 import { BuildingWindow } from '../components/panels/BuildingWindow'
 import { PanelHost } from '../components/town/PanelHost'
 import { freshScenario, scenarioById } from '../data/scenarios'
 import { ToastStack } from './flow/ToastStack'
+import { MonthRecap } from './flow/MonthRecap'
 import { useShortcuts } from './flow/useShortcuts'
 import { ActivityWindow } from './flow/ActivityWindow'
 import { TimelineWindow } from './flow/TimelineWindow'
@@ -46,7 +46,6 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   const [menu, setMenu] = useState<Menu>(null)
   const [confirm, setConfirm] = useState<Confirm>(null)
   const [finishing, setFinishing] = useState(false)
-  const [monthBanner, setMonthBanner] = useState(false)
   const [saved, setSaved] = useState(false)
   const [tipStep, setTipStep] = useState(() => settings.tips && !settings.tipsSeen && game.monthIndex === 0 ? 0 : -1)
   const previousMonth = useRef(game.monthIndex)
@@ -58,6 +57,8 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   const finishStarted = useRef(false)
 
   const panel = store.openBuildingId
+  // Any window, menu or coach panel holds the clock (useGameClock also holds it while the tab is hidden); a Type B
+  // offer holds it through `blocked` below until the player chooses.
   const modalOpen = Boolean(panel || store.timelineOpen || store.historyOpen || store.coachOpen || menu || confirm)
   const clock = useGameClock({
     enabled: settings.autoAdvanceSeconds > 0,
@@ -125,13 +126,9 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   }, [store.lastActionError, store.clearActionError])
   useEffect(() => {
     if (previousMonth.current !== game.monthIndex) {
-      setMonthBanner(true)
       sfx('month')
       if (game.cash > previousCash.current) sfx('coin')
       previousMonth.current = game.monthIndex
-      previousCash.current = game.cash
-      const timeout = window.setTimeout(() => setMonthBanner(false), 1_200)
-      return () => window.clearTimeout(timeout)
     }
     previousCash.current = game.cash
   }, [game.monthIndex, game.cash])
@@ -180,13 +177,13 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   return <main aria-label="Fortune Valley town">
     <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
       <Hud onOpenTimeline={store.openTimeline}/>
+      <MonthRecap game={game} config={config} reduceMotion={settings.reduceMotion}/>
       <div className="fv-flow-tools"><StatusTag/>{saved && <Tag tone="green">Saved</Tag>}<Button size="sm" className="fv-pause-menu" aria-label="Pause menu" title="Pause menu · Esc" onClick={openPause}><span className="fv-glyph fv-glyph--pause" aria-hidden="true"/></Button></div>
       <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
       <ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/>
       <HudFooter/>
       <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
-      {monthBanner && <Board className="fv-month-banner" role="status" data-reduce-motion={settings.reduceMotion || undefined}>Month {game.monthIndex} · {monthLabel(config.startMonth, game.monthIndex)}</Board>}
       {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
         <strong>{tip[0]}</strong><p>{tip[1]}</p>
         <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === 2 ? 'Got it' : 'Next tip'}</Button>

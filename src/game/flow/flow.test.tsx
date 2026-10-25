@@ -9,12 +9,15 @@ import { TimelineWindow } from './TimelineWindow'
 import { ActivityWindow } from './ActivityWindow'
 import { useShortcuts } from './useShortcuts'
 import { GameScreen } from '../GameScreen'
+import { refreshSettings, setSetting } from '../settings'
+import { recapChips, recapNetWorthDelta } from './recapChips'
+import { netWorthOf } from '../../engine'
 
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') }
   HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') }
 })
-afterEach(() => { cleanup(); vi.useRealTimers() })
+afterEach(() => { cleanup(); vi.useRealTimers(); window.localStorage.clear(); refreshSettings() })
 
 const notices: GameNotification[] = [
   { id: 'old', monthIndex: 1, kind: 'positive', summary: 'Payday', amountSigned: 100, read: false },
@@ -141,7 +144,7 @@ describe('game screen flow', () => {
     render(<GameScreen/>)
     fireEvent.click(screen.getByRole('button', { name: /Finish & reveal/ }))
     const dialog = screen.getByRole('dialog', { name: 'Finish early?' })
-    expect(dialog.textContent).toContain('0 of 24 months')
+    expect(dialog.textContent).toContain('0 of 36 months')
     fireEvent.click(screen.getByRole('button', { name: 'Keep playing' }))
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(useGameStore.getState().finishPayload).toBeNull()
@@ -165,6 +168,83 @@ describe('game screen flow', () => {
     } finally {
       useGameStore.setState({ finishGame: original })
     }
+  })
+
+  it('shows the month recap banner after Next month, replaces it on the next month and slides it away after 5 s', () => {
+    vi.useFakeTimers()
+    render(<GameScreen/>)
+    const host = screen.getByRole('status', { name: 'Month recap' })
+    expect(host.textContent).toBe('')
+    expect(host.getAttribute('aria-live')).toBe('polite')
+    fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
+    const game = useGameStore.getState().game!
+    expect(game.monthIndex).toBe(1)
+    expect(host.textContent).toContain('Month 1 · Feb 2026 · Net worth')
+    expect(host.textContent).toContain(new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(netWorthOf(game)))
+    const chips = within(host).getAllByRole('listitem').map(li => li.textContent)
+    expect(chips.length).toBeGreaterThan(2)
+    expect(chips.length).toBeLessThanOrEqual(8)
+    expect(chips[0]).toMatch(/^\+\$[\d,]+ job$/)
+    expect(chips).toContainEqual(expect.stringMatching(/^-\$[\d,]+ home$/))
+    expect(chips).toContainEqual(expect.stringMatching(/^-\$[\d,]+ essentials$/))
+    expect(chips.every(chip => !/\$0 /.test(chip!))).toBe(true)
+    expect(host.querySelector('.fv-chip--up')).toBeTruthy(); expect(host.querySelector('.fv-chip--down')).toBeTruthy()
+    expect(host.querySelector('[tabindex]')).toBeNull()
+    // No summary toast: the toast region holds only event notices.
+    expect(screen.getByRole('region', { name: 'Recent financial activity' }).textContent).not.toContain('kept')
+    act(() => { vi.advanceTimersByTime(3_000) })
+    fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
+    expect(host.textContent).toContain('Month 2 · Mar 2026')
+    act(() => { vi.advanceTimersByTime(4_999) })
+    expect(host.textContent).toContain('Month 2')
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(host.textContent).toBe('')
+  })
+
+  it('recap chips group the month ledger by cash-flow family and skip self-transfers', () => {
+    const store = useGameStore.getState()
+    store.dispatchAction({ type: 'set_contributions', savingsContributionPerMonth: 150, investmentContributionPerMonth: 100 })
+    store.advanceOneMonth()
+    const game = useGameStore.getState().game!
+    const chips = recapChips(game)
+    const month = game.ledger.filter(e => e.monthIndex === 0)
+    const sum = (...cats: string[]) => Math.round(month.filter(e => cats.includes(e.category) && e.account === 'cash').reduce((a, e) => a + e.amountSigned, 0))
+    expect(chips.find(c => c.group === 'job')?.amount).toBe(sum('salary', 'unemployment_benefit', 'tax_withholding'))
+    expect(chips.find(c => c.group === 'home')?.amount).toBe(sum('housing'))
+    expect(chips.find(c => c.group === 'debt')?.amount).toBe(sum('debt_payment'))
+    expect(chips.some(c => /contribution|transfer/.test(c.label))).toBe(false)
+    expect(chips.every(c => c.amount !== 0)).toBe(true)
+    expect(recapNetWorthDelta(game)).toBe(Math.round(game.netWorthHistory[1]! - game.netWorthHistory[0]!))
+  })
+
+  it('holds the auto clock while a building window is open and resumes it when the window closes', () => {
+    vi.useFakeTimers()
+    act(() => setSetting('autoAdvanceSeconds', 15))
+    render(<GameScreen/>)
+    const timer = screen.getByRole('timer')
+    expect(timer.textContent).toBe('Next month in00:15')
+    act(() => { vi.advanceTimersByTime(5_000) })
+    expect(timer.textContent).toBe('Next month in00:10')
+    fireEvent.keyDown(window, { key: '1' })
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    act(() => { vi.advanceTimersByTime(30_000) })
+    expect(useGameStore.getState().game?.monthIndex).toBe(0)
+    expect(screen.getByRole('timer').textContent).toBe('Next month in00:10')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    act(() => { vi.advanceTimersByTime(10_000) })
+    expect(useGameStore.getState().game?.monthIndex).toBe(1)
+    // The pause menu and the timeline hold it too; Pause (button) holds it until Resume.
+    fireEvent.keyDown(window, { key: 't' })
+    act(() => { vi.advanceTimersByTime(20_000) })
+    expect(useGameStore.getState().game?.monthIndex).toBe(1)
+    fireEvent.keyDown(window, { key: 'Escape' })
+    fireEvent.click(screen.getByRole('button', { name: /^Pause \(Space\)/ }))
+    act(() => { vi.advanceTimersByTime(20_000) })
+    expect(useGameStore.getState().game?.monthIndex).toBe(1)
+    fireEvent.click(screen.getByRole('button', { name: /^Resume \(Space\)/ }))
+    act(() => { vi.advanceTimersByTime(15_000) })
+    expect(useGameStore.getState().game?.monthIndex).toBe(2)
   })
 
   it('clears the action error toast after five seconds', () => {

@@ -133,8 +133,9 @@ describe('ending: what-if runs', () => {
   it('"never change anything" equals the paired default-policy comparison (same luck)', () => {
     const result = runWhatIf({ ...base, decisionId: 'all', alternativeId: 'defaults' });
     const cmp = compareWithBaseline(config, s.policyLog, base.finishMonteCarlo.months, { paths: PATHS, seed: base.finishMonteCarlo.seed })!;
-    expect(result.changed.median).toBeCloseTo(cmp.b.median, 2);
-    expect(result.changed.p10).toBeCloseTo(cmp.b.p10, 2);
+    // What-if lines are rounded to cents; the raw comparison is not, so compare at the same precision.
+    expect(result.changed.median).toBe(round2(cmp.b.median));
+    expect(result.changed.p10).toBe(round2(cmp.b.p10));
     expect(result.original).toEqual(outcomeLines(base.finishMonteCarlo, base.startNetWorth));
     expect(result.delta.median).toBeCloseTo(result.changed.median - result.original.median, 2);
     expect(result.delta.spread).toBeCloseTo(result.changed.spread - result.original.spread, 2);

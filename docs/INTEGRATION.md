@@ -70,7 +70,7 @@ export function StatusTag(): JSX.Element                                   // OF
 export function HudFooter(): JSX.Element
 
 // src/game/settings/index.ts
-export function useSettings(): Settings   // { autoAdvanceSeconds: 0|30|60|120, lastAutoAdvanceSeconds, sound, reduceMotion, tips, tipsSeen } persisted in localStorage
+export function useSettings(): Settings   // { autoAdvanceSeconds: 0|15|30|60|120 (default 15), lastAutoAdvanceSeconds, sound, reduceMotion, tips, tipsSeen } persisted in localStorage
 export function setSetting<K extends SettingKey>(key: K, value: Settings[K]): void
 export function OptionsWindow(props: { onClose: () => void; onDeleteSave?: () => void }): JSX.Element   // (differs: extra optional onDeleteSave)
 // src/game/audio/sfx.ts
