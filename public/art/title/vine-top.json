@@ -1,7 +1,7 @@
 {
   "src": "/art/title/vine-top.png",
-  "w": 32,
-  "h": 16,
+  "w": 256,
+  "h": 18,
   "frames": [
     "0"
   ]

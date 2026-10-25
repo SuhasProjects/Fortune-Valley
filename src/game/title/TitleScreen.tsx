@@ -42,7 +42,6 @@ export function TitleScreen() {
           <div className="fv-vine fv-vine--top" aria-hidden="true"/><div className="fv-vine fv-vine--left" aria-hidden="true"/><div className="fv-vine fv-vine--right" aria-hidden="true"/>
           <h1>Fortune Valley</h1>
         </div>
-        {screen === 'menu' && <p className="fv-motto">A little town. A bigger perspective.</p>}
       </header>
       {screen === 'menu' ? <div className="fv-title-menu" role="group" aria-label="Main menu" ref={menu} onKeyDown={move} onClick={clickSound}>
         <Button size="lg" data-menu="New Story" onClick={() => { returnFocus.current = 'New Story'; setScreen('picker') }}>New Story</Button>
@@ -54,7 +53,6 @@ export function TitleScreen() {
       </div>}
       <footer className="fv-title-corners">
         <Button icon="gear" aria-label="Options" onClick={() => setWindow('options')}>Options</Button>
-        <small>Fictional lives. Real perspective.</small>
         <Button icon="book" aria-label="Guide" onClick={() => setWindow('guide')}>Guide</Button>
       </footer>
       {window === 'guide' && <GuideWindow onClose={() => setWindow(null)}/>}

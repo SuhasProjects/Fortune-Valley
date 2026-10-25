@@ -14,7 +14,7 @@ function rng(seed) {
   return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-const MATERIAL_KEYS = new Set(['h', 'a', 's', 'u', 'w', 'j']);
+const MATERIAL_KEYS = new Set(['h', 'a', 's', 'u', 'w', 'j', 'f']);
 
 export function buildGround(mask) {
   const H = mask.length, W = mask[0].length;
@@ -39,6 +39,14 @@ export function buildGround(mask) {
       ground[y][x] = r < 0.08 ? 'W' : 'w';
     } else if (m === 'j') {
       ground[y][x] = r < 0.06 ? 'Y' : (y % 4 === 1 ? 'W' : 'w');
+    } else if (m === 'f') {
+      // Tilled field: furrows every 4 rows that waver along x (lit ridge, soil, shadowed trench, soil), with
+      // scattered clods and the odd sprout poking out of the soil row.
+      const row = ((y + Math.round(Math.sin(x / 6.5) * 0.9)) % 4 + 4) % 4;
+      let k = row === 0 ? 'b' : row === 2 ? 'W' : 'w';
+      if (r < 0.07) k = row === 0 ? 'n' : row === 2 ? 'w' : r < 0.035 ? 'b' : 'W';
+      else if (row === 1 && r > 0.955) { k = 'j'; if (y > 0 && mask[y - 1][x] === 'f') ground[y - 1][x] = 'Y'; }
+      ground[y][x] = k;
     }
   }
 
@@ -52,6 +60,8 @@ export function buildGround(mask) {
     else if (m === 'w' && nb.includes('u')) ground[y][x] = 'W';
     else if (m === 's' && nb.some((k) => k !== 's')) ground[y][x] = 'S';
     else if (m === 'h' && nb.includes('w')) ground[y][x] = 'G';
+    else if (m === 'h' && nb.includes('f')) ground[y][x] = 'g';
+    else if (m === 'f' && at(x, y - 1) !== 'f') ground[y][x] = 'W';
   }
 
   // Water frames: ripples drift one pixel per frame; foam where water meets the bank.
@@ -84,7 +94,7 @@ export function writeGround(root) {
     const maskPath = `art-src/${folder}/ground-mask.txt`;
     if (!existsSync(join(root, maskPath))) continue;
     const parsed = parseGrid(readFileSync(join(root, maskPath), 'utf8'), palette, maskPath);
-    for (const row of parsed.frames[0].rows) for (const k of row) if (!MATERIAL_KEYS.has(k)) throw new Error(`${maskPath}: "${k}" is not a material key (h a s u w j)`);
+    for (const row of parsed.frames[0].rows) for (const k of row) if (!MATERIAL_KEYS.has(k)) throw new Error(`${maskPath}: "${k}" is not a material key (h a s u w j f)`);
     const built = buildGround(parsed.frames[0].rows);
     const out = join(root, `public/art/${folder}`);
     mkdirSync(out, { recursive: true });
