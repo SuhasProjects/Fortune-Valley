@@ -130,3 +130,23 @@ describe('what-if "Invest differently"', () => {
     expect(bonds.delta.spread).toBeLessThan(0);
   });
 });
+
+describe('"from the start" hypotheticals beat the player\'s own later changes of the same setting', () => {
+  it('invest-differently still moves the bands when the player set an allocation at month 0', async () => {
+    const { applyAction, runMonteCarlo, runWhatIf, listDecisions, netWorthOf, createGame, advanceMonth } = await import('@/engine');
+    const { archetypeConfig } = await import('@/config/archetypes');
+    const config = archetypeConfig('professional', 4242);
+    let s = createGame(config);
+    const start = netWorthOf(s);
+    const r0 = applyAction(s, { type: 'set_allocation', allocation: { stock: 0, bond: 1, etf: 0 } });
+    if (!r0.ok) throw new Error('allocation rejected');
+    s = r0.state;
+    for (let i = 0; i < 36; i++) s = advanceMonth(s);
+    const mc = runMonteCarlo(config, s.policyLog, s, { paths: 200 });
+    const alloc = listDecisions(config, s.policyLog).find((d) => d.id === 'hyp:allocation');
+    expect(alloc).toBeDefined();
+    const r = runWhatIf({ config, policyLog: s.policyLog, finishMonteCarlo: mc, startNetWorth: start, observedNetWorth: netWorthOf(s), decisionId: 'hyp:allocation', alternativeId: 'all-stock' });
+    expect(Math.abs(r.delta.spread)).toBeGreaterThan(5000);
+    expect(r.changed.p90 - r.changed.p10).toBeGreaterThan(1.5 * (r.original.p90 - r.original.p10));
+  });
+});

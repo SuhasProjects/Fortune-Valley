@@ -297,6 +297,13 @@ export function listDecisions(config: GameConfig, policyLog: PolicyLogEntry[]): 
   return out;
 }
 
+/** Two actions change the same persistent setting (allocation, budget, contributions, a car, or one insurance line). */
+function sameSetting(a: GameAction, b: GameAction): boolean {
+  if (a.type !== b.type) return false;
+  if (a.type === 'set_insurance' && b.type === 'set_insurance') return a.line === b.line;
+  return a.type === 'set_allocation' || a.type === 'set_budget' || a.type === 'set_contributions' || a.type === 'set_car';
+}
+
 /** The policy log with one decision replaced (or every decision dropped for 'all'/'defaults', or a hypothetical added at month 0). */
 export function changedPolicyLog(config: GameConfig, policyLog: PolicyLogEntry[], decisionId: string, alternativeId: string): { log: PolicyLogEntry[]; decisionLabel: string; alternativeLabel: string } {
   if (decisionId === ALL_ID) {
@@ -308,8 +315,11 @@ export function changedPolicyLog(config: GameConfig, policyLog: PolicyLogEntry[]
     const entry = h?.entries.get(alternativeId);
     const alternative = h?.choice.alternatives.find((a) => a.id === alternativeId);
     if (!h || !entry || !alternative) throw new Error(`Unknown hypothetical ${decisionId}/${alternativeId}`);
-    // The hypothetical applies from day one; the player's later decisions still happen after it.
-    return { log: [entry, ...policyLog], decisionLabel: h.choice.label, alternativeLabel: alternative.label };
+    // The hypothetical applies from day one and for the whole run: the player's own later changes of the same setting
+    // (e.g. their month-0 "invest as 100% bonds") are dropped, otherwise they would simply overwrite it again.
+    // Unrelated decisions still happen after it.
+    const log = [entry, ...policyLog.filter((e) => !sameSetting(e.action, entry.action))];
+    return { log, decisionLabel: h.choice.label, alternativeLabel: alternative.label };
   }
   const index = Number(decisionId);
   const entry = policyLog[index];
