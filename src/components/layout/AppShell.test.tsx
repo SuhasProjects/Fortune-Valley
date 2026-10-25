@@ -22,7 +22,7 @@ describe('integrated app shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Next month/ }))
     expect(useGameStore.getState().game?.monthIndex).toBe(1)
     expect(screen.getByText(`Month 1 / ${useGameStore.getState().config!.durationMonths}`)).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: /Pause/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Pause \(Space\)/ }))
     expect((screen.getByRole('button', { name: /Next month/ }) as HTMLButtonElement).disabled).toBe(true)
     expect(useGameStore.getState().game?.status).toBe('paused')
   })

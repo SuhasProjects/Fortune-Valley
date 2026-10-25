@@ -17,7 +17,7 @@ import { TownWorld } from './world/TownWorld'
 import { ControlBar, Hud, HudFooter, StatusTag } from './hud'
 import { GuideWindow } from './title/GuideWindow'
 import { useGameClock } from '../hooks/useGameClock'
-import { Board, Button, IconButton, Modal, Tag } from '../ui'
+import { Board, Button, Modal, Tag } from '../ui'
 import './flow/flow.css'
 import './GameScreen.css'
 
@@ -178,7 +178,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   return <main aria-label="Fortune Valley town">
     <GameStage label="Fortune Valley town" world={<TownWorld onBuildingClick={store.openBuilding} eventBuildings={eventBuildings} openBuilding={panel} monthIndex={game.monthIndex}/>}>
       <Hud onOpenTimeline={store.openTimeline}/>
-      <div className="fv-flow-tools"><StatusTag/>{saved && <Tag tone="green">Saved</Tag>}<IconButton size="sm" icon="gear" label="Open pause menu" onClick={openPause}/></div>
+      <div className="fv-flow-tools"><StatusTag/>{saved && <Tag tone="green">Saved</Tag>}<Button size="sm" className="fv-pause-menu" aria-label="Pause menu" title="Pause menu · Esc" onClick={openPause}><span className="fv-glyph fv-glyph--pause" aria-hidden="true"/></Button></div>
       <ControlBar status={game.status} onAdvance={clock.advanceNow} onPause={store.setPaused} onFinish={requestFinish} secondsRemaining={clock.secondsRemaining} autoAdvanceEnabled={clock.autoAdvanceEnabled} blocked={game.activeEvents.length > 0} onToggleAuto={() => setSetting('autoAdvanceSeconds', settings.autoAdvanceSeconds ? 0 : settings.lastAutoAdvanceSeconds)}/>
       <ToastStack notifications={game.notifications} onOpenBuilding={store.openBuilding} onViewAll={() => store.setHistoryOpen(true)} onDismiss={store.markNotificationRead}/>
       <HudFooter/>

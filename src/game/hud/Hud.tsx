@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useGameStore, selectDebtTotal, selectNetWorth } from '../../stores/useGameStore'
 import { monthLabel, usd } from '../../components/flow/format'
 import { Board, Button, Divider, Icon, Money, type IconName, useReducedMotion } from '../../ui'
 import './hud.css'
 
+/** One HUD cell: a small icon + label line on top and the value line underneath. */
+function Cell({ className, label, icon, children, title }: { className: string; label: string; icon: IconName; children: ReactNode; title?: string }) {
+  return <div className={`fv-hud__cell ${className}`}><dl><dt><Icon name={icon} compact/>{label}</dt><dd title={title}>{children}</dd></dl></div>
+}
 function Value({ label, icon, value }: { label: string; icon: IconName; value: number }) {
   const previous = useRef(value)
   const [tick, setTick] = useState<{ delta: number; key: number } | null>(null)
@@ -16,12 +20,20 @@ function Value({ label, icon, value }: { label: string; icon: IconName; value: n
     const timer = setTimeout(() => setTick(null), 600)
     return () => clearTimeout(timer)
   }, [value])
-  return <div className="fv-hud__stat"><dl><dt><Icon name={icon} compact/>{label}</dt><dd className={tick ? `fv-value-tick fv-value-tick--${tick.delta > 0 ? 'up' : 'down'}` : ''} data-reduce-motion={reduced || undefined}><Money value={value}/>{tick && !reduced && <span key={tick.key} className="fv-value-delta" aria-hidden="true">{usd(tick.delta, true)}</span>}</dd></dl></div>
+  return <div className="fv-hud__cell fv-hud__stat"><dl><dt><Icon name={icon} compact/>{label}</dt><dd className={tick ? `fv-value-tick fv-value-tick--${tick.delta > 0 ? 'up' : 'down'}` : ''} data-reduce-motion={reduced || undefined}><Money value={value}/>{tick && !reduced && <span key={tick.key} className="fv-value-delta" aria-hidden="true">{usd(tick.delta, true)}</span>}</dd></dl></div>
 }
 export function Hud({ onOpenTimeline }: { onOpenTimeline: () => void }) {
   const game = useGameStore(state => state.game)
   const config = useGameStore(state => state.config)
   const debt = useGameStore(selectDebtTotal), netWorth = useGameStore(selectNetWorth)
   if (!game || !config) return null
-  return <Board as="header" role="region" padding="sm" className="fv-hud" aria-label="Financial overview"><div className="fv-hud__brand"><span className="fv-hud__brand-icon"><Icon name="coin" compact/></span><div><strong>FORTUNE VALLEY</strong><span title={config.title}>{config.title}</span></div></div><Divider vertical/><div className="fv-hud__date"><strong><Icon name="calendar" compact/>{monthLabel(config.startMonth, game.monthIndex)}</strong><span>Month {game.monthIndex} / {config.durationMonths}</span></div><Divider vertical/><Value label="Cash" icon="coin" value={game.cash}/><Divider vertical/><Value label="Savings" icon="leaf" value={game.savings}/><Divider vertical/><Value label="Debt" icon="ledger" value={debt}/><Divider vertical/><Value label="Net worth" icon="purse" value={netWorth}/><Button size="sm" iconRight="arrow-up-right" onClick={onOpenTimeline}>Timeline</Button></Board>
+  return <Board as="header" role="region" padding="sm" className="fv-hud" aria-label="Financial overview">
+    <Cell className="fv-hud__brand" label="Fortune Valley" icon="coin" title={config.title}>{config.title}</Cell><Divider vertical/>
+    <Cell className="fv-hud__date" label={`Month ${game.monthIndex} / ${config.durationMonths}`} icon="calendar">{monthLabel(config.startMonth, game.monthIndex)}</Cell><Divider vertical/>
+    <Value label="Cash" icon="coin" value={game.cash}/><Divider vertical/>
+    <Value label="Savings" icon="leaf" value={game.savings}/><Divider vertical/>
+    <Value label="Debt" icon="ledger" value={debt}/><Divider vertical/>
+    <Value label="Net worth" icon="purse" value={netWorth}/><Divider vertical/>
+    <Button size="sm" iconRight="arrow-up-right" onClick={onOpenTimeline}>Timeline</Button>
+  </Board>
 }

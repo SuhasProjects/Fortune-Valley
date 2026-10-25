@@ -20,6 +20,13 @@ describe('HUD', () => {
     expect(screen.getByText(usd(selectNetWorth(state))).className).toContain('fv-money--negative')
     fireEvent.click(screen.getByRole('button', {name:/Timeline/})); expect(timeline).toHaveBeenCalledOnce()
   })
+  it('lays every cell out as a label line over a value line', () => {
+    const {container} = render(<Hud onOpenTimeline={vi.fn()}/>); const cells = [...container.querySelectorAll('.fv-hud__cell')]
+    expect(cells.length).toBe(6)
+    for (const cell of cells) { expect(cell.querySelector('dt .fv-icon')).toBeTruthy(); expect(cell.querySelector('dt')?.textContent?.trim()).not.toBe(''); expect(cell.querySelector('dd')?.textContent?.trim()).not.toBe('') }
+    expect(container.querySelector('.fv-hud__brand dt')?.textContent).toBe('Fortune Valley'); expect(container.querySelector('.fv-hud__date dt')?.textContent).toMatch(/^Month \d+ \/ \d+$/)
+    expect(container.querySelectorAll('.fv-hud > .fv-divider--vertical').length).toBe(6)
+  })
   it('flashes a value tick with a floating delta when cash changes, colour only under reduced motion', () => {
     const {container, rerender} = render(<Hud onOpenTimeline={vi.fn()}/>); expect(container.querySelector('.fv-value-tick')).toBeNull()
     useGameStore.setState(state => ({game:{...state.game!,cash:state.game!.cash + 420}})); rerender(<Hud onOpenTimeline={vi.fn()}/>)

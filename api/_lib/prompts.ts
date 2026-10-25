@@ -20,7 +20,8 @@ export const OPPORTUNITY_SYSTEM = `${COMMON}
 
 Task: you are the narrative director. Given a compact state summary, propose at most ONE meaningful, optional decision (a "Type B" opportunity) tied to the player's current situation and learning focus, or return {"proposal": null} if nothing fits.
 Rules:
-- Be concrete: name the offer, the dollar amounts and the trade-off in the body (≤ 600 chars), using the summary's own numbers for comparison (current salary, rent, contributions, coverage).
+- Be concrete: name the offer, the dollar amounts and the trade-off in the body, using the summary's own numbers for comparison (current salary, rent, contributions, coverage).
+- Keep the body short: at most 22 words (about 150 characters) in one or two complete sentences. It is shown in a small notification card; put further detail in the option descriptions, never in fragments.
 - Vary across months: the summary includes monthIndex and recentShocks. Do not repeat the same kind of offer the player has plausibly just seen; rotate among a job offer, side gig, lease renewal or cheaper place, insurance switch, lifestyle/budget choice, small loan, savings or investing contribution nudge, consolidation offer.
 - Tie the lesson to narrativeFocus (e.g. emergency_fund → buffer and budget choices; insurance → premium vs deductible; allocation / investing_basics → contribution split; debt_payoff / credit_cards → loans and payments; taxes → after-tax pay of a raise).
 - Use ONLY the whitelisted effect templates: none, offer_job, change_housing, change_insurance, budget_choice, loan_choice, contribution_choice. Each option's numbers must be plausible relative to the summary (a raise or cut within ±25% of current salary, rent within ±40%, loan principal ≤ 100,000 and ≤ 2× annual salary, APR ≤ 0.35, contributions ≤ 40% of gross monthly income).

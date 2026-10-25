@@ -17,7 +17,7 @@
  */
 import type { GameEvent, GameState, LedgerCategory } from '@/types/domain';
 import { ASSET_CLASSES } from '@/types/domain';
-import { allocateAmount, coverShortfall, makeId, monthLabel, monthlyRate, netWorthOf, post, round2 } from './accounting';
+import { allocateAmount, coverShortfall, makeId, monthlyRate, netWorthOf, post, round2 } from './accounting';
 import { activePlan, rollEmployment, rollShocks } from './events';
 import { monthRng, type Rng } from './rng';
 
@@ -190,7 +190,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
   if (rollEmployment(s, rng.employment)) {
     const ev: GameEvent = {
       id: makeId('EVJ', s, 0), type: 'A', title: 'Job loss', source: 'engine', buildingTarget: 'office', createdAtMonth: m, expiresAtMonth: m + 2,
-      body: `Your employer cut your position. Unemployment benefits (illustrative) replace part of your pay for about ${s.employment.monthsUnemployedRemaining} months, then you return to a similar role unless you take another offer.`,
+      body: `Your employer cut your position, so illustrative unemployment benefits replace part of your pay for about ${s.employment.monthsUnemployedRemaining} months unless you take another offer.`,
       options: [{ id: 'ack', label: 'Understood', description: 'Acknowledge', effect: { template: 'none' } }],
       shock: { kind: 'job_loss', grossCost: 0, insurerPaid: 0, outOfPocket: 0, planId: null, fundedFrom: [] },
     };
@@ -216,7 +216,7 @@ export function advanceMonth(input: GameState, opts: AdvanceOptions = {}): GameS
     const net = round2(grossPay - withheld - (h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly) - premiums - debtPaid);
     notes.unshift({
       kind: 'info',
-      summary: `${monthLabel(s.startMonth, m)}: pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − bills/premiums/debt $${Math.round(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()}; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
+      summary: `Pay $${Math.round(grossPay).toLocaleString()} − withholding $${Math.round(withheld).toLocaleString()} − costs $${Math.round(h.housingMonthly + h.essentialsMonthly + h.discretionaryMonthly + premiums + debtPaid).toLocaleString()} = ${net < 0 ? '−' : ''}$${Math.abs(Math.round(net)).toLocaleString()} kept; investments ${totalReturn >= 0 ? '+' : '−'}$${Math.abs(Math.round(totalReturn)).toLocaleString()}`,
     });
     notes.forEach((n, i) => s.notifications.push({ id: makeId('N', s, s.notifications.length + i), monthIndex: m, kind: n.kind, summary: n.summary, details: n.details, relatedBuilding: n.building, read: false }));
     timeline.forEach((t, i) => s.timeline.push({ id: makeId('T', s, s.timeline.length + i), monthIndex: m, type: t.type, description: t.description, eventId: t.eventId, netWorthAfter: nwAfter }));

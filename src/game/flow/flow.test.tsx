@@ -121,9 +121,12 @@ describe('game screen flow', () => {
     expect(useGameStore.getState().game?.status).toBe('playing')
   })
 
+  it('labels the top-left pause button as the pause menu with a pixel pause glyph', () => {
+    render(<GameScreen/>); const button = screen.getByRole('button', { name: 'Pause menu' }); expect(button.querySelector('.fv-glyph--pause')).toBeTruthy(); expect(button.textContent).toBe('')
+  })
   it('offers Options and Guide from the pause menu and returns to it', () => {
     render(<GameScreen/>)
-    fireEvent.click(screen.getByRole('button', { name: 'Open pause menu' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pause menu' }))
     fireEvent.click(screen.getByRole('button', { name: 'Options' }))
     expect(screen.getByRole('dialog', { name: 'Options' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Done' }))

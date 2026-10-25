@@ -1,20 +1,21 @@
-/* Top HUD: a full-width parchment board, 16 art px tall, flush with the top edge so its bottom (16 art px) clears the
-   Town Office roof at 1280x720. Columns have fixed flex bases so a value changing digits never moves its neighbours.
-   The frame's 4-art-px border leaves an 8-art-px content box; the two text rows (5 + 6.5 art px) overflow it
-   symmetrically and stay inside the 2-art-px painted edge. */
-.fv-hud { position: absolute; top: 0; left: calc(2 * var(--px)); right: calc(2 * var(--px)); z-index: var(--z-hud); height: calc(16 * var(--px)); display: flex; gap: var(--px); align-items: center; padding: 0 var(--px); white-space: nowrap; }
-.fv-hud__brand { flex: 0 0 calc(64 * var(--px)); display: flex; align-items: center; min-width: 0; gap: calc(2 * var(--px)); }
-.fv-hud__brand-icon { background: var(--c-wood); border: var(--px) solid var(--c-outline); box-shadow: inset var(--px) var(--px) 0 var(--c-wood-light); display: flex; padding: var(--px); }
-.fv-hud__brand > div { min-width: 0; }
-.fv-hud__brand strong { display: block; overflow: hidden; text-overflow: ellipsis; font: 700 var(--fs-body)/1 var(--font-heading); color: var(--c-ink); }
-.fv-hud__brand span:not(.fv-hud__brand-icon), .fv-hud__date span { display: block; font-size: var(--fs-label); line-height: 1; margin-top: var(--px); overflow: hidden; text-overflow: ellipsis; }
-.fv-hud__date { flex: 0 0 calc(36 * var(--px)); min-width: 0; }
-.fv-hud__date strong { display: flex; align-items: center; gap: var(--px); font: var(--fs-value)/1 var(--font-body); color: var(--c-ink); }
-.fv-hud__stat { flex: 1 0 calc(30 * var(--px)); min-width: 0; }
-.fv-hud dl { margin: 0; }
-.fv-hud dt { display: flex; align-items: center; gap: var(--px); height: calc(5 * var(--px)); font-size: var(--fs-label); line-height: 1; color: color-mix(in srgb, var(--c-outline) 75%, transparent); }
-.fv-hud dd { position: relative; margin: 0; min-width: 9ch; font-size: var(--fs-value); line-height: 1; font-variant-numeric: tabular-nums; }
-.fv-hud > .fv-button { margin-left: var(--px); }
+/* Top HUD: a full-width parchment board, 22 art px tall, flush with the top edge so its bottom (22 art px) still
+   clears the Town Office roof at 1280x720 (GameScreen.css reads the same number as --hud-bottom). Every cell is a
+   two-line stack: a small icon + label line on top and the value underneath. The frame's 4-art-px border leaves a
+   14-art-px content box, which holds the 5 + 1 + 6.5 art px stack with room to spare. Columns have fixed flex bases
+   so a value changing digits never moves its neighbours. */
+.fv-hud { position: absolute; top: 0; left: calc(2 * var(--px)); right: calc(2 * var(--px)); z-index: var(--z-hud); height: calc(22 * var(--px)); display: flex; gap: calc(2 * var(--px)); align-items: center; padding: 0 calc(2 * var(--px)); white-space: nowrap; }
+.fv-hud > .fv-divider--vertical { align-self: stretch; margin: 0; }
+.fv-hud__cell { min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.fv-hud__brand { flex: 0 1 calc(58 * var(--px)); }
+.fv-hud__date { flex: 0 0 calc(34 * var(--px)); }
+.fv-hud__stat { flex: 1 0 calc(28 * var(--px)); }
+.fv-hud dl { margin: 0; min-width: 0; }
+.fv-hud dt { display: flex; align-items: center; gap: var(--px); height: calc(5 * var(--px)); margin-bottom: var(--px); font-size: var(--fs-label); line-height: 1; color: color-mix(in srgb, var(--c-outline) 75%, transparent); overflow: hidden; }
+.fv-hud dd { position: relative; margin: 0; font-size: var(--fs-value); line-height: 1; font-variant-numeric: tabular-nums; color: var(--c-ink); overflow: hidden; text-overflow: ellipsis; }
+.fv-hud__stat dd { min-width: 9ch; }
+.fv-hud__brand dt { font: 700 var(--fs-label)/1 var(--font-heading); text-transform: uppercase; color: var(--c-wood-dark); }
+.fv-hud__brand dd { font-size: var(--fs-body); }
+.fv-hud > .fv-button { flex: none; }
 /* Value tick: two-step nudge + colour flash, with a floating signed delta (three steps, 6 art px). */
 .fv-value-tick { animation: fv-tick 600ms steps(2); }
 .fv-value-tick--up, .fv-value-tick--up > .fv-money { color: var(--c-money-up); } .fv-value-tick--down, .fv-value-tick--down > .fv-money { color: var(--c-money-down); }
@@ -25,7 +26,10 @@
 .fv-control-bar { position: absolute; bottom: calc(5 * var(--px)); left: 50%; transform: translateX(-50%); z-index: var(--z-hud); display: flex; align-items: center; gap: calc(2 * var(--px)); max-width: calc(100% - 4 * var(--px)); padding: 0 var(--px); white-space: nowrap; }
 .fv-countdown { min-width: calc(26 * var(--px)); text-align: center; color: var(--c-outline); } .fv-countdown span { display: block; font-size: var(--fs-label); line-height: 1; } .fv-countdown strong { display: block; margin-top: calc(0.5 * var(--px)); font: 700 var(--fs-value)/1 var(--font-heading); font-variant-numeric: tabular-nums; color: var(--c-ink); }
 .fv-control-bar > .fv-divider--vertical { align-self: stretch; margin: calc(-1 * var(--px)) 0; }
-.fv-status-tag { position: absolute; z-index: var(--z-hud); top: calc(18 * var(--px)); left: calc(3 * var(--px)); }
+.fv-status-tag { position: absolute; z-index: var(--z-hud); top: calc(24 * var(--px)); left: calc(3 * var(--px)); }
+/* The pause-menu button beside the status tag: a plain pixel pause glyph, so nobody reads it as settings. */
+.fv-pause-menu { --button-height: 9; width: calc(11 * var(--px)); padding: 0; flex: none; }
+.fv-pause-menu .fv-glyph { color: var(--c-ink); }
 /* The status tag is a small, quiet label (one size under --fs-label) tucked top-left under the HUD. */
 .fv-status-tag .fv-tag { font-size: calc(4 * var(--px)); line-height: 1; min-height: calc(6 * var(--px)); }
 .fv-status-dot { display: inline-block; width: calc(2 * var(--px)); height: calc(2 * var(--px)); background: var(--c-gold); animation: fv-pulse 900ms steps(2) infinite; }
@@ -48,12 +52,11 @@
   .fv-hud { height: calc(47 * var(--px)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--px) calc(2 * var(--px)); padding: 0 var(--px); }
   .fv-hud > .fv-divider { display: none; }
   .fv-hud__brand { grid-area: 1 / 1 / 2 / 3; }
-  .fv-hud__brand-icon { display: none; }
   .fv-hud__date { grid-area: 1 / 3 / 2 / 4; }
-  .fv-hud > .fv-button { grid-area: 1 / 4 / 2 / 5; justify-self: end; margin-left: 0; padding: 0 calc(2 * var(--px)); }
-  .fv-hud__stat { grid-row: 2; align-self: stretch; display: flex; align-items: center; border-top: var(--px) solid var(--c-parchment-shadow); }
-  .fv-hud dt { height: auto; margin-bottom: var(--px); }
-  .fv-hud dd { min-width: 0; font-size: var(--fs-body); }
+  .fv-hud > .fv-button { grid-area: 1 / 4 / 2 / 5; justify-self: end; padding: 0 calc(2 * var(--px)); }
+  .fv-hud__stat { grid-row: 2; align-self: stretch; justify-content: center; border-top: var(--px) solid var(--c-parchment-shadow); }
+  .fv-hud dt { height: auto; }
+  .fv-hud dd, .fv-hud__brand dd { min-width: 0; font-size: var(--fs-body); }
   /* Control bar: countdown on the left across both rows, then Auto · Pause over Next month · Finish. */
   .fv-control-bar { height: calc(33 * var(--px)); display: grid; grid-template-columns: auto auto auto; grid-template-rows: calc(12 * var(--px)) calc(12 * var(--px)); gap: var(--px) calc(2 * var(--px)); align-items: stretch; max-width: calc(100% - 4 * var(--px)); }
   .fv-control-bar > .fv-divider { display: none; }

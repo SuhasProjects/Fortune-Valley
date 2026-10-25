@@ -108,7 +108,7 @@ const TEMPLATES: OppTemplate[] = [
       const pay = salaryOffer(s.grossAnnualSalary * 0.9);
       return {
         title: 'A quicker way back to work',
-        body: `A recruiter offers a role at ${fmtUsd(pay)}/yr — about 10% less than your last job — starting next month. Taking it ends unemployment now; declining means waiting for a role at your old pay.`,
+        body: `A recruiter offers ${fmtUsd(pay)}/yr from next month, about 10% under your last pay, which ends unemployment now instead of waiting for your old rate.`,
         buildingTarget: 'office',
         learningNote: 'Income stability versus holding out for a higher salary. There is no single right answer; the simulation shows the cash effect.',
         options: [
@@ -127,7 +127,7 @@ const TEMPLATES: OppTemplate[] = [
       const deep = spendOffer(s.discretionaryMonthly * 0.3);
       return {
         title: 'Tight month ahead',
-        body: `Your cash plus savings covers about ${fmtMonths(s.monthsOfEssentialsCovered)} of housing and essentials. Trimming discretionary spending from ${fmtUsd(s.discretionaryMonthly)} to ${fmtUsd(cut)} would rebuild a buffer faster; a deeper cut to ${fmtUsd(deep)} would do it sooner still.`,
+        body: `Your cash and savings cover about ${fmtMonths(s.monthsOfEssentialsCovered)} of essentials, so trimming spending from ${fmtUsd(s.discretionaryMonthly)} to ${fmtUsd(cut)} or ${fmtUsd(deep)} a month would rebuild your buffer faster.`,
         buildingTarget: 'home',
         learningNote: 'Emergency funds are built from the gap between income and spending; small recurring cuts compound.',
         options: [
@@ -144,7 +144,7 @@ const TEMPLATES: OppTemplate[] = [
     eligible: (s) => s.insurance.health === null,
     build: () => ({
       title: 'Open enrollment',
-      body: 'You currently have no health coverage. A basic high-deductible plan costs $180/month and caps what you pay per claim; the Plus plan costs $340/month with a $1,000 deductible. Going without saves the premium but leaves you exposed to the full cost of a medical shock.',
+      body: 'You have no health coverage, and a Basic plan at $180/month or Plus at $340/month would cap what a medical shock costs you.',
       buildingTarget: 'hospital',
       learningNote: 'Insurance trades a certain premium for a cap on uncertain costs. It changes what you pay, never whether something happens.',
       options: [
@@ -163,7 +163,7 @@ const TEMPLATES: OppTemplate[] = [
       const counter = salaryOffer(s.grossAnnualSalary * 1.03);
       return {
         title: 'Offer from across town',
-        body: `A competitor offers ${fmtUsd(pay)}/yr, about 8% more than your current ${fmtUsd(s.grossAnnualSalary)}. Your manager hints they could match part of it (${fmtUsd(counter)}) if you stay. Take-home pay rises by less than the headline because withholding rises too.`,
+        body: `A competitor offers ${fmtUsd(pay)}/yr against your ${fmtUsd(s.grossAnnualSalary)}, and your manager hints at ${fmtUsd(counter)} if you stay; take-home rises less than the headline.`,
         buildingTarget: 'office',
         learningNote: 'Compare after-tax pay, not headline salary: a raise is taxed at your top bracket in the simulation.',
         options: [
@@ -183,7 +183,7 @@ const TEMPLATES: OppTemplate[] = [
       const small = salaryOffer(s.grossAnnualSalary + 2400);
       return {
         title: 'Weekend side gig',
-        body: `A neighbour needs regular weekend help. Two shifts a month adds about $200/mo (${fmtUsd(small)}/yr in total pay); four shifts adds about $400/mo (${fmtUsd(big)}/yr). The extra is taxed like the rest of your income.`,
+        body: `A neighbour needs weekend help: two shifts a month add about $200 (${fmtUsd(small)}/yr), four add about $400 (${fmtUsd(big)}/yr), all taxed as income.`,
         buildingTarget: 'office',
         learningNote: 'Extra income raises every month’s surplus, but it costs time and is taxed; the net is smaller than the gross.',
         options: [
@@ -203,7 +203,7 @@ const TEMPLATES: OppTemplate[] = [
       const std = salaryOffer(s.grossAnnualSalary * 1.02);
       return {
         title: 'Annual review',
-        body: `Review season. The standard adjustment is 2% (${fmtUsd(std)}/yr). You could instead ask for 5% (${fmtUsd(ask)}/yr) in exchange for leading a bigger project with longer hours.`,
+        body: `The standard review raise is 2% (${fmtUsd(std)}/yr), or you could ask for 5% (${fmtUsd(ask)}/yr) by leading a bigger project with longer hours.`,
         buildingTarget: 'office',
         learningNote: 'Pay raises compound: a higher base lifts every future raise and contribution tied to income.',
         options: [
@@ -222,7 +222,7 @@ const TEMPLATES: OppTemplate[] = [
       const pay = salaryOffer(s.grossAnnualSalary * 0.9);
       return {
         title: 'Four-day week offer',
-        body: `Your employer pilots a four-day week at 90% pay: ${fmtUsd(pay)}/yr instead of ${fmtUsd(s.grossAnnualSalary)}. Your fixed costs stay the same, so the cut comes straight out of your monthly surplus.`,
+        body: `Your employer offers a four-day week at 90% pay, ${fmtUsd(pay)}/yr instead of ${fmtUsd(s.grossAnnualSalary)}, while your fixed costs stay the same.`,
         buildingTarget: 'office',
         learningNote: 'A pay cut shows up fully in the surplus because housing and essentials do not shrink with it.',
         options: [
@@ -241,7 +241,7 @@ const TEMPLATES: OppTemplate[] = [
       const down = housingOffer(s.housingMonthly * 0.88);
       return {
         title: 'Lease renewal',
-        body: `Your lease is up. Renewing costs ${fmtUsd(up)}/mo (up 6% from ${fmtUsd(s.housingMonthly)}). A smaller place nearby lists at ${fmtUsd(down)}/mo. You can also stay month-to-month at today’s rent for now.`,
+        body: `Your lease is up: renewing costs ${fmtUsd(up)}/mo, a smaller place nearby lists at ${fmtUsd(down)}/mo, or you can stay month-to-month at ${fmtUsd(s.housingMonthly)}.`,
         buildingTarget: 'home',
         learningNote: 'Housing is usually the largest fixed cost; a few percent either way moves every month of the run.',
         options: [
@@ -260,7 +260,7 @@ const TEMPLATES: OppTemplate[] = [
       const cheaper = housingOffer(s.housingMonthly * 0.82);
       return {
         title: 'A smaller place opens up',
-        body: `A friend’s building has a smaller unit for about ${fmtUsd(cheaper)}/mo versus your ${fmtUsd(s.housingMonthly)}. Less space, more room in the budget every month.`,
+        body: `A friend’s building has a smaller unit for about ${fmtUsd(cheaper)}/mo instead of your ${fmtUsd(s.housingMonthly)}, trading space for monthly budget room.`,
         buildingTarget: 'home',
         learningNote: 'Reducing a fixed cost frees the same cash every month for the rest of the run; one-off savings do not.',
         options: [
@@ -279,7 +279,7 @@ const TEMPLATES: OppTemplate[] = [
       const down = spendOffer(s.discretionaryMonthly * 0.8);
       return {
         title: 'Friends, plans, and a budget',
-        body: `A new gym, a weekly dinner out, a streaming bundle: the invitations add up to about ${fmtUsd(up)}/mo versus your current ${fmtUsd(s.discretionaryMonthly)}. Alternatively, a no-spend month challenge would trim it to ${fmtUsd(down)}.`,
+        body: `New invitations would lift your spending from ${fmtUsd(s.discretionaryMonthly)} to about ${fmtUsd(up)}/mo, while a no-spend challenge would trim it to ${fmtUsd(down)}.`,
         buildingTarget: 'home',
         learningNote: 'Discretionary spending is the lever you control most directly; it moves the surplus one-for-one.',
         options: [
@@ -314,8 +314,8 @@ const TEMPLATES: OppTemplate[] = [
       return {
         title: toPlus ? 'Upgrade your health plan?' : 'Downgrade your health plan?',
         body: toPlus
-          ? 'Open enrollment: the Plus plan costs $340/month (up from $180) but lowers the deductible from $4,000 to $1,000 and the out-of-pocket cap from $8,000 to $4,000. You pay more every month for a smaller worst case.'
-          : 'Open enrollment: the Basic plan costs $180/month (down from $340) but raises the deductible from $1,000 to $4,000 and the out-of-pocket cap from $4,000 to $8,000. You keep more each month and carry a bigger worst case.',
+          ? 'The Plus plan costs $340/month instead of $180 but cuts the deductible from $4,000 to $1,000, so you pay more monthly for a smaller worst case.'
+          : 'The Basic plan costs $180/month instead of $340 but raises the deductible from $1,000 to $4,000, so you keep more monthly with a bigger worst case.',
         buildingTarget: 'hospital',
         learningNote: 'Premium versus deductible is a trade between a certain monthly cost and the size of the bad-month bill.',
         options: [
@@ -336,8 +336,8 @@ const TEMPLATES: OppTemplate[] = [
       return {
         title: hasLiability ? 'Full coverage quote' : 'Auto insurance quote',
         body: hasLiability
-          ? 'Your insurer quotes full coverage at $145/month (up from $70). Liability-only pays nothing toward damage to your own car; full coverage pays up to $25,000 after a $1,000 deductible.'
-          : 'You drive without coverage. Liability-only costs $70/month and covers nothing on your own car; full coverage costs $145/month and pays up to $25,000 after a $1,000 deductible.',
+          ? 'Full coverage costs $145/month instead of $70 and pays up to $25,000 for damage to your own car after a $1,000 deductible.'
+          : 'You drive uninsured; liability-only costs $70/month, while full coverage at $145/month also pays up to $25,000 for your own car.',
         buildingTarget: 'hospital',
         learningNote: 'Different lines of coverage protect different things; check what a plan pays for, not just its price.',
         options: hasLiability
@@ -365,7 +365,7 @@ const TEMPLATES: OppTemplate[] = [
       const less = contribOffer(Math.max(0, save - bump));
       return {
         title: 'Automatic transfer reminder',
-        body: `Pine Bank suggests nudging your automatic savings transfer. You currently move ${fmtUsd(save)}/mo to savings (and ${fmtUsd(inv)}/mo to investments). Raising it to ${fmtUsd(more)} grows your buffer faster; lowering it to ${fmtUsd(less)} leaves more cash each month.`,
+        body: `You move ${fmtUsd(save)}/mo to savings and ${fmtUsd(inv)}/mo to investments; raising savings to ${fmtUsd(more)} builds your buffer faster, while ${fmtUsd(less)} leaves more cash.`,
         buildingTarget: 'bank',
         learningNote: 'Savings earn a small steady return and stay liquid; the contribution, not the rate, does most of the work early on.',
         options: [
@@ -388,7 +388,7 @@ const TEMPLATES: OppTemplate[] = [
       const growth = contribOffer(total * 0.3);
       return {
         title: 'Rebalance your monthly habit',
-        body: `You set aside ${fmtUsd(save)}/mo to savings and ${fmtUsd(inv)}/mo to investments. An even split (${fmtUsd(half)} each) balances liquidity and growth; a growth tilt (${fmtUsd(growth)} savings, ${fmtUsd(contribOffer(total - growth))} investments) accepts more swing.`,
+        body: `You set aside ${fmtUsd(save)}/mo for savings and ${fmtUsd(inv)}/mo for investments; an even split is ${fmtUsd(half)} each, and a growth tilt is ${fmtUsd(growth)} to ${fmtUsd(contribOffer(total - growth))}.`,
         buildingTarget: 'market',
         learningNote: 'Savings are liquid and steady; investments grow more on average but swing. The right split depends on your buffer.',
         options: [
@@ -409,7 +409,7 @@ const TEMPLATES: OppTemplate[] = [
       const medium = contribOffer(Math.max(50, monthly(s) * 0.05));
       return {
         title: 'Open a brokerage account?',
-        body: `Maple Market offers an account with no minimum. You currently invest $0/mo; starting at ${fmtUsd(small)}/mo or ${fmtUsd(medium)}/mo would buy your target mix automatically. Your savings transfer of ${fmtUsd(save)}/mo is unchanged.`,
+        body: `Maple Market offers a no-minimum account, so investing ${fmtUsd(small)} or ${fmtUsd(medium)} a month would buy your target mix while your ${fmtUsd(save)}/mo savings transfer stays unchanged.`,
         buildingTarget: 'market',
         learningNote: 'Investment returns in the simulation are random around an average; a steady contribution matters more than timing.',
         options: [
@@ -428,7 +428,7 @@ const TEMPLATES: OppTemplate[] = [
       const principal = loanOffer(Math.min(3000, monthly(s) * 1.5), s);
       return {
         title: 'Laptop financing offer',
-        body: `Your laptop died. The store offers ${fmtUsd(principal)} of financing at 9% APR over 24 months, or 18% APR over 12 months with a lower total interest cost but a higher payment. Paying cash is not modelled here; declining simply means no new loan.`,
+        body: `Your laptop died, and the store offers ${fmtUsd(principal)} of financing at 9% APR over 24 months or 18% APR over 12 months with a higher payment.`,
         buildingTarget: 'bank',
         learningNote: 'A loan converts one bill into many; the longer the term, the smaller each payment and the more interest in total.',
         options: [
@@ -447,7 +447,7 @@ const TEMPLATES: OppTemplate[] = [
       const principal = loanOffer(Math.min(10000, s.debtTotal), s);
       return {
         title: 'Consolidation offer',
-        body: `A lender offers a ${fmtUsd(principal)} personal loan at 11% APR over 36 months against your ${fmtUsd(s.debtTotal)} of debt. The cash lands in your account; your existing debts remain until you pay them down yourself.`,
+        body: `A lender offers a ${fmtUsd(principal)} personal loan at 11% APR over 36 months, which adds cash now while your ${fmtUsd(s.debtTotal)} of existing debt stays until you repay it.`,
         buildingTarget: 'bank',
         learningNote: 'New borrowing adds a fixed payment and interest. It only helps if it replaces more expensive debt.',
         options: [
