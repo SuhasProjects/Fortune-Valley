@@ -28,13 +28,16 @@ const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x,
  * Standalone props sit fully inside the core or fully outside x 58..422 so no viewport cuts one in half; the pine
  * line leaves a gap over those edge bands for the same reason.
  */
+// A continuous tree line, as originally drawn: no gaps for the path or the screen-edge bands (a half tree at the
+// window edge reads better than a hole in the forest).
 const forest: Placed[] = []
-for (let x = 2; x < MAP_W; x += 20) {
-  if (x >= 216 && x <= 244) continue // the path leaves the meadow here
-  if ((x + 18 > 60 && x < 80) || (x + 18 > 400 && x < 420)) continue // edge bands
-  const step = Math.round((x - 2) / 20)
-  forest.push(pine(x, 118 + (step % 3) * 3))
-  if (step % 4 === 1 && x + 31 <= 400) forest.push(tree(x + 9, 126))
+for (let x = -10; x < MAP_W; x += 10) {
+  const step = Math.round((x + 10) / 10)
+  // Three rows; every trunk base (y + 28) sits on the meadow, which starts at row 146 under the hills.
+  forest.push(pine(x + 5, 118 + (step % 2) * 2)) // back row
+  forest.push(pine(x, 123 + (step % 3) * 2)) // middle row
+  if (step % 2 === 0) forest.push(pine(x + 3, 129 + (step % 4))) // front row
+  if (step % 7 === 3) forest.push(tree(x + 2, 134))
 }
 
 const PROPS: Placed[] = [
