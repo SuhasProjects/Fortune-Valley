@@ -60,7 +60,7 @@ async function call(req: AiRequest, opts: AiClientOptions): Promise<AiResponse |
 export async function generateScenario(input: PersonalizedInput, opts: AiClientOptions = {}): Promise<ScenarioResult> {
   const r = await call({ kind: 'scenario', input }, opts);
   if (r && r.kind === 'scenario') return r;
-  return { kind: 'scenario', source: 'fallback', proposal: fallbackScenario(input), warnings: ['AI gateway unavailable; used offline keyword mapping.'] };
+  return { kind: 'scenario', source: 'fallback', proposal: fallbackScenario(input), warnings: ['The valley\'s storyteller is offline, so this story follows a template plus the words and numbers in your letter.'] };
 }
 
 export async function proposeOpportunity(summary: StateSummary, opts: AiClientOptions = {}): Promise<OpportunityResult> {

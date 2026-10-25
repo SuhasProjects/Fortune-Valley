@@ -75,8 +75,8 @@ export function fallbackScenario(input: PersonalizedInput): ScenarioProposal {
 
   return {
     baseArchetype,
-    title: 'Your situation (offline mapping)',
-    description: `Mapped offline to the "${baseArchetype.replace('_', ' ')}" mechanics using keywords and the numbers you entered. Unlabeled values use demo defaults.`,
+    title: 'Your own story',
+    description: `A story built offline from the "${baseArchetype.replace('_', ' ')}" life, the words in your letter and the numbers you entered. Anything you left out uses that life's usual figures.`,
     overrides,
     narrativeFocus: focus,
     defaultsApplied,

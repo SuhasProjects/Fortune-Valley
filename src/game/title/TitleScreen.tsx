@@ -35,7 +35,12 @@ export function TitleScreen() {
   }
   return <TitleStage label="Fortune Valley" world={<TitleScene/>}>
     <div className={`fv-title ${screen !== 'menu' ? 'fv-title--subscreen' : ''}`} data-reduce-motion={reduceMotion} onKeyDown={event => {
-      if (event.key === 'Escape' && screen !== 'menu' && !window) { event.preventDefault(); back() }
+      if (event.key !== 'Escape' || screen === 'menu' || window) return
+      event.preventDefault()
+      // Escape inside a half-written letter only leaves the text box (the next Escape goes back), so a draft is never lost by one key.
+      const target = event.target as HTMLElement
+      if ((target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) && target.value !== '') { content.current?.querySelector<HTMLElement>('h2')?.focus(); return }
+      back()
     }}>
       <header className="fv-sign-wrap">
         <div className="fv-ropes" aria-hidden="true"/>
