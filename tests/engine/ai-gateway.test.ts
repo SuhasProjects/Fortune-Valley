@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { handleAiRequest, type HandlerResult, type ModelClient } from '../../api/_lib/handler';
 import { makeOpenAiCompatibleClient } from '../../api/_lib/openaiCompatible';
+import { MAX_PER_WINDOW } from '../../api/_lib/rateLimit';
 import vercelHandler from '../../api/ai';
 import { aiDevMiddleware, readServerEnv } from '../../server/aiDevMiddleware';
 import { fixtureState, fixtureConfig } from '@/fixtures';
@@ -133,15 +134,17 @@ describe('OpenAI-compatible provider end to end (mocked fetch) → gateway code 
     expect(direct.source).toBe('fallback');
   });
 
-  it('per-client rate limit: the 41st request in the window is 429 rate_limited and never reaches the model', async () => {
+  it('per-client rate limit: a full game plus Sage questions fits in one window; the request past the cap is 429 rate_limited and never reaches the model', async () => {
     let modelCalls = 0;
     const counting: ModelClient = { async parse({ schema }) { modelCalls++; return { parsed: schema.parse({ text: 'ok' }), stopReason: 'stop' }; } };
     const meta = { clientKey: `rate-limit-test-${Math.random()}` };
     const body = JSON.stringify({ kind: 'explain', summary: summary(), question: 'why' });
-    for (let i = 0; i < 40; i++) expect((await handleAiRequest(body, env, counting, meta)).status).toBe(200);
+    // A quickly clicked 36-month game makes ~40 calls; a judge then asks the Sage a handful of questions, all in one window.
+    expect(MAX_PER_WINDOW).toBeGreaterThanOrEqual(40 + 10);
+    for (let i = 0; i < MAX_PER_WINDOW; i++) expect((await handleAiRequest(body, env, counting, meta)).status).toBe(200);
     const r = await handleAiRequest(body, env, counting, meta);
     expect(r).toMatchObject({ status: 429, body: { code: 'rate_limited', error: expect.stringMatching(/retry in \d+s/) } });
-    expect(modelCalls).toBe(40);
+    expect(modelCalls).toBe(MAX_PER_WINDOW);
     expect((await explainOutcome(summary(), 'why', undefined, { fetchImpl: replay(r) })).source).toBe('fallback');
   });
 

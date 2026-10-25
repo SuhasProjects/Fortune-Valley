@@ -1,6 +1,10 @@
 /** In-memory sliding-window rate limiter (per serverless instance / dev server). */
 const WINDOW_MS = 5 * 60_000;
-const MAX_PER_WINDOW = 40;
+/**
+ * One quickly clicked 36-month game makes ~40 calls (≈20 flavour, ≈16 opportunity, explain, recap, what-if), and judges on one
+ * venue Wi-Fi share a client IP, so the window must hold a few full games plus Sage questions. Abuse still stops at 120.
+ */
+export const MAX_PER_WINDOW = 120;
 const buckets = new Map<string, number[]>();
 
 export function allowRequest(clientKey: string, now = Date.now()): { ok: boolean; retryAfterSec: number } {

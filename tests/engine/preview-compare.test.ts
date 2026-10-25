@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { archetypeConfig } from '@/config/archetypes';
 import { advanceMonth, applyAction, compareWithBaseline, createGame, hasPolicyDecisions, histogram, previewHorizon, previewMonth, runMonteCarlo, selectPaySummary } from '@/engine';
-import { allowRequest } from '../../api/_lib/rateLimit';
+import { allowRequest, MAX_PER_WINDOW } from '../../api/_lib/rateLimit';
 import { handleAiRequest } from '../../api/_lib/handler';
 
 describe('previewMonth', () => {
@@ -69,12 +69,12 @@ describe('baseline comparison & histogram', () => {
 describe('gateway guards', () => {
   it('rate limits per client and rejects oversized bodies', async () => {
     let allowed = 0;
-    for (let i = 0; i < 45; i++) if (allowRequest('c1', 1_000_000 + i).ok) allowed += 1;
-    expect(allowed).toBe(40);
+    for (let i = 0; i < MAX_PER_WINDOW + 5; i++) if (allowRequest('c1', 1_000_000 + i).ok) allowed += 1;
+    expect(allowed).toBe(MAX_PER_WINDOW);
     expect(allowRequest('c1', 1_000_000 + 5 * 60_000 + 1).ok).toBe(true);
     const big = await handleAiRequest('x'.repeat(250_000), { AI_API_KEY: 'k' });
     expect(big.status).toBe(413);
-    const limited = await (async () => { let r; for (let i = 0; i < 41; i++) r = await handleAiRequest('{}', {}, undefined, { clientKey: 'c2' }); return r!; })();
+    const limited = await (async () => { let r; for (let i = 0; i <= MAX_PER_WINDOW; i++) r = await handleAiRequest('{}', {}, undefined, { clientKey: 'c2' }); return r!; })();
     expect(limited.body).toMatchObject({ code: 'rate_limited' });
   });
 });
