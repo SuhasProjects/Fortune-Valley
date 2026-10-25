@@ -214,6 +214,12 @@ for (const band of ['haze', 'far', 'mid']) {
     const ny = top + Math.floor((bottom - top) / 2);
     for (const nx of [6, 13, w - 8, w - 15]) if (rows[ny][nx] !== '.') { rows[ny][nx] = 'K'; rows[ny][nx + 1] = 'k'; rows[ny + 1][nx] = 'k'; }
   }
+  // Nails along the plank seams where the boards are fixed to the battens behind: a dark head with a lit edge.
+  for (const sy of seams) for (let nx = 10; nx < w - 6; nx += 24 + (Math.floor(nx / 24) % 2) * 6) {
+    if (inText(nx, sy)) continue;
+    if (rows[sy - 1][nx] === '.' || rows[sy + 1][nx + 1] === '.') continue;
+    rows[sy - 1][nx] = 'K'; rows[sy - 1][nx + 1] = 'k'; rows[sy][nx] = 'k'; rows[sy][nx + 1] = 'W'; rows[sy - 2][nx + 1] = 'n';
+  }
   // Sun-bleached streaks and dark weather stains, away from the lettering.
   for (let i = 0; i < 40; i++) {
     const x = Math.floor(r() * (w - 8)) + 4, y = Math.floor(r() * (h - 6)) + 3, len = 3 + Math.floor(r() * 7);

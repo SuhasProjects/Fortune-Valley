@@ -19,6 +19,7 @@ const LAYERS: [SpriteName, number][] = [
 ]
 
 interface Placed { sprite: SpriteName; x: number; y: number; animate?: boolean }
+const pine = (x: number, y: number): Placed => ({ sprite: 'world/extra/pine-tree', x, y })
 const tree = (x: number, y: number): Placed => ({ sprite: 'world/props/tree-round', x, y, animate: true })
 const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x, y, animate: true })
 
@@ -71,6 +72,9 @@ const PROPS: Placed[] = [
   { sprite: 'world/props/flowers-mixed', x: 200, y: 246, animate: true }, { sprite: 'world/props/flowers-white', x: 300, y: 198, animate: true },
   { sprite: 'world/props/lilypad', x: 104, y: 220, animate: true }, { sprite: 'world/props/lilypad', x: 128, y: 228, animate: true }, { sprite: 'world/props/lilypad', x: 118, y: 216, animate: true },
   tree(0, 232), tree(452, 196), tree(20, 196), tree(176, 208),
+  // Loose trees around the meadow, evergreen and broadleaf, clear of the buildings, path, pond and menu.
+  tree(30, 170), pine(34, 236), tree(430, 172), pine(428, 232), pine(268, 150), tree(200, 150), tree(372, 240), pine(214, 250), tree(300, 238),
+  pine(146, 148), tree(290, 170), tree(150, 206),
 ]
 
 export function TitleScene({ dusk = false }: { dusk?: boolean }) {
