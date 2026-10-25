@@ -105,12 +105,22 @@
 
 @media (max-width:1099px) { .fv-story-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:639px) {
-  .fv-sign-wrap { top:17%; } .fv-sign h1 { font-size:calc(10 * var(--px)); }
-  .fv-title-menu { flex-direction:column; top:51%; width:75%; } .fv-title-menu > .fv-button { min-height:calc(20 * var(--px)); }
+  /* Phones run the stage at zoom 1. The title's own UI floors at 2 px (sign, menu, corners) and reading surfaces at
+     3 px (picker, letter, Guide/Options windows) so title.css's calc(N * --px) text is legible. The scene is untouched. */
+  .fv-title { --px:2px; }
+  .fv-title-content, .fv-title .fv-modal { --px:3px; }
+  /* The full sign is 200 art px (400 CSS px); let its plank ends run off a 390 px screen rather than scale it. */
+  .fv-sign-wrap { top:12%; width:calc(200 * var(--px)); max-width:none; } .fv-sign h1 { font-size:calc(12 * var(--px)); }
+  .fv-motto { font-size:var(--fs-label); }
+  /* Menu below the valley scene (its band ends ~143 CSS px under the centre at zoom 1), never over it. */
+  .fv-title-menu { flex-direction:column; top:calc(50% + 150px); width:75%; gap:calc(4 * var(--px)); } .fv-title-menu > .fv-button { min-height:calc(20 * var(--px)); }
+  .fv-title-menu small { font-size:var(--fs-label); white-space:normal; }
+  .fv-title-menu > .fv-button:hover::before,.fv-title-menu > .fv-button:focus-visible::before { left:calc(-7 * var(--px)); }
   .fv-title-corners small { display:none; }
-  .fv-title-content { inset-inline:calc(3 * var(--px)); }
-  .fv-story-grid { grid-template-columns:1fr; } .fv-story-card.fv-button { padding:calc(4 * var(--px)); }
+  .fv-title-content { inset:calc(76px) calc(2px) calc(40px); }
+  .fv-story-grid { grid-template-columns:1fr; gap:calc(3 * var(--px)); } .fv-story-card.fv-button { padding:calc(3 * var(--px)); }
   .fv-number-grid { grid-template-columns:1fr 1fr; }
-  .fv-title--subscreen .fv-sign-wrap { max-width:70%; } .fv-title--subscreen .fv-sign h1 { font-size:calc(7 * var(--px)); }
-  .fv-picker header { margin-top:calc(24 * var(--px)); } .fv-letter { margin-top:calc(24 * var(--px)); }
+  .fv-title--subscreen .fv-sign-wrap { top:calc(10px); width:calc(120 * var(--px)); max-width:70%; }
+  .fv-picker header { margin-top:calc(2 * var(--px)); } .fv-letter { margin-top:calc(2 * var(--px)); }
+  .fv-title-content .fv-back { position:sticky; top:0; margin-bottom:calc(2 * var(--px)); }
 }

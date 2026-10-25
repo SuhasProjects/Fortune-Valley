@@ -1,16 +1,19 @@
 /* Agent 4: game-flow layer over the town. Every element here is a direct child of `.fv-ui`, so only the
    pieces themselves take pointer events and the town stays clickable in between. All sizes use `--px`. */
-.fv-flow-tools { position: absolute; z-index: var(--z-hud); top: calc(19 * var(--px)); left: calc(3 * var(--px)); display: flex; align-items: center; gap: var(--px); }
+.fv-flow-tools { position: absolute; z-index: var(--z-hud); top: calc(var(--hud-bottom, calc(17 * var(--px))) + 2 * var(--px)); left: calc(3 * var(--px)); display: flex; align-items: center; gap: var(--px); }
 .fv-flow-tools .fv-status-tag { position: static; }
 
 /* Toasts: right edge under the HUD, stacked downward. */
-.fv-toasts { position: absolute; z-index: var(--z-toast); top: calc(19 * var(--px)); right: calc(3 * var(--px)); width: calc(84 * var(--px)); max-width: calc(100% - 6 * var(--px)); display: flex; flex-direction: column; align-items: stretch; gap: calc(2 * var(--px)); pointer-events: none; }
+.fv-toasts { position: absolute; z-index: var(--z-toast); top: calc(var(--hud-bottom, calc(17 * var(--px))) + 2 * var(--px)); right: calc(3 * var(--px)); width: calc(84 * var(--px)); max-width: calc(100% - 6 * var(--px)); display: flex; flex-direction: column; align-items: stretch; gap: calc(2 * var(--px)); pointer-events: none; }
 .fv-toasts > * { pointer-events: auto; }
 .fv-toast { display: grid; gap: var(--px); }
 .fv-toast__head { display: flex; align-items: center; gap: var(--px); font-size: var(--fs-label); text-transform: uppercase; }
 .fv-toast__head > span { flex: 1; }
 .fv-toast strong { font: 700 var(--fs-body)/1.15 var(--font-heading); }
 .fv-toast p { margin: 0; font-size: var(--fs-label); }
+/* Long summaries (payroll lines) clamp so three toasts and "View all activity" fit under the HUD at 1280x720. */
+.fv-toast strong, .fv-toast p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.fv-toast p { -webkit-line-clamp: 3; }
 .fv-toast .fv-button { justify-self: start; }
 .fv-toast--decision { outline: var(--px) solid var(--c-gold); outline-offset: calc(-1 * var(--px)); }
 .fv-toast--negative .fv-toast__head { color: var(--c-money-down); }
@@ -18,7 +21,7 @@
 .fv-toasts .fv-view-all { align-self: flex-end; }
 
 /* Month ribbon and action errors drop in under the HUD. */
-.fv-month-banner, .fv-action-error { position: absolute; z-index: var(--z-toast); top: calc(19 * var(--px)); left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
+.fv-month-banner, .fv-action-error { position: absolute; z-index: var(--z-toast); top: calc(var(--hud-bottom, calc(17 * var(--px))) + 2 * var(--px)); left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; }
 .fv-month-banner { font: 700 var(--fs-heading)/1 var(--font-heading); padding: var(--px) calc(3 * var(--px)); animation: fv-banner-drop 240ms steps(3, end); }
 .fv-action-error { color: var(--c-money-down); white-space: normal; max-width: min(calc(140 * var(--px)), calc(100% - 8 * var(--px))); }
 @keyframes fv-banner-drop { from { transform: translate(-50%, calc(-4 * var(--px))); opacity: 0; } }
@@ -31,7 +34,7 @@
 /* Tips sit over scenery (the river, the plaza, under the HUD), never over a building. */
 .fv-coach-tip--0 { left: calc(3 * var(--px)); bottom: calc(30 * var(--px)); }
 .fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
-.fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(19 * var(--px)); }
+.fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(var(--hud-bottom, calc(17 * var(--px))) + 2 * var(--px)); }
 
 /* Finish sequence and natural end. */
 .fv-finish-overlay { position: absolute; inset: 0; z-index: var(--z-overlay); display: grid; place-items: center; background: color-mix(in srgb, var(--c-ink) 55%, transparent); }
@@ -60,12 +63,18 @@
 .fv-options { display: grid; gap: calc(3 * var(--px)); }
 .fv-options__row { display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--px)); }
 
-@media (max-width: 700px) {
-  .fv-toasts { width: calc(70 * var(--px)); top: calc(36 * var(--px)); }
+@media (max-width: 639px) {
+  /* Phones: tools on the left and toasts on the right share the strip under the HUD, above the town core. */
+  .fv-toasts { width: calc(96 * var(--px)); }
   .fv-toast p { display: none; }
-  .fv-month-banner, .fv-action-error { top: calc(36 * var(--px)); }
+  .fv-toast strong { font: var(--fs-body)/1.05 var(--font-body); }
+  /* Only the newest toast keeps its button; older ones shrink to a one-line summary so the stack stays above
+     the town core. Every toast is still in "View all activity". */
+  .fv-toasts > :nth-child(n+2) .fv-toast strong, .fv-toasts > .fv-toast:nth-child(n+2) strong { -webkit-line-clamp: 1; }
+  .fv-toasts > :nth-child(n+2) .fv-toast > :is(.fv-button, .fv-money), .fv-toasts > .fv-toast:nth-child(n+2) > :is(.fv-button, .fv-money) { display: none; }
   /* Narrow screens: every tip docks above the control bar so no building is covered. */
-  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2 { left: 50%; right: auto; top: auto; bottom: calc(44 * var(--px)); transform: translateX(-50%); }
+  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2 { left: 50%; right: auto; top: auto; bottom: calc(var(--bar-top, calc(44 * var(--px))) + 2 * var(--px)); transform: translateX(-50%); width: calc(100vw - 8 * var(--px)); max-width: calc(160 * var(--px)); }
+  .fv-month-banner { font-size: var(--fs-body); }
 }
 [data-reduce-motion='true'] .fv-month-banner, [data-reduce-motion='true'] .fv-counter i { animation: none; }
 @media (prefers-reduced-motion: reduce) { .fv-month-banner, .fv-counter i { animation: none; } }

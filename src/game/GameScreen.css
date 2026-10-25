@@ -1,0 +1,33 @@
+/* Brief M: town-screen layout that has to hold from a 390x844 phone (stage zoom 1) to a 1280x720 laptop (zoom 4).
+   The world keeps the stage's integer zoom (`--px`); the UI layer floors it at 2 CSS px so frames, buttons and
+   boards stay tappable at zoom 1 (the kit's font tokens are absolute, so text was never the problem — the boxes
+   around it were 1 px per art px and could not hold it). */
+.fv-stage[aria-label='Fortune Valley town'] > .fv-ui { --ui-px: max(2px, var(--px)); }
+
+/* Shared geometry every overlay positions against, in UI art px:
+   --hud-bottom  distance from the viewport top to the HUD's bottom edge (2 inset + 15 board)
+   --bar-top     distance from the viewport bottom to the control bar's top edge (5 inset + 18 board) */
+.fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
+  --px: var(--ui-px);
+  --hud-bottom: calc(17 * var(--px));
+  --bar-top: calc(23 * var(--px));
+}
+
+/* Phones: the HUD is two rows (brand + date / four values) and the control bar two rows; see hud.css. */
+@media (max-width: 639px) {
+  .fv-stage[aria-label='Fortune Valley town'] > .fv-ui > * {
+    --hud-bottom: calc(48 * var(--px));
+    --bar-top: calc(49 * var(--px));
+  }
+}
+
+/* Every town window (building windows, timeline, activity, pause, options, guide, confirms) sits between the HUD
+   and the control bar, centred in that gap. Its body scrolls; the header stays visible. */
+.fv-stage[aria-label='Fortune Valley town'] .fv-modal {
+  top: calc(var(--hud-bottom) + 2 * var(--px));
+  bottom: calc(var(--bar-top) + 2 * var(--px));
+  max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
+}
+.fv-stage[aria-label='Fortune Valley town'] .fv-modal > .fv-window {
+  max-height: calc(100dvh - var(--hud-bottom) - var(--bar-top) - 4 * var(--px));
+}
