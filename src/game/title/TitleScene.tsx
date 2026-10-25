@@ -33,11 +33,9 @@ const bush = (x: number, y: number): Placed => ({ sprite: 'world/props/bush', x,
 const forest: Placed[] = []
 for (let x = -10; x < MAP_W; x += 10) {
   const step = Math.round((x + 10) / 10)
-  // Three rows; every trunk base (y + 28) sits on the meadow, which starts at row 146 under the hills.
-  forest.push(pine(x + 5, 118 + (step % 2) * 2)) // back row
-  forest.push(pine(x, 123 + (step % 3) * 2)) // middle row
-  if (step % 2 === 0) forest.push(pine(x + 3, 129 + (step % 4))) // front row
-  if (step % 7 === 3) forest.push(tree(x + 2, 134))
+  // One dense row hugging the horizon; trunk bases (y + 28) land on the top of the meadow, not the farmland.
+  forest.push(pine(x + 5, 118 + (step % 2) * 2))
+  forest.push(pine(x, 120 + (step % 3)))
 }
 
 const PROPS: Placed[] = [
