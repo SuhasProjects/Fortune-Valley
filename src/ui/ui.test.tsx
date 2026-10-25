@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useState } from 'react'
-import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, IconButton, Icon, Select, Slider, Tooltip, Dropdown, setUiReducedMotion, useReducedMotion } from './index'
+import { Modal, Tabs, Toggle, Money, NumberField, Field, Button, IconButton, Icon, Select, Slider, Tooltip, Dropdown, setUiReducedMotion, useReducedMotion, logScale, niceStep, snapNice, stepNice } from './index'
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); setUiReducedMotion(false) })
 beforeEach(() => {
@@ -99,5 +99,37 @@ describe('UI kit components', () => {
   it('describes its child with a tooltip', () => {
     render(<Tooltip content="Keyboard: N"><Button>Next</Button></Tooltip>)
     const tip = screen.getByRole('tooltip'); expect(tip.textContent).toBe('Keyboard: N'); expect(screen.getByRole('button').closest('[aria-describedby]')?.getAttribute('aria-describedby')).toBe(tip.id)
+  })
+})
+describe('log money slider', () => {
+  it('grows the nice step with magnitude and snaps within bounds', () => {
+    expect([40, 150, 700, 2000, 5000, 20000].map(niceStep)).toEqual([5, 10, 25, 50, 100, 250])
+    expect(snapNice(47, 0, 5000)).toBe(45); expect(snapNice(2_030, 0, 5000)).toBe(2_050); expect(snapNice(12_345, 0, 50_000)).toBe(12_250)
+    expect(snapNice(99_999, 0, 5000)).toBe(5000); expect(snapNice(-3, 0, 5000)).toBe(0); expect(snapNice(NaN, 0, 5000)).toBe(0)
+  })
+  it('maps value to position and back, with a zero stop before the floor', () => {
+    const scale = logScale(0, 5000)
+    expect(scale.toPos(0)).toBe(0); expect(scale.toValue(0)).toBe(0)
+    expect(scale.toPos(10)).toBe(1); expect(scale.toValue(1)).toBeCloseTo(10); expect(scale.toValue(1000)).toBeCloseTo(5000); expect(scale.toPos(5000)).toBe(1000)
+    for (const value of [10, 25, 100, 350, 1000, 2500, 4900, 5000]) expect(snapNice(scale.toValue(scale.toPos(value)), 0, 5000)).toBe(value)
+    expect(scale.decades).toEqual([10, 100, 1000])
+    expect(logScale(50, 20_000).decades).toEqual([100, 1000, 10_000])
+  })
+  it('steps one nice increment per arrow, five per page, and jumps with Home/End', () => {
+    expect(stepNice(100, 1, 1, 0, 5000)).toBe(110); expect(stepNice(100, -1, 1, 0, 5000)).toBe(95)
+    expect(stepNice(500, -1, 1, 0, 5000)).toBe(490); expect(stepNice(2500, 1, 5, 0, 5000)).toBe(3000); expect(stepNice(4900, 1, 5, 0, 5000)).toBe(5000)
+    const change = vi.fn()
+    render(<Slider label="Budget" scale="log" min={0} max={5000} value={100} onChange={change} format={value => `$${value}`}/>)
+    const slider = screen.getByRole('slider', {name:/Budget/}) as HTMLInputElement
+    expect(slider.max).toBe('1000'); expect(slider.getAttribute('aria-valuenow')).toBe('100'); expect(slider.getAttribute('aria-valuemax')).toBe('5000'); expect(slider.getAttribute('aria-valuetext')).toBe('$100')
+    fireEvent.keyDown(slider, {key:'ArrowRight'}); expect(change).toHaveBeenLastCalledWith(110)
+    fireEvent.keyDown(slider, {key:'ArrowLeft'}); expect(change).toHaveBeenLastCalledWith(95)
+    fireEvent.keyDown(slider, {key:'PageUp'}); expect(change).toHaveBeenLastCalledWith(150)
+    fireEvent.keyDown(slider, {key:'PageDown'}); expect(change).toHaveBeenLastCalledWith(75)
+    fireEvent.keyDown(slider, {key:'End'}); expect(change).toHaveBeenLastCalledWith(5000)
+    fireEvent.keyDown(slider, {key:'Home'}); expect(change).toHaveBeenLastCalledWith(0)
+    fireEvent.change(slider, {target:{value:'500'}}); const dragged = change.mock.lastCall![0] as number
+    expect(dragged).toBe(snapNice(logScale(0, 5000).toValue(500), 0, 5000)); expect(dragged).toBeGreaterThan(200); expect(dragged).toBeLessThan(250)
+    expect(screen.getByRole('status').textContent).toBe('$100'); expect(screen.getAllByText(/^\$(10|100|1k)$/)).toHaveLength(4)
   })
 })

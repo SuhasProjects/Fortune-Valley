@@ -39,7 +39,10 @@ describe('reduced Bank decisions', () => {
   it('keeps drafts local and preserves the investment contribution in the canonical action', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
-    fireEvent.change(screen.getByLabelText('Monthly savings contribution (USD)'), { target: { value: '325' } });
+    const input = screen.getByLabelText('Monthly savings contribution (USD)') as HTMLInputElement, slider = screen.getByRole('slider', { name: 'Monthly savings contribution slider' });
+    fireEvent.change(slider, { target: { value: '1000' } }); expect(input.value).toBe(slider.getAttribute('aria-valuemax'));
+    fireEvent.keyDown(slider, { key: 'ArrowLeft' }); expect(Number(input.value)).toBeLessThan(Number(slider.getAttribute('aria-valuemax')));
+    fireEvent.change(input, { target: { value: '325' } }); expect(slider.getAttribute('aria-valuenow')).toBe('325');
     expect(dispatch).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Save savings contribution' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_contributions', savingsContributionPerMonth: 325, investmentContributionPerMonth: state.policy.investmentContributionPerMonth }));
@@ -49,8 +52,11 @@ describe('reduced Bank decisions', () => {
     const state = initial(); state.cash = 100; state.debts[0]!.balance = 40;
     const dispatch = dispatchFor(state); render(<BuildingPanel building="bank" state={state} dispatch={dispatch} />);
     fireEvent.click(screen.getByText('Extra debt payment'));
-    const input = screen.getByLabelText('One-time debt payment (USD)');
+    const input = screen.getByLabelText('One-time debt payment (USD)') as HTMLInputElement;
     expect(input.getAttribute('max')).toBe('40');
+    const slider = screen.getByRole('slider', { name: 'One-time debt payment slider' }); expect(slider.getAttribute('aria-valuemax')).toBe('40');
+    fireEvent.change(slider, { target: { value: '1000' } }); expect(input.value).toBe('40');
+    expect((screen.getByRole('button', { name: 'Pay once' }) as HTMLButtonElement).disabled).toBe(false);
     fireEvent.change(input, { target: { value: '41' } });
     expect((screen.getByRole('button', { name: 'Pay once' }) as HTMLButtonElement).disabled).toBe(true);
     expect(dispatch).not.toHaveBeenCalled();
@@ -99,7 +105,9 @@ describe('reduced Market decisions', () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="market" state={state} dispatch={dispatch} />);
     fireEvent.click(screen.getByText('Monthly investing', { exact: true }));
-    fireEvent.change(screen.getByLabelText('Monthly investment contribution (USD)'), { target: { value: '200' } });
+    const slider = screen.getByRole('slider', { name: 'Monthly investment contribution slider' });
+    fireEvent.change(slider, { target: { value: '1000' } }); expect((screen.getByLabelText('Monthly investment contribution (USD)') as HTMLInputElement).value).toBe(slider.getAttribute('aria-valuemax'));
+    fireEvent.change(screen.getByLabelText('Monthly investment contribution (USD)'), { target: { value: '200' } }); expect(slider.getAttribute('aria-valuenow')).toBe('200');
     fireEvent.click(screen.getByRole('button', { name: 'Save investment contribution' }));
     await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_contributions', savingsContributionPerMonth: state.policy.savingsContributionPerMonth, investmentContributionPerMonth: 200 }));
   });
@@ -147,10 +155,15 @@ describe('Insurance, Home and Office', () => {
   it('uses one budget slider within the engine bounds', async () => {
     const state = initial(); const dispatch = dispatchFor(state);
     render(<BuildingPanel building="home" state={state} dispatch={dispatch} />);
-    const slider = screen.getByRole('slider'); expect(slider.getAttribute('max')).toBe(String(BOUNDS.monthlySpendMax));
+    const slider = screen.getByRole('slider'); const sliderMax = Number(slider.getAttribute('aria-valuemax'));
+    expect(sliderMax).toBeLessThanOrEqual(BOUNDS.monthlySpendMax); expect(sliderMax).toBeGreaterThanOrEqual(state.household.discretionaryMonthly);
+    expect(slider.getAttribute('aria-valuenow')).toBe(String(state.household.discretionaryMonthly));
     expect(screen.getAllByRole('slider')).toHaveLength(1);
-    fireEvent.change(slider, { target: { value: '120' } }); fireEvent.click(screen.getByRole('button', { name: 'Save budget' }));
-    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_budget', discretionaryMonthly: 120 }));
+    fireEvent.change(slider, { target: { value: '1000' } }); expect(slider.getAttribute('aria-valuenow')).toBe(String(sliderMax));
+    fireEvent.keyDown(slider, { key: 'Home' }); fireEvent.keyDown(slider, { key: 'ArrowRight' }); fireEvent.keyDown(slider, { key: 'ArrowRight' });
+    expect(slider.getAttribute('aria-valuetext')).toBe(`${money(10)} / month`);
+    fireEvent.click(screen.getByRole('button', { name: 'Save budget' }));
+    await waitFor(() => expect(dispatch).toHaveBeenCalledWith({ type: 'set_budget', discretionaryMonthly: 10 }));
   });
   it('keeps Office read-only and displays the canonical pay summary', () => {
     const state = initial(); const pay = selectPaySummary(state);

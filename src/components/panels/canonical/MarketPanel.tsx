@@ -1,8 +1,8 @@
-import { Button, Field } from '../../../ui';
+import { Button, Field, Slider } from '../../../ui';
 import { useEffect, useId, useState } from 'react';
 import { ASSET_CLASSES, type Allocation, type AssetClass } from '../../../types/domain';
 import { BOUNDS } from '../../../config/defaults';
-import { validateAllocation } from '../../../engine';
+import { selectPaySummary, validateAllocation } from '../../../engine';
 import { PanelShell } from '../PanelShell';
 import { PolicyPreview } from '../PolicyPreview';
 import type { PanelProps } from '../panelTypes';
@@ -26,6 +26,7 @@ export function MarketPanel({ state, dispatch }: PanelProps) {
   const allocation: Allocation = valid ? candidate : state.policy.targetAllocation;
   const contributionError = amountError(contribution, 0, BOUNDS.contributionMax);
   const disabled = !editable(state) || task.pending;
+  const sliderMax = Math.min(BOUNDS.contributionMax, Math.max(1000, Math.ceil(selectPaySummary(state).grossMonthly), state.policy.investmentContributionPerMonth));
   const draftPolicy = { ...state.policy, targetAllocation: allocation, investmentContributionPerMonth: contributionError ? state.policy.investmentContributionPerMonth : Number(contribution) };
   return <PanelShell title="Market" status={<dl>{ASSET_CLASSES.map(asset => <div key={asset}><dt>{shortLabels[asset]}</dt><dd>{money(state.investments[asset])}</dd></div>)}</dl>} decision={<>
     <form onSubmit={event => { event.preventDefault(); if (!disabled && valid) void task.send({ type: 'set_allocation', allocation }); }}>
@@ -40,6 +41,7 @@ export function MarketPanel({ state, dispatch }: PanelProps) {
     </form>
     <details><summary>Monthly investing</summary><form onSubmit={event => { event.preventDefault(); if (!disabled && !contributionError) void task.send({ type: 'set_contributions', savingsContributionPerMonth: state.policy.savingsContributionPerMonth, investmentContributionPerMonth: Number(contribution) }); }}>
       <MoneyInput label="Monthly investment contribution" raw={contribution} onChange={setContribution} max={BOUNDS.contributionMax} disabled={disabled} />
+      <Slider label="Monthly investment contribution slider" labelHidden scale="log" min={0} max={sliderMax} value={Number.isFinite(Number(contribution)) ? Number(contribution) : 0} disabled={disabled} format={value => `${money(value)} / month`} onChange={value => setContribution(String(value))} />
       <Button type="submit" variant="primary" disabled={disabled || !!contributionError}>Save investment contribution</Button>
     </form></details>{task.feedback}
   </>} consequence={<><p>Investing after Save · {money(draftPolicy.investmentContributionPerMonth)} / month</p><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!valid || !!contributionError} compact /></>} help={<><ul><li>Percentages apply to new investments.</li><li>Existing holdings stay as they are.</li><li>An equity ETF spreads holdings, but can still fall.</li></ul><PolicyPreview state={state} draftPolicy={draftPolicy} invalid={!valid || !!contributionError} /></>} details={<>

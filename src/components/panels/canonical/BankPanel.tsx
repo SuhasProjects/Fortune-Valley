@@ -1,6 +1,6 @@
-import { Button, Select } from '../../../ui';
+import { Button, Select, Slider } from '../../../ui';
 import { useEffect, useId, useState } from 'react';
-import { netWorthOf } from '../../../engine';
+import { netWorthOf, selectPaySummary } from '../../../engine';
 import { BOUNDS } from '../../../config/defaults';
 import { PanelShell } from '../PanelShell';
 import { PolicyPreview } from '../PolicyPreview';
@@ -19,6 +19,8 @@ export function BankPanel({ state, dispatch }: PanelProps) {
   const savingsError = amountError(savings, 0, BOUNDS.contributionMax);
   const paymentError = amountError(payment, .01, paymentMax);
   const disabled = !editable(state) || task.pending;
+  const sliderMax = Math.min(BOUNDS.contributionMax, Math.max(1000, Math.ceil(selectPaySummary(state).grossMonthly), state.policy.savingsContributionPerMonth));
+  const asNumber = (raw: string) => Number.isFinite(Number(raw)) ? Number(raw) : 0;
   const draftPolicy = { ...state.policy, savingsContributionPerMonth: savingsError ? state.policy.savingsContributionPerMonth : Number(savings) };
   return <PanelShell title="Bank" status={<>
     <dl><div><dt>Cash</dt><dd>{money(state.cash)}</dd></div><div><dt>Savings</dt><dd>{money(state.savings)}</dd></div><div><dt>Net worth</dt><dd>{money(netWorthOf(state))}</dd></div></dl>
@@ -26,6 +28,7 @@ export function BankPanel({ state, dispatch }: PanelProps) {
   </>} decision={<>
     <form onSubmit={event => { event.preventDefault(); if (!disabled && !savingsError) void task.send({ type: 'set_contributions', savingsContributionPerMonth: Number(savings), investmentContributionPerMonth: state.policy.investmentContributionPerMonth }); }}>
       <MoneyInput label="Monthly savings contribution" raw={savings} onChange={setSavings} max={BOUNDS.contributionMax} disabled={disabled} />
+      <Slider label="Monthly savings contribution slider" labelHidden scale="log" min={0} max={sliderMax} value={asNumber(savings)} disabled={disabled} format={value => `${money(value)} / month`} onChange={value => setSavings(String(value))} />
       <Button type="submit" variant="primary" disabled={disabled || !!savingsError}>Save savings contribution</Button>
     </form>
     <details><summary>Extra debt payment</summary>
@@ -33,6 +36,7 @@ export function BankPanel({ state, dispatch }: PanelProps) {
       <form onSubmit={async event => { event.preventDefault(); if (!disabled && debt && !paymentError && paymentMax > 0 && await task.send({ type: 'make_extra_payment', debtId: debt.id, amount: Number(payment) })) setPayment(''); }}>
         <Select label="Debt" id={id} value={debtId} disabled={disabled || !state.debts.length} options={state.debts.map(value => ({ value: value.id, label: value.name }))} onChange={value => { setDebtId(value); setPayment(''); }} />
         <MoneyInput label="One-time debt payment" raw={payment} onChange={setPayment} min={paymentMax > 0 ? .01 : 0} max={paymentMax} disabled={disabled || paymentMax <= 0} />
+        {paymentMax > 0 && <Slider label="One-time debt payment slider" labelHidden scale="log" min={0} max={paymentMax} value={asNumber(payment)} disabled={disabled} format={value => `${money(value)} once`} onChange={value => setPayment(String(value))} />}
         <p>{!paymentError ? `${money(-Number(payment))} once` : `Up to ${money(paymentMax)}`}</p>
         {!paymentError && debt && <PaymentPreview state={state} debtId={debt.id} amount={Number(payment)} />}
         <Button type="submit" variant="wood" disabled={disabled || !debt || !!paymentError || paymentMax <= 0}>Pay once</Button>
