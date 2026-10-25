@@ -65,11 +65,14 @@ export const LUMINAL_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL:
 
 export const GEMINI_DEFAULTS = { AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/openai', AI_MODEL: 'gemini-2.5-flash' } as const;
 
-/** Resolve the key and provider: AI_* wins; a bare GEMINI_API_KEY selects the Gemini defaults, else a bare LUMINAL_API_KEY the Luminal defaults. */
+/**
+ * Resolve the key and provider. GEMINI_API_KEY always wins (Gemini defaults, explicit AI_PROVIDER/AI_BASE_URL/AI_MODEL still
+ * override those); otherwise AI_API_KEY with explicit AI_*; otherwise a bare LUMINAL_API_KEY selects the Luminal defaults.
+ */
 export function resolveEnv(env: HandlerEnv): HandlerEnv {
-  if (env.AI_API_KEY) return env;
   const set = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ''));
   if (env.GEMINI_API_KEY) return { ...GEMINI_DEFAULTS, ...set, AI_API_KEY: env.GEMINI_API_KEY };
+  if (env.AI_API_KEY) return env;
   if (env.LUMINAL_API_KEY) return { ...LUMINAL_DEFAULTS, ...set, AI_API_KEY: env.LUMINAL_API_KEY };
   return env;
 }

@@ -8,9 +8,9 @@ Limits: body ≤ 200 KB; 40 requests per 5 minutes per client IP (429 with `code
 
 | Variable | Meaning |
 |---|---|
-| `GEMINI_API_KEY` | Google AI Studio key. On its own it selects Gemini's OpenAI-compatible endpoint (`gemini-2.5-flash`). Wins over `LUMINAL_API_KEY`. |
+| `GEMINI_API_KEY` | Google AI Studio key. Selects Gemini's OpenAI-compatible endpoint (`gemini-2.5-flash`). Wins over every other key, including `AI_API_KEY`. |
 | `LUMINAL_API_KEY` | On its own selects Luminal's DeepSeek endpoint. |
-| `AI_API_KEY` | Generic provider key; with it set, `AI_PROVIDER`/`AI_BASE_URL`/`AI_MODEL` must be given explicitly. Never `VITE_`-prefixed. No key at all → 503 `disabled`. |
+| `AI_API_KEY` | Generic provider key, used only when `GEMINI_API_KEY` is absent; needs explicit `AI_PROVIDER`/`AI_BASE_URL`/`AI_MODEL`. Never `VITE_`-prefixed. No key at all → 503 `disabled`. |
 | `AI_PROVIDER` | `anthropic` (default) or `openai_compatible`. |
 | `AI_MODEL` | Anthropic default `claude-opus-5-5`; required for `openai_compatible`. |
 | `AI_BASE_URL` | `openai_compatible` only: an origin (`https://flash.luminal.cloud` → `/v1/chat/completions` appended), a `/v1` base, or a full prefix such as `https://generativelanguage.googleapis.com/v1beta/openai` (→ `/chat/completions` appended). |

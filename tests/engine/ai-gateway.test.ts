@@ -457,7 +457,8 @@ describe('provider defaults from bare keys', async () => {
   it('LUMINAL_API_KEY alone selects the Luminal defaults; explicit AI_* still wins', () => {
     expect(resolveEnv({ LUMINAL_API_KEY: 'l' })).toMatchObject({ ...LUMINAL_DEFAULTS, AI_API_KEY: 'l' });
     expect(resolveEnv({ GEMINI_API_KEY: 'g', AI_MODEL: 'gemini-2.5-pro' }).AI_MODEL).toBe('gemini-2.5-pro');
-    expect(resolveEnv({ AI_API_KEY: 'k', GEMINI_API_KEY: 'g' })).toEqual({ AI_API_KEY: 'k', GEMINI_API_KEY: 'g' });
+    expect(resolveEnv({ AI_API_KEY: 'k', GEMINI_API_KEY: 'g' })).toMatchObject({ ...GEMINI_DEFAULTS, AI_API_KEY: 'g' });
+    expect(resolveEnv({ AI_API_KEY: 'k', AI_PROVIDER: 'openai_compatible', AI_BASE_URL: 'https://x.test', AI_MODEL: 'm' })).toMatchObject({ AI_API_KEY: 'k', AI_MODEL: 'm' });
   });
   it('builds the chat completions URL for origins, /v1 bases and full prefixes like Gemini', () => {
     expect(chatCompletionsUrl('https://flash.luminal.cloud')).toBe('https://flash.luminal.cloud/v1/chat/completions');
