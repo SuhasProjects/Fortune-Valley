@@ -33,7 +33,7 @@ test('keyboard reaches title, buildings, windows and the ending with visible foc
   await page.keyboard.press('Enter')
   await expect(page.getByRole('button', { name: /Open Pine Bank:/ })).toBeVisible()
   const tip = page.getByRole('button', { name: /Next tip|Got it/ })
-  for (let i = 0; i < 4; i++) if (await tip.isVisible().catch(() => false)) await tip.click()
+  for (let i = 0; i < 5; i++) if (await tip.isVisible().catch(() => false)) await tip.click()
 
   // Buildings in order, each with a visible focus treatment (gold hover frame).
   await page.getByRole('button', { name: /Open Pine Bank:/ }).focus()

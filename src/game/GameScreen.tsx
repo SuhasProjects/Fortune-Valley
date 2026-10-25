@@ -29,6 +29,7 @@ const tips = [
   ['Explore the town', 'Each building holds a different part of your financial life. Click one, or press 1 to 5.'],
   ['Control the calendar', 'Advance when you are ready (N), pause with Space, or let auto-time move the story.'],
   ['Watch your whole picture', 'Cash, savings, debt and net worth update together in the board above.'],
+  ['Own a car?', 'Open Your Home and tick it there, with a rough value. That sets fuel and repair costs and unlocks car insurance at the Health House.'],
   ['Stuck? Ask the Sage', 'The speech bubble in the corner opens the Sage. Ask what a choice does and he explains it with your own numbers.'],
 ] as const
 

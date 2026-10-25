@@ -50,10 +50,11 @@
 .fv-coach-tip--0 { left: calc(3 * var(--px)); bottom: calc(30 * var(--px)); }
 .fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
 .fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); }
-.fv-coach-tip--3 { right: calc(14 * var(--px)); bottom: calc(14 * var(--px)); }
+.fv-coach-tip--3 { left: calc(3 * var(--px)); bottom: calc(30 * var(--px)); }
+.fv-coach-tip--4 { right: calc(14 * var(--px)); bottom: calc(14 * var(--px)); }
 /* Zoom 1 (windows under 640 px wide or 360 tall): the UI layer runs at twice the world's scale, so a tip beside a
    building would cover it; every tip docks above the control bar on the left instead. */
-.fv-stage[data-px='1'] :is(.fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3) { left: calc(3 * var(--px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(25 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px)); max-width: calc(160 * var(--px)); }
+.fv-stage[data-px='1'] :is(.fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3, .fv-coach-tip--4) { left: calc(3 * var(--px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(25 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px)); max-width: calc(160 * var(--px)); }
 /* Windows taller than the map with room under the control bar (GameScreen's CoachTip sets data-dock): the tip sits on
    the pine border below the bar, covering nothing. */
 .fv-stage .fv-coach-tip[data-dock='below'] { top: calc(100% + 2 * var(--px)); bottom: auto; left: calc(3 * var(--px)); right: auto; transform: none; width: min(calc(100vw - 6 * var(--px)), calc(160 * var(--px))); }
@@ -99,7 +100,7 @@
 /* Landscape phones: tips dock above the control bar on the left (clear of the coach bubble); tools and toasts
    respect the notch. */
 @media (max-height: 480px) and (orientation: landscape) {
-  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(31 * var(--px))) + 2 * var(--px)); transform: none; width: calc(95 * var(--px)); }
+  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3, .fv-coach-tip--4 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(31 * var(--px))) + 2 * var(--px)); transform: none; width: calc(95 * var(--px)); }
   .fv-flow-tools { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); }
   .fv-toasts { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); width: calc(110 * var(--px)); }
   .fv-toasts > :nth-child(n+2):not(.fv-view-all) { display: none; }
