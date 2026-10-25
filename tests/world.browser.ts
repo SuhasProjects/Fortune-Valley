@@ -3,7 +3,7 @@ import { openTitle, startStory } from './helpers'
 
 // OWNER: Agent 1 (world). The town stage at laptop sizes: integer zoom, no page scroll, art loaded, hover and keyboard.
 
-for (const [width, height, px] of [[1280, 720, 4], [1366, 768, 4], [1440, 900, 4], [1920, 1080, 6]] as const) {
+for (const [width, height, px] of [[1280, 720, 4], [1366, 768, 4], [1440, 900, 4], [1920, 1080, 6], [2000, 1100, 6], [2560, 1440, 8]] as const) {
   test(`town world fits ${width}x${height} at ${px}x zoom`, async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === 'mobile', 'laptop sizes only')
     const errors: string[] = []
@@ -29,7 +29,7 @@ for (const [width, height, px] of [[1280, 720, 4], [1366, 768, 4], [1440, 900, 4
     expect(art.count).toBeGreaterThan(8)
     expect(art.allLoaded).toBe(true)
 
-    if (width === 1280 || width === 1440) await page.screenshot({ path: `docs/screenshots/world-${width}.png` })
+    if (width === 1280 || width === 1440 || width === 2000) await page.screenshot({ path: `docs/screenshots/world-${width}.png` })
 
     // The HUD never covers a roof: every building (hover frame included) starts below the HUD's bottom edge, and
     // the bottom row's plaques stay above the control bar.
@@ -40,6 +40,24 @@ for (const [width, height, px] of [[1280, 720, 4], [1366, 768, 4], [1440, 900, 4
       expect(box.y - px, `${id} roof under the HUD`).toBeGreaterThanOrEqual(hud.y + hud.height)
       expect(box.y + box.height + 9 * px, `${id} plaque under the control bar`).toBeLessThanOrEqual(bar.y)
     }
+    // The Town Office's new tower peak is the highest point of the town: at least 2 css px below the HUD, and its
+    // hover frame and any "decision waiting" badge above it stay inside the viewport.
+    const office = page.locator('.fv-building[data-building=office]')
+    const officeBox = (await office.boundingBox())!
+    expect(officeBox.y, 'office peak under the HUD').toBeGreaterThanOrEqual(hud.y + hud.height + 2)
+    await office.hover()
+    const frame = (await office.locator('.fv-building__hover').boundingBox())!
+    expect(frame.y).toBeGreaterThanOrEqual(0)
+    expect(frame.y + frame.height).toBeLessThanOrEqual(height)
+    expect(frame.x >= 0 && frame.x + frame.width <= width).toBe(true)
+    const officeBadge = page.locator('.fv-badge[data-badge=office]')
+    if (await officeBadge.count()) {
+      const badge = (await officeBadge.boundingBox())!
+      expect(badge.y, 'office badge under the HUD').toBeGreaterThanOrEqual(hud.y + hud.height)
+      expect(badge.y + badge.height).toBeLessThanOrEqual(height)
+    }
+    await page.mouse.move(0, height - 1)
+
     const bank = page.getByRole('button', { name: /Open Pine Bank/ })
     await expect(bank.locator('.fv-building__hover')).toBeHidden()
     await bank.hover()
