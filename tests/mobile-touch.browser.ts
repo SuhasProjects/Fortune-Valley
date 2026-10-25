@@ -52,7 +52,7 @@ async function expectInside(page: Page, locator: Locator, what: string) {
 }
 
 const closePanel = (page: Page) => page.getByRole('button', { name: 'Close panel' }).click()
-const dismissTips = async (page: Page) => { const tip = page.getByRole('button', { name: /Next tip|Got it/ }); for (let i = 0; i < 3; i++) if (await tip.isVisible().catch(() => false)) await tip.click() }
+const dismissTips = async (page: Page) => { const tip = page.getByRole('button', { name: /Next tip|Got it/ }); for (let i = 0; i < 4; i++) if (await tip.isVisible().catch(() => false)) await tip.click() }
 
 test.describe('Phone pass', () => {
   test.beforeEach(async ({ page }, testInfo) => {

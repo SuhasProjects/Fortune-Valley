@@ -28,6 +28,7 @@ const tips = [
   ['Explore the town', 'Each building holds a different part of your financial life. Click one, or press 1 to 5.'],
   ['Control the calendar', 'Advance when you are ready (N), pause with Space, or let auto-time move the story.'],
   ['Watch your whole picture', 'Cash, savings, debt and net worth update together in the board above.'],
+  ['Stuck? Ask the Sage', 'The speech bubble in the corner opens the Sage. Ask what a choice does and he explains it with your own numbers.'],
 ] as const
 
 export interface GameScreenProps { panels?: Partial<Record<BuildingId, ReactNode>> }
@@ -156,7 +157,7 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
   }, [flowWindowOpen])
 
   const nextTip = () => {
-    if (tipStep < 2) setTipStep(step => step + 1)
+    if (tipStep < tips.length - 1) setTipStep(step => step + 1)
     else { setTipStep(-1); setSetting('tipsSeen', true) }
   }
   const saveAndQuit = () => {
@@ -184,9 +185,9 @@ function TownScreen({ game, config, panels }: { game: GameState; config: GameCon
       <HudFooter/>
       <CoachPanel/>
       {store.lastActionError && <Board as="p" className="fv-action-error" role="alert">{store.lastActionError}</Board>}
-      {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of 3`}>
+      {tip && <Board as="aside" className={`fv-coach-tip fv-coach-tip--${tipStep}`} aria-label={`Tip ${tipStep + 1} of ${tips.length}`}>
         <strong>{tip[0]}</strong><p>{tip[1]}</p>
-        <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === 2 ? 'Got it' : 'Next tip'}</Button>
+        <Button size="sm" variant="primary" onClick={nextTip}>{tipStep === tips.length - 1 ? 'Got it' : 'Next tip'}</Button>
       </Board>}
       {game.status === 'finished' && !finishing && <Board as="section" padding="lg" className="fv-completion-banner" aria-label="Story complete">
         <p>Your {config.durationMonths} months are complete.</p>

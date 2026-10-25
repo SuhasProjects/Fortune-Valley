@@ -50,6 +50,7 @@
 .fv-coach-tip--0 { left: calc(3 * var(--px)); bottom: calc(30 * var(--px)); }
 .fv-coach-tip--1 { left: 50%; bottom: calc(28 * var(--px)); transform: translateX(-50%); }
 .fv-coach-tip--2 { right: calc(3 * var(--px)); top: calc(var(--hud-bottom, calc(22 * var(--px))) + 2 * var(--px)); }
+.fv-coach-tip--3 { right: calc(14 * var(--px)); bottom: calc(14 * var(--px)); }
 
 /* Finish sequence and natural end. */
 .fv-finish-overlay { position: absolute; inset: 0; z-index: var(--z-overlay); display: grid; place-items: center; background: color-mix(in srgb, var(--c-ink) 55%, transparent); }
@@ -91,7 +92,7 @@
   .fv-toasts > :nth-child(n+2) .fv-toast strong, .fv-toasts > .fv-toast:nth-child(n+2) strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
   .fv-toasts > :nth-child(n+2) .fv-toast > :is(.fv-button, .fv-money), .fv-toasts > .fv-toast:nth-child(n+2) > :is(.fv-button, .fv-money) { display: none; }
   /* Narrow screens: every tip docks above the control bar so no building is covered. */
-  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(44 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); max-width: calc(160 * var(--px)); }
+  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(44 * var(--px))) + 2 * var(--px)); transform: none; width: calc(100vw - 30 * var(--px) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); max-width: calc(160 * var(--px)); }
   /* Only the newest toast shows in full (older ones would reach the town core now that dismiss buttons are
      thumb-sized); every toast is still in "View all activity". */
   .fv-toasts > :nth-child(n+2):not(.fv-view-all) { display: none; }
@@ -118,7 +119,7 @@
 /* Landscape phones: tips dock above the control bar on the left (clear of the coach bubble); tools and toasts
    respect the notch. */
 @media (max-height: 480px) and (orientation: landscape) {
-  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(31 * var(--px))) + 2 * var(--px)); transform: none; width: calc(95 * var(--px)); }
+  .fv-coach-tip, .fv-coach-tip--0, .fv-coach-tip--1, .fv-coach-tip--2, .fv-coach-tip--3 { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); right: auto; top: auto; bottom: calc(var(--bar-top, calc(31 * var(--px))) + 2 * var(--px)); transform: none; width: calc(95 * var(--px)); }
   .fv-flow-tools { left: calc(3 * var(--px) + env(safe-area-inset-left, 0px)); }
   .fv-toasts { right: calc(3 * var(--px) + env(safe-area-inset-right, 0px)); width: calc(110 * var(--px)); }
   .fv-toasts > :nth-child(n+2):not(.fv-view-all) { display: none; }
